@@ -1,0 +1,396 @@
+ins:
+- 4 pots
+- 7 buttons
+
+outs:
+- 2 line display
+- LED panel
+- LED safelight
+
+Connectiviy:
+- display is i2c
+- pots are on A1 (CONTRAST)  A2 A3 A4
+- Buttons D7,8,9,10 (posibly D2)
+- LED is D4 or D3 (D4 has clock/counter, so possible. D3 is PWM, so more likely)
+
+
+Jun 01 11:43:14 pinot kernel: usb 1-1: new full-speed USB device number 5 using xhci_hcd
+Jun 01 11:43:14 pinot kernel: usb 1-1: New USB device found, idVendor=1a86, idProduct=7523, bcdDevice= 2.54
+Jun 01 11:43:14 pinot kernel: usb 1-1: New USB device strings: Mfr=0, Product=2, SerialNumber=0
+Jun 01 11:43:14 pinot kernel: usb 1-1: Product: USB2.0-Ser!
+Jun 01 11:43:15 pinot kernel: usbcore: registered new interface driver ch341
+Jun 01 11:43:15 pinot kernel: usbserial: USB Serial support registered for ch341-uart
+Jun 01 11:43:15 pinot kernel: ch341 1-1:1.0: ch341-uart converter detected
+Jun 01 11:43:15 pinot kernel: ch341-uart ttyUSB0: break control not supported, using simulated break
+Jun 01 11:43:15 pinot kernel: usb 1-1: ch341-uart converter now attached to ttyUSB0
+ 
+ 
+Found online
+
+$ avrdude -c stk500v1 -p m328p -b 57600 -P /dev/tty.usbserial-210 -U flash:w:IntrepidTimer_v2.02_Chip_P.hex:i
+
+From my device
+
+~ [ avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -v                                                   ]
+Avrdude version 8.0
+Copyright see https://github.com/avrdudes/avrdude/blob/main/AUTHORS
+ 
+System wide configuration file is /etc/avrdude.conf
+User configuration file /home/tristan/.avrduderc does not exist
+ 
+Using port            : /dev/ttyUSB0
+Using programmer      : stk500v1
+Setting baud rate     : 57600
+AVR part              : ATmega328P
+Programming modes     : SPM, ISP, HVPP, debugWIRE
+Programmer type       : STK500
+Description           : Atmel STK500 v1
+HW Version            : 2
+FW Version            : 1.16
+Vtarget               : 0.0 V
+Varef                 : 0.0 V
+Oscillator            : Off
+SCK period            : 0.0 us
+XTAL frequency        : 7.372800 MHz
+ 
+AVR device initialized and ready to accept instructions
+Device signature = 1E 95 0F (ATmega328P, ATA6614Q, LGT8F328P)
+ 
+Avrdude done.  Thank you.
+
+
+To download existing fw:
+$ avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -U flash:r:"download.hex":i
+
+To flash
+$ avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -v -U flash:w:IntrepidTimer_v2.02_Chip_P.hex:i
+
+
+Outputs in firmware:
+
+     450:	11 24       	eor	r1, r1
+     452:	1f be       	out	0x3f, r1	; 63
+
+     454:	cf ef       	ldi	r28, 0xFF	; 255
+     456:	d8 e0       	ldi	r29, 0x08	; 8
+     458:	de bf       	out	0x3e, r29	; 62
+     45a:	cd bf       	out	0x3d, r28	; 61
+
+All the unique writes
+
+      out	0x05, r20	; 5   * 1
+
+      out	0x1f, r1	; 31  * 1
+      out	0x20, r18	; 32  * 1
+      out	0x21, r24	; 33  * 2
+      out	0x22, r25	; 34  * 2
+
+      out	0x24, r24	; 36  * 3
+      out	0x25, r24	; 37  * 2
+
+      out	0x3d, r28	; 61  * 21
+      out	0x3e, r29	; 62  * 21
+      out	0x3f, r0	; 63  * 29
+
+are these:
+
+0x3E (0x5E) SPH – – – – – (SP10) SP9 SP8 13
+0x3D (0x5D) SPL SP7 SP6 SP5 SP4 SP3 SP2 SP1 SP0 13
+
+0x3F (0x5F) SREG I T H S V N Z C 10
+
+Timer
+0x25 (0x45) TCCR0B FOC0A FOC0B – – WGM02 CS02 CS01 CS00
+0x24 (0x44) TCCR0A COM0A1 COM0A0 COM0B1 COM0B0 – – WGM01
+
+0x22 (0x42) EEARH (EEPROM address register high byte) 20
+0x21 (0x41) EEARL EEPROM address register low byte 20
+0x20 (0x40) EEDR EEPROM data register 20
+0x1F (0x3F) EECR – – EEPM1 EEPM0 EERIE EEMPE EEPE EERE 20
+
+0x05 (0x25) PORTB PORTB7 PORTB6 PORTB5 PORTB4 PORTB3 PORTB2 PORTB1 PORTB0 72
+
+
+
+inputs in firmware:
+
+in _ , 0x20	; 32
+in _ , 0x24	; 36 * 2
+in _ , 0x25	; 37 * 2
+
+in _ , 0x3d	; 61 * 6
+in _ , 0x3e	; 62 * 6
+in _ , 0x3f	; 63 * 22
+
+
+
+All the writes 
+
+     184:	45 b9       	out	0x05, r20	; 5
+     452:	1f be       	out	0x3f, r1	; 63
+     458:	de bf       	out	0x3e, r29	; 62
+     45a:	cd bf       	out	0x3d, r28	; 61
+     65e:	84 bd       	out	0x24, r24	; 36
+     71c:	8f bf       	out	0x3f, r24	; 63
+     774:	9f bf       	out	0x3f, r25	; 63
+     79e:	8f bf       	out	0x3f, r24	; 63
+     7f0:	3f bf       	out	0x3f, r19	; 63
+     828:	de bf       	out	0x3e, r29	; 62
+     82a:	0f be       	out	0x3f, r0	; 63
+     82c:	cd bf       	out	0x3d, r28	; 61
+     93a:	de bf       	out	0x3e, r29	; 62
+     93c:	0f be       	out	0x3f, r0	; 63
+     93e:	cd bf       	out	0x3d, r28	; 61
+     a34:	2f bf       	out	0x3f, r18	; 63
+    17da:	de bf       	out	0x3e, r29	; 62
+    17dc:	0f be       	out	0x3f, r0	; 63
+    17de:	cd bf       	out	0x3d, r28	; 61
+    181c:	de bf       	out	0x3e, r29	; 62
+    181e:	0f be       	out	0x3f, r0	; 63
+    1820:	cd bf       	out	0x3d, r28	; 61
+    19a4:	de bf       	out	0x3e, r29	; 62
+    19a6:	0f be       	out	0x3f, r0	; 63
+    19a8:	cd bf       	out	0x3d, r28	; 61
+    1a28:	de bf       	out	0x3e, r29	; 62
+    1a2a:	0f be       	out	0x3f, r0	; 63
+    1a2c:	cd bf       	out	0x3d, r28	; 61
+    1d06:	0f be       	out	0x3f, r0	; 63
+    1d80:	0f be       	out	0x3f, r0	; 63
+    22d4:	de bf       	out	0x3e, r29	; 62
+    22d6:	0f be       	out	0x3f, r0	; 63
+    22d8:	cd bf       	out	0x3d, r28	; 61
+    22e0:	84 bd       	out	0x24, r24	; 36
+    22e6:	84 bd       	out	0x24, r24	; 36
+    22ec:	85 bd       	out	0x25, r24	; 37
+    22f2:	85 bd       	out	0x25, r24	; 37
+    2b2e:	de bf       	out	0x3e, r29	; 62
+    2b30:	0f be       	out	0x3f, r0	; 63
+    2b32:	cd bf       	out	0x3d, r28	; 61
+    2efa:	de bf       	out	0x3e, r29	; 62
+    2efc:	0f be       	out	0x3f, r0	; 63
+    2efe:	cd bf       	out	0x3d, r28	; 61
+    2f66:	de bf       	out	0x3e, r29	; 62
+    2f68:	0f be       	out	0x3f, r0	; 63
+    2f6a:	cd bf       	out	0x3d, r28	; 61
+    323a:	de bf       	out	0x3e, r29	; 62
+    323c:	0f be       	out	0x3f, r0	; 63
+    323e:	cd bf       	out	0x3d, r28	; 61
+    3282:	de bf       	out	0x3e, r29	; 62
+    3284:	0f be       	out	0x3f, r0	; 63
+    3286:	cd bf       	out	0x3d, r28	; 61
+    3506:	de bf       	out	0x3e, r29	; 62
+    3508:	0f be       	out	0x3f, r0	; 63
+    350a:	cd bf       	out	0x3d, r28	; 61
+    3702:	de bf       	out	0x3e, r29	; 62
+    3704:	0f be       	out	0x3f, r0	; 63
+    3706:	cd bf       	out	0x3d, r28	; 61
+    3a96:	de bf       	out	0x3e, r29	; 62
+    3a98:	0f be       	out	0x3f, r0	; 63
+    3a9a:	cd bf       	out	0x3d, r28	; 61
+    3bc0:	de bf       	out	0x3e, r29	; 62
+    3bc2:	0f be       	out	0x3f, r0	; 63
+    3bc4:	cd bf       	out	0x3d, r28	; 61
+    3d68:	de bf       	out	0x3e, r29	; 62
+    3d6a:	0f be       	out	0x3f, r0	; 63
+    3d6c:	cd bf       	out	0x3d, r28	; 61
+    3f7c:	de bf       	out	0x3e, r29	; 62
+    3f7e:	0f be       	out	0x3f, r0	; 63
+    3f80:	cd bf       	out	0x3d, r28	; 61
+    4188:	92 bd       	out	0x22, r25	; 34
+    418a:	81 bd       	out	0x21, r24	; 33
+    419a:	1f ba       	out	0x1f, r1	; 31
+    419c:	92 bd       	out	0x22, r25	; 34
+    419e:	81 bd       	out	0x21, r24	; 33
+    41a0:	20 bd       	out	0x20, r18	; 32
+    41aa:	0f be       	out	0x3f, r0	; 63
+    4ac2:	de bf       	out	0x3e, r29	; 62
+    4ac4:	0f be       	out	0x3f, r0	; 63
+    4ac6:	cd bf       	out	0x3d, r28	; 61
+    4af6:	de bf       	out	0x3e, r29	; 62
+    4af8:	0f be       	out	0x3f, r0	; 63
+    4afa:	cd bf       	out	0x3d, r28	; 61
+
+
+out	0x05, r20	; 5
+out	0x1f, r1	; 31
+out	0x20, r18	; 32
+out	0x21, r24	; 33
+out	0x22, r25	; 34
+out	0x24, r24	; 36
+out	0x25, r24	; 37
+out	0x3d, r28	; 61
+out	0x3e, r29	; 62
+out	0x3f, r0	; 63
+out	0x3f, r1	; 63
+out	0x3f, r18	; 63
+out	0x3f, r19	; 63
+out	0x3f, r24	; 63
+out	0x3f, r25	; 63
+
+
+Boot string "Intrepid Timer \0" at 168
+
+calls:
+
+     56 call 0x1c3e
+     25 call 0x4536
+     18 call 0x41b0
+     15 call 0xa20
+     11 call 0xca8
+     10 call 0x7cc
+     10 call 0x4266
+      9 call 0x4976
+      9 call 0x41ee
+      8 call 0xba2
+      8 call 0x4248
+      7 call 0xe78
+      7 call 0x6ce
+      7 call 0x18aa
+      7 call 0x188c
+      7 call 0x179e
+      7 call 0x15d4
+      6 call 0xb1a
+      6 call 0x1f58
+      5 call 0xa38
+      5 call 0x9bc
+      5 call 0x4164
+      5 call 0x176c
+      4 call 0xe64
+      4 call 0x7a2
+      4 call 0x72a
+      4 call 0x5a8
+      4 call 0x4204
+      4 call 0x187a
+      4 call 0x14f0
+      3 call 0xaba
+      3 call 0x4a4
+      3 call 0x1afc
+      3 call 0x182a
+      3 call 0x119a
+      2 call 0xcc0
+      2 call 0x816
+      2 call 0x67c
+      2 call 0x62a
+      2 call 0x49d6
+      2 call 0x42d0
+      2 call 0x42b6
+      2 call 0x4184
+      2 call 0x201e
+      2 call 0x1b9a
+      2 call 0x1ade
+      2 call 0x1a6c
+      2 call 0x1994
+      2 call 0x18ec
+      2 call 0x17cc
+      2 call 0x1612
+      2 call 0x1604
+      2 call 0x114c
+      1 call 0x4960
+      1 call 0x494a
+      1 call 0x4596
+      1 call 0x4528
+      1 call 0x451a
+      1 call 0x4408
+      1 call 0x42c2
+      1 call 0x428e
+      1 call 0x41de
+      1 call 0x4194
+      1 call 0x4172
+      1 call 0x22c4
+      1 call 0x1bce
+      1 call 0x1492
+      1 call 0x1218
+      1 call 0x11d6
+      1 call 0
+
+
+     68 White
+     91 1.0s
+     96 0.5s
+     9b 0.1s
+     a0 Yellow
+     a7 Magenta
+     af Cyan
+     b4 Blue
+     b9 Green
+     c3 7000k
+     c9 6500k
+     cf 5000k
+     d5 4000k
+     db 3000k
+     e1 Max Light
+     eb Custom4
+     f3 Custom3
+     fb Custom2
+    103 Custom1
+    15b v2.11
+    161 %-15s
+    168 Intrepid Timer 
+    1c6 %s%s%s%s
+    1d7 FLT:
+    1dc %s%s   
+    1e4   :  . 
+    1ec %s%s   
+    1f4 %02u:%02u.%1u
+    202 -- Focus Mode --
+    213 %s%s 
+    219   :  . 
+    221 %s%s 
+    227 %02u:%02u.%1u
+    235 C%03u  M%03u  Y%03u
+    249 %s%s %-16s
+    254 --Live--
+    260 %s%-16s
+    274 %s%s  	%u/%u
+    281 Settings
+    28d TimeStep
+    296 EditCustomScan
+    2a5 Saved
+    2ab SaveCurrentTime
+    2bb Scan
+    2c0 Color
+    2ca StartMode
+    2d4 %s:%03d  
+    2de %s %03d
+    2e6 BrightnessBW
+    2f3 safe+run+focus
+    302 Factory Reset
+    310 Cleared
+    338 w%03ur%03ug%03ub%03u
+    34d %s:%s   	
+    357 %s %s   	
+    361 Edit
+    366 Darkroom Disco
+    377 PB (a)
+    37e Error
+    384 %s:%0-16s
+    38e Chip
+    393 SysInfo
+    39b %-16s
+
+Atmega
+
+The I/O space definition of the ATmega328P is shown in Section “” on page 275.
+All ATmega328P I/Os and peripherals are placed in the I/O space. All I/O
+locations may be accessed by the LD/LDS/LDD and ST/STS/STD instructions,
+transferring data between the 32 general purpose working registers and the I/O
+space. I/O registers within the address range 0x00 - 0x1F are directly
+bit-accessible using the SBI and CBI instructions. In these registers, the
+value of single bits can be checked by using the SBIS and SBIC instructions.
+Refer to the instruction set section for more details. When using the I/O
+specific commands IN and OUT, the I/O addresses 0x00 - 0x3F must be used.  When
+addressing I/O registers as data space using LD and ST instructions, 0x20 must
+be added to these addresses. The ATmega328P is a complex microcontroller with
+more peripheral units than can be supported within the 64 location reserved in
+opcode for the IN and OUT instructions. For the extended I/O space from 0x60 -
+0xFF in SRAM, only the ST/STS/STD and LD/LDS/LDD instructions can be used.
+
+`
+R26 0x1A X-register Low Byte
+R27 0x1B X-register High Byte
+R28 0x1C Y-register Low Byte
+R29 0x1D Y-register High Byte
+R30 0x1E Z-register Low Byte
+R31 0x1F Z-register High Byte
+
+
