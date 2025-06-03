@@ -54,6 +54,24 @@ func main() {
 	p := machine.PD4
 	p.Configure(machine.PinConfig{Mode: machine.PinOutput})
 
+	butInt := func(p machine.Pin) {
+		println("Button pressed", p)
+	}
+
+	bPins := []machine.Pin{
+		machine.D7,  // T+
+		machine.D8,  // T-
+		machine.D9,  // Run
+		machine.D10, // Focus
+		machine.D2,  // Cancel
+		machine.D11, // Mode
+		machine.D12, // Safelight
+	}
+	for i := range bPins {
+		bPins[i].Configure(machine.PinConfig{Mode: machine.PinInputPullup})
+		bPins[i].SetInterrupt(machine.PinToggle, butInt)
+	}
+
 	ws := ws2812.NewSK6812(p)
 	count := 56
 	leds := make([]color.RGBA, count)
