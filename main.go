@@ -9,56 +9,18 @@ import (
 	"tinygo.org/x/drivers/ws2812"
 )
 
-func main() {
-	time.Sleep(2 * time.Second)
-	machine.InitADC()
+const (
+	tickChanLen = 4
+	ledCount    = 56
+)
 
-	//	led := machine.LED
-	//	led.Configure(machine.PinConfig{Mode: machine.PinOutput})
+var (
+	tickChan      = make(chan struct{}, tickChanLen)
+	potUpdateChan = make(chan potUpdate, tickChanLen)
 
-	contrast := machine.ADC{machine.ADC0}
-	contrast.Configure(machine.ADCConfig{})
+	// hardware setup
 
-	cyan := machine.ADC{machine.ADC1}
-	cyan.Configure(machine.ADCConfig{})
-
-	magenta := machine.ADC{machine.ADC2}
-	magenta.Configure(machine.ADCConfig{})
-
-	yellow := machine.ADC{machine.ADC3}
-	yellow.Configure(machine.ADCConfig{})
-
-	// Test the display
-	i2c := machine.I2C0
-	err := i2c.Configure(machine.I2CConfig{})
-	if err != nil {
-		println("could not configure I2C:", err)
-		return
-	}
-
-	machine.I2C0.Configure(machine.I2CConfig{
-		Frequency: machine.TWI_FREQ_400KHZ,
-	})
-
-	lcd := hd44780i2c.New(machine.I2C0, 0x27) // some modules have address 0x3F
-
-	lcd.Configure(hd44780i2c.Config{
-		Width:       16, // required
-		Height:      2,  // required
-		CursorOn:    true,
-		CursorBlink: true,
-	})
-	lcd.Print([]byte("hello"))
-
-	// test LED panel
-	p := machine.PD4
-	p.Configure(machine.PinConfig{Mode: machine.PinOutput})
-
-	butInt := func(p machine.Pin) {
-		println("Button pressed", p)
-	}
-
-	bPins := []machine.Pin{
+	buttonPins = []machine.Pin{
 		machine.D7,  // T+
 		machine.D8,  // T-
 		machine.D9,  // Run
@@ -67,41 +29,173 @@ func main() {
 		machine.D11, // Mode
 		machine.D12, // Safelight
 	}
-	for i := range bPins {
-		bPins[i].Configure(machine.PinConfig{Mode: machine.PinInputPullup})
-		bPins[i].SetInterrupt(machine.PinToggle, butInt)
+	buttonPinsConfig = machine.PinConfig{Mode: machine.PinInputPullup}
+
+	ledPin       = machine.PD4
+	ledPinConfig = machine.PinConfig{Mode: machine.PinOutput}
+	leds         [ledCount]color.RGBA
+	ledDriver    = ws2812.NewSK6812(ledPin)
+
+	contrast = machine.ADC{machine.ADC0}
+	cyan     = machine.ADC{machine.ADC1}
+	magenta  = machine.ADC{machine.ADC2}
+	yellow   = machine.ADC{machine.ADC3}
+
+	i2c       = machine.I2C0
+	i2cConfig = machine.I2CConfig{
+		Frequency: machine.TWI_FREQ_400KHZ,
 	}
 
-	ws := ws2812.NewSK6812(p)
-	count := 56
-	leds := make([]color.RGBA, count)
+	lcdAddr   = uint8(0x27)
+	lcd       = hd44780i2c.New(i2c, lcdAddr)
+	lcdConfig = hd44780i2c.Config{
+		Width:  16,
+		Height: 2,
+	}
+
+	stringTable = [][]byte{
+		[]byte("Hello: "),
+		[]byte("C: "),
+		[]byte("M: "),
+		[]byte("Y: "),
+	}
+)
+
+func ticker() {
+	for {
+		time.Sleep(10 * time.Millisecond)
+		select {
+		case tickChan <- (struct{}{}):
+		default:
+		}
+	}
+}
+
+type potUpdateStatus int
+
+const (
+	conPotUpdated     = 1
+	cyanPotUpdated    = 2
+	magentaPotUpdated = 4
+	yellowPotUpdated  = 8
+)
+
+type potUpdate struct {
+	vals    [4]uint16
+	updated uint8
+}
+
+func potWatcher(tick <-chan struct{}) {
+	conV := contrast.Get()
+	cyanV := cyan.Get()
+	magentaV := magenta.Get()
+	yellowV := yellow.Get()
+
+	for _ = range tick {
+		var updated uint8
+
+		if newConV := contrast.Get(); newConV != conV {
+			updated |= conPotUpdated
+			conV = newConV
+		}
+
+		if newCyanV := cyan.Get(); newCyanV != cyanV {
+			updated |= cyanPotUpdated
+			cyanV = newCyanV
+		}
+
+		if newMagentaV := magenta.Get(); newMagentaV != magentaV {
+			updated |= magentaPotUpdated
+			magentaV = newMagentaV
+		}
+
+		if newYellowV := yellow.Get(); newYellowV != yellowV {
+			updated |= yellowPotUpdated
+			yellowV = newYellowV
+		}
+
+		if updated == 0 {
+			continue
+		}
+
+		update := potUpdate{
+			updated: updated,
+		}
+		update.vals[0] = conV
+		update.vals[1] = cyanV
+		update.vals[2] = magentaV
+		update.vals[3] = yellowV
+
+		potUpdateChan <- update
+	}
+}
+
+func setLEDPanel(c color.RGBA) {
+	for i := range leds {
+		leds[i] = c
+	}
+}
+
+func main() {
+	time.Sleep(2 * time.Second)
+
+	// setup
+
+	machine.InitADC()
+
+	contrast.Configure(machine.ADCConfig{})
+	cyan.Configure(machine.ADCConfig{})
+	magenta.Configure(machine.ADCConfig{})
+	yellow.Configure(machine.ADCConfig{})
+
+	err := i2c.Configure(machine.I2CConfig{})
+	if err != nil {
+		println("could not configure I2C:", err)
+		return
+	}
+
+	i2c.Configure(i2cConfig)
+	lcd.Configure(lcdConfig)
+
+	ledPin.Configure(ledPinConfig)
+
+	butInt := func(p machine.Pin) {
+		p.Get()
+		println("Button ", p, " ", p.Get())
+	}
+
+	for i := range buttonPins {
+		buttonPins[i].Configure(buttonPinsConfig)
+		buttonPins[i].SetInterrupt(machine.PinFalling|machine.PinRising, butInt)
+	}
+
+	// down here is using stuff
+
+	lcd.Print(stringTable[0])
+
 	for i := range leds {
 		switch i {
 		case 0:
 			leds[i] = color.RGBA{R: 0xff, G: 0x0, B: 0x0}
-		case count - 1:
+		case ledCount - 1:
 			leds[i] = color.RGBA{R: 0x0, G: 0x0, B: 0xff}
 		default:
-			leds[i] = color.RGBA{R: 0x0, G: 0x0, B: 0x00}
 		}
 	}
-	ws.WriteColors(leds[:])
 
-	id := machine.Device
+	setLEDPanel(color.RGBA{R: 0x0, G: 0x0, B: 0x00, A: 0xff})
+
+	go ticker()
+	go potWatcher(tickChan)
 
 	for {
-		time.Sleep(1 * time.Second)
-		println("Device ID:", id)
-		println(time.Now().Unix())
-
-		conV := contrast.Get()
-		println("contrast: ", conV)
-
-		cyanV := cyan.Get()
-		println("cyan: ", cyanV)
-		magentaV := magenta.Get()
-		println("magenta: ", magentaV)
-		yellowV := yellow.Get()
-		println("yellow: ", yellowV)
+		select {
+		case upd := <-potUpdateChan:
+			println("updated: ", upd.updated)
+			println("contrast: ", upd.vals[0])
+			println("cyan: ", upd.vals[1])
+			println("magenta: ", upd.vals[2])
+			println("yellow: ", upd.vals[3])
+		}
 	}
 }

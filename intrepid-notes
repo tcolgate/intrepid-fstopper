@@ -1,18 +1,9 @@
-ins:
-- 4 pots
-- 7 buttons
+# Notes
 
-outs:
-- 2 line display
-- LED panel
-- LED safelight
+This is just a collection of notes put together during the exploration of
+the device
 
-Connectiviy:
-- display is i2c
-- pots are on A1 (CONTRAST)  A2 A3 A4
-- Buttons D7,8,9,10 (posibly D2)
-- LED is D4 or D3 (D4 has clock/counter, so possible. D3 is PWM, so more likely)
-
+## Presentation over USB
 
 Jun 01 11:43:14 pinot kernel: usb 1-1: new full-speed USB device number 5 using xhci_hcd
 Jun 01 11:43:14 pinot kernel: usb 1-1: New USB device found, idVendor=1a86, idProduct=7523, bcdDevice= 2.54
@@ -65,6 +56,45 @@ $ avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -U flash:r:"download.hex
 To flash
 $ avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -v -U flash:w:IntrepidTimer_v2.02_Chip_P.hex:i
 
+
+# Discovered hardware info
+
+ins:
+- 4 pots
+- 7 buttons
+
+outs:
+- 2 line display
+- LED panel
+- LED safelight (not bothering with)
+
+Connectiviy:
+# Hardware setup
+
+	ledPin       = machine.D4
+
+	buttonPins = []machine.Pin{
+		machine.D7,  // T+
+		machine.D8,  // T-
+		machine.D9,  // Run
+		machine.D10, // Focus
+		machine.D2,  // Cancel
+		machine.D11, // Mode
+		machine.D12, // Safelight
+	}
+
+	contrast = machine.ADC0
+	cyan     = machine.ADC1
+	magenta  = machine.ADC2
+	yellow   = machine.ADC3
+
+	lcdAddr   = uint8(0x27)
+	lcd       = hd44780i2c.New(i2c, lcdAddr)
+
+
+# Old stuff
+
+## Stuff grokked from firmware
 
 Outputs in firmware:
 
