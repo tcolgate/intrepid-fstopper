@@ -1,10 +1,12 @@
 package main
 
 import (
+	"image/color"
 	"machine"
 	"time"
 
 	"tinygo.org/x/drivers/hd44780i2c"
+	"tinygo.org/x/drivers/ws2812"
 )
 
 func main() {
@@ -48,9 +50,25 @@ func main() {
 	})
 	lcd.Print([]byte("hello"))
 
-	// For efficiency, it's best to get the device ID once and cache it
-	// (e.g. on RP2040 XIP flash and interrupts disabled for period of
-	// retrieving the hardware ID from ROM chip)
+	// test LED panel
+	p := machine.PD4
+	p.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	ws := ws2812.NewSK6812(p)
+	count := 56
+	leds := make([]color.RGBA, count)
+	for i := range leds {
+		switch i {
+		case 0:
+			leds[i] = color.RGBA{R: 0xff, G: 0x0, B: 0x0}
+		case count - 1:
+			leds[i] = color.RGBA{R: 0x0, G: 0x0, B: 0xff}
+		default:
+			leds[i] = color.RGBA{R: 0x0, G: 0x0, B: 0x00}
+		}
+	}
+	ws.WriteColors(leds[:])
+
 	id := machine.Device
 
 	for {
