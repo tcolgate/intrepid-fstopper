@@ -6,8 +6,8 @@ flash:
 		-baudrate 9600 \
 		-monitor \
 		-target ./timer-1.2-target.json \
-		-scheduler=tasks \
-		-no-debug
+		-no-debug \
+		-print-allocs main\
 
 build:
 	tinygo build \
@@ -15,7 +15,6 @@ build:
 		-baudrate 9600 \
 		-monitor \
 		-target ./timer-1.2-target.json \
-		-scheduler=tasks \
 		-no-debug \
 		-o intrep-ftimer.hex
 	du -h intrep-ftimer.hex

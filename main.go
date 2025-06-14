@@ -11,21 +11,23 @@ import (
 )
 
 const (
-	tickChanLen = 0
+	tickChanLen = 4
 	ledCount    = 56
 
 	halfStop  = 141 // = 100 * (2 ^ (1 / 2))
 	thirdStop = 125 // = 100 * (2 ^ (1 / 3))
+
+	longPress = 1 * time.Second
 )
 
-type mode int
+type mode uint8
 
 const (
 	modeBW = iota
 	modeFocus
 )
 
-type subMode int
+type subMode uint8
 
 const (
 	modeBWPrint = iota
@@ -33,8 +35,11 @@ const (
 )
 
 var (
-	tickChan      = make(chan struct{}, tickChanLen)
-	potUpdateChan = make(chan potUpdate, 4)
+	tickChan        = make(chan struct{}, tickChanLen)
+	butTickChan     = make(chan struct{}, tickChanLen)
+	potUpdateChan   = make(chan potUpdate, 4)
+	butIntEventChan = make(chan butIntEvent, 4)
+	butEventChan    = make(chan butEvent, 4)
 
 	// hardware setup
 
@@ -47,6 +52,7 @@ var (
 		machine.D11, // Mode
 		machine.D12, // Safelight
 	}
+
 	buttonPinsConfig = machine.PinConfig{Mode: machine.PinInputPullup}
 
 	ledPin       = machine.PD4
@@ -78,27 +84,26 @@ var (
 		[]byte("Y: "),
 	}
 
+	// Application state
 	activeMode mode
 	lastMode   mode
+
+	butManager = &butMgr{
+		tickChan:  butTickChan,
+		intEvents: butIntEventChan,
+		events:    butEventChan,
+	}
+
+	potManager = &potMgr{}
 )
 
-func ticker() {
-	for {
-		time.Sleep(10 * time.Millisecond)
-		select {
-		case tickChan <- (struct{}{}):
-		default:
-		}
-	}
-}
-
-type potUpdateStatus int
+type potUpdateStatus uint8
 
 const (
-	conPotUpdated     = 1
-	cyanPotUpdated    = 2
-	magentaPotUpdated = 4
-	yellowPotUpdated  = 8
+	conPotUpdated = 1 << iota
+	cyanPotUpdated
+	magentaPotUpdated
+	yellowPotUpdated
 )
 
 type potUpdate struct {
@@ -106,11 +111,32 @@ type potUpdate struct {
 	updated uint8
 }
 
-type buttonState struct {
+func pinToButton(p machine.Pin) button {
+	switch p {
+	case machine.D7:
+		return butTimePlus
+	case machine.D8:
+		return butTimeMinus
+	case machine.D9:
+		return butRun
+	case machine.D10:
+		return butFocus
+	case machine.D2:
+		return butCancel
+	case machine.D11:
+		return butMode
+	case machine.D12:
+		return butSafelight
+
+	default:
+		// should never get here
+		return 0
+	}
 }
 
 func potChanged(o, n uint16) bool {
-	minDiff := uint16(10)
+	// This gives us 128 valid pot positions
+	minDiff := uint16(128)
 
 	if o > n {
 		return (minDiff < (o - n))
@@ -123,51 +149,52 @@ func potChanged(o, n uint16) bool {
 	return false
 }
 
-func potWatcher(tick <-chan struct{}) {
-	conV := contrast.Get()
-	cyanV := cyan.Get()
-	magentaV := magenta.Get()
-	yellowV := yellow.Get()
+type potMgr struct {
+	lastConV    uint16
+	lastCyanV   uint16
+	lastMagentV uint16
+	lastYellowV uint16
+}
 
-	for _ = range tick {
-		var updated uint8
+func (mgr *potMgr) process(t time.Time) {
+	var updated uint8
 
-		if newConV := contrast.Get(); potChanged(newConV, conV) {
-			updated |= conPotUpdated
-			conV = newConV
-		}
+	if newConV := contrast.Get(); potChanged(newConV, mgr.lastConV) {
+		updated |= conPotUpdated
+		mgr.lastConV = newConV
+	}
 
-		if newCyanV := cyan.Get(); potChanged(newCyanV, cyanV) {
-			updated |= cyanPotUpdated
-			cyanV = newCyanV
-		}
+	if newCyanV := cyan.Get(); potChanged(newCyanV, mgr.lastCyanV) {
+		updated |= cyanPotUpdated
+		mgr.lastCyanV = newCyanV
+	}
 
-		if newMagentaV := magenta.Get(); potChanged(newMagentaV, magentaV) {
-			updated |= magentaPotUpdated
-			magentaV = newMagentaV
-		}
+	if newMagentaV := magenta.Get(); potChanged(newMagentaV, mgr.lastMagentV) {
+		updated |= magentaPotUpdated
+		mgr.lastMagentV = newMagentaV
+	}
 
-		if newYellowV := yellow.Get(); potChanged(newYellowV, yellowV) {
-			updated |= yellowPotUpdated
-			yellowV = newYellowV
-		}
+	if newYellowV := yellow.Get(); potChanged(newYellowV, mgr.lastYellowV) {
+		updated |= yellowPotUpdated
+		mgr.lastYellowV = newYellowV
+	}
 
-		if updated == 0 {
-			continue
-		}
+	if updated == 0 {
+		return
+	}
 
-		update := potUpdate{
-			updated: updated,
-		}
-		update.vals[0] = conV
-		update.vals[1] = cyanV
-		update.vals[2] = magentaV
-		update.vals[3] = yellowV
+	update := potUpdate{
+		updated: updated,
+	}
 
-		select {
-		case potUpdateChan <- update:
-		default:
-		}
+	update.vals[0] = mgr.lastConV
+	update.vals[1] = mgr.lastCyanV
+	update.vals[2] = mgr.lastMagentV
+	update.vals[3] = mgr.lastYellowV
+
+	select {
+	case potUpdateChan <- update:
+	default:
 	}
 }
 
@@ -195,14 +222,28 @@ func configureDevices() error {
 
 	ledPin.Configure(ledPinConfig)
 
-	butInt := func(p machine.Pin) {
-		p.Get()
-		println("Button ", p, " ", p.Get())
+	butManager = &butMgr{
+		tickChan:  butTickChan,
+		intEvents: butIntEventChan,
+		events:    butEventChan,
 	}
 
+	/*
+		butInt := func(p machine.Pin) {
+			ev := butIntEvent{
+				button: pinToButton(p),
+				status: p.Get(),
+			}
+
+			select {
+			case butIntEventChan <- ev:
+			default:
+			}
+		}
+	*/
 	for i := range buttonPins {
 		buttonPins[i].Configure(buttonPinsConfig)
-		buttonPins[i].SetInterrupt(machine.PinFalling|machine.PinRising, butInt)
+		buttonPins[i].SetInterrupt(machine.PinFalling|machine.PinRising, butManager.Int)
 	}
 
 	return nil
@@ -210,32 +251,38 @@ func configureDevices() error {
 
 func main() {
 	time.Sleep(2 * time.Second)
+	println("starting")
 	configureDevices()
-
-	// setup
+	println("configured")
 
 	// down here is using stuff
 
-	for i := range leds {
-		switch i {
-		case 0:
-			leds[i] = color.RGBA{R: 0xff, G: 0x0, B: 0x0}
-		case ledCount - 1:
-			leds[i] = color.RGBA{R: 0x0, G: 0x0, B: 0xff}
-		default:
+	/*
+		for i := range leds {
+			switch i {
+			case 0:
+				leds[i] = color.RGBA{R: 0xff, G: 0x0, B: 0x0}
+			case ledCount - 1:
+				leds[i] = color.RGBA{R: 0x0, G: 0x0, B: 0xff}
+			default:
+			}
 		}
-	}
 
-	setLEDPanel(color.RGBA{R: 0x0, G: 0x0, B: 0x00, A: 0xff})
+		setLEDPanel(color.RGBA{R: 0x0, G: 0x0, B: 0x00, A: 0xff})
+	*/
 
-	go ticker()
-	go potWatcher(tickChan)
-
+	println("setting lcd")
 	lcd.ClearDisplay()
 	lcd.SetCursor(0, 0)
 	lcd.Print(stringTable[0])
+	println("string set")
 
 	for {
+		t := time.Now()
+
+		butManager.process(t)
+		potManager.process(t)
+
 		select {
 		case upd := <-potUpdateChan:
 			var out num.NumBuf
@@ -244,6 +291,10 @@ func main() {
 				lcd.SetCursor(0, 1)
 				lcd.Print(out[:])
 			}
+		case upd := <-butEventChan:
+			println("butEv ", upd.button, " ev ", upd.buttonEventType)
+		default:
+			time.Sleep(10 * time.Microsecond)
 		}
 	}
 }
