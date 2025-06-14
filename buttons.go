@@ -23,9 +23,9 @@ const (
 type buttonEventType uint8
 
 const (
-	butEventPress    buttonEventType = iota // a single press
-	butEventLongPres                        // a long press, interpretted as one events
-	butEventHold                            // a held press, interpretted as an ongoing event
+	butEventPress     buttonEventType = iota // a single press
+	butEventLongPress                        // a long press, interpretted as one events
+	butEventHold                             // a held press, interpretted as an ongoing event
 )
 
 // bufIntEvent holds information from the button interrupts
@@ -41,7 +41,6 @@ type butEvent struct {
 
 // bufMgr translates button interrupt events into button UI events
 type butMgr struct {
-	tickChan  <-chan struct{}
 	intEvents <-chan butIntEvent
 	events    chan<- butEvent
 
@@ -64,26 +63,49 @@ func buttonToIndex(b button) int {
 
 func (m *butMgr) process(t time.Time) {
 	var unset time.Time
+
+	// process any buffered interrupt events
+loop:
 	for {
 		select {
 		case u := <-m.intEvents:
-			switch {
-			case 0 != (u.button & butDoesHold):
-				fallthrough
-			case 0 != (u.button & butDoesLongPress):
-				fallthrough
-			default: // button has simple press behaviour
-				butIndx := buttonToIndex(u.button)
-				if butIndx < 0 || butIndx > 6 {
-					continue
+			butIndx := buttonToIndex(u.button)
+			if butIndx < 0 || butIndx > 6 {
+				// unknown button, should log this
+				continue
+			}
+
+			switch u.status {
+			case false: // buttonUp
+				if m.downTimes[butIndx] == unset {
+					break
 				}
-				switch u.status {
-				case false: // buttonUp
+				switch {
+				case 0 != (u.button & butDoesHold):
+				case 0 != (u.button & butDoesLongPress):
 					d := time.Since(m.downTimes[butIndx])
-					print("d ", d)
-					m.downTimes[butIndx] = unset
-				case true: // buttonDown
-					m.downTimes[butIndx] = t
+					if d > 1*time.Second {
+						m.events <- butEvent{
+							button:          u.button,
+							buttonEventType: butEventLongPress,
+						}
+					} else {
+						m.events <- butEvent{
+							button:          u.button,
+							buttonEventType: butEventPress,
+						}
+					}
+				default:
+				}
+
+				m.downTimes[butIndx] = unset
+			case true: // buttonDown
+				m.downTimes[butIndx] = t
+				switch {
+				case 0 != (u.button & butDoesLongPress):
+				case 0 != (u.button & butDoesHold):
+					fallthrough // hold buttons should produce a press on quick press too
+				default:
 					m.events <- butEvent{
 						button:          u.button,
 						buttonEventType: butEventPress,
@@ -91,7 +113,28 @@ func (m *butMgr) process(t time.Time) {
 				}
 			}
 		default:
-			return
+			break loop
+		}
+	}
+
+	// produce events for long press and hold
+	for i, t := range m.downTimes {
+		if t == unset {
+			continue
+		}
+		d := time.Since(t)
+		but := button(1 << i)
+		switch {
+		case 0 != (but & butDoesHold):
+		case 0 != (but & butDoesLongPress):
+			if d < (1 * time.Second) {
+				continue
+			}
+			m.events <- butEvent{
+				button:          but,
+				buttonEventType: butEventLongPress,
+			}
+			m.downTimes[i] = unset
 		}
 	}
 }

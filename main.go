@@ -11,8 +11,7 @@ import (
 )
 
 const (
-	tickChanLen = 4
-	ledCount    = 56
+	ledCount = 56
 
 	halfStop  = 141 // = 100 * (2 ^ (1 / 2))
 	thirdStop = 125 // = 100 * (2 ^ (1 / 3))
@@ -35,8 +34,6 @@ const (
 )
 
 var (
-	tickChan        = make(chan struct{}, tickChanLen)
-	butTickChan     = make(chan struct{}, tickChanLen)
 	potUpdateChan   = make(chan potUpdate, 4)
 	butIntEventChan = make(chan butIntEvent, 4)
 	butEventChan    = make(chan butEvent, 4)
@@ -89,7 +86,6 @@ var (
 	lastMode   mode
 
 	butManager = &butMgr{
-		tickChan:  butTickChan,
 		intEvents: butIntEventChan,
 		events:    butEventChan,
 	}
@@ -149,55 +145,6 @@ func potChanged(o, n uint16) bool {
 	return false
 }
 
-type potMgr struct {
-	lastConV    uint16
-	lastCyanV   uint16
-	lastMagentV uint16
-	lastYellowV uint16
-}
-
-func (mgr *potMgr) process(t time.Time) {
-	var updated uint8
-
-	if newConV := contrast.Get(); potChanged(newConV, mgr.lastConV) {
-		updated |= conPotUpdated
-		mgr.lastConV = newConV
-	}
-
-	if newCyanV := cyan.Get(); potChanged(newCyanV, mgr.lastCyanV) {
-		updated |= cyanPotUpdated
-		mgr.lastCyanV = newCyanV
-	}
-
-	if newMagentaV := magenta.Get(); potChanged(newMagentaV, mgr.lastMagentV) {
-		updated |= magentaPotUpdated
-		mgr.lastMagentV = newMagentaV
-	}
-
-	if newYellowV := yellow.Get(); potChanged(newYellowV, mgr.lastYellowV) {
-		updated |= yellowPotUpdated
-		mgr.lastYellowV = newYellowV
-	}
-
-	if updated == 0 {
-		return
-	}
-
-	update := potUpdate{
-		updated: updated,
-	}
-
-	update.vals[0] = mgr.lastConV
-	update.vals[1] = mgr.lastCyanV
-	update.vals[2] = mgr.lastMagentV
-	update.vals[3] = mgr.lastYellowV
-
-	select {
-	case potUpdateChan <- update:
-	default:
-	}
-}
-
 func setLEDPanel(c color.RGBA) {
 	for i := range leds {
 		leds[i] = c
@@ -223,7 +170,6 @@ func configureDevices() error {
 	ledPin.Configure(ledPinConfig)
 
 	butManager = &butMgr{
-		tickChan:  butTickChan,
 		intEvents: butIntEventChan,
 		events:    butEventChan,
 	}
