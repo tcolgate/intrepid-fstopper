@@ -10,13 +10,30 @@ import (
 )
 
 const (
-	tickChanLen = 4
+	tickChanLen = 0
 	ledCount    = 56
+
+	halfStop  = 141 // = 100 * (2 ^ (1 / 2))
+	thirdStop = 125 // = 100 * (2 ^ (1 / 3))
+)
+
+type mode int
+
+const (
+	modeBW = iota
+	modeFocus
+)
+
+type subMode int
+
+const (
+	modeBWPrint = iota
+	modeBWTestStrip
 )
 
 var (
 	tickChan      = make(chan struct{}, tickChanLen)
-	potUpdateChan = make(chan potUpdate, tickChanLen)
+	potUpdateChan = make(chan potUpdate, 4)
 
 	// hardware setup
 
@@ -59,6 +76,9 @@ var (
 		[]byte("M: "),
 		[]byte("Y: "),
 	}
+
+	activeMode mode
+	lastMode   mode
 )
 
 func ticker() {
@@ -85,6 +105,23 @@ type potUpdate struct {
 	updated uint8
 }
 
+type buttonState struct {
+}
+
+func potChanged(o, n uint16) bool {
+	minDiff := uint16(10)
+
+	if o > n {
+		return (minDiff < (o - n))
+	}
+
+	if o < n {
+		return (minDiff < (n - o))
+	}
+
+	return false
+}
+
 func potWatcher(tick <-chan struct{}) {
 	conV := contrast.Get()
 	cyanV := cyan.Get()
@@ -94,22 +131,22 @@ func potWatcher(tick <-chan struct{}) {
 	for _ = range tick {
 		var updated uint8
 
-		if newConV := contrast.Get(); newConV != conV {
+		if newConV := contrast.Get(); potChanged(newConV, conV) {
 			updated |= conPotUpdated
 			conV = newConV
 		}
 
-		if newCyanV := cyan.Get(); newCyanV != cyanV {
+		if newCyanV := cyan.Get(); potChanged(newCyanV, cyanV) {
 			updated |= cyanPotUpdated
 			cyanV = newCyanV
 		}
 
-		if newMagentaV := magenta.Get(); newMagentaV != magentaV {
+		if newMagentaV := magenta.Get(); potChanged(newMagentaV, magentaV) {
 			updated |= magentaPotUpdated
 			magentaV = newMagentaV
 		}
 
-		if newYellowV := yellow.Get(); newYellowV != yellowV {
+		if newYellowV := yellow.Get(); potChanged(newYellowV, yellowV) {
 			updated |= yellowPotUpdated
 			yellowV = newYellowV
 		}
@@ -126,7 +163,10 @@ func potWatcher(tick <-chan struct{}) {
 		update.vals[2] = magentaV
 		update.vals[3] = yellowV
 
-		potUpdateChan <- update
+		select {
+		case potUpdateChan <- update:
+		default:
+		}
 	}
 }
 
@@ -136,11 +176,7 @@ func setLEDPanel(c color.RGBA) {
 	}
 }
 
-func main() {
-	time.Sleep(2 * time.Second)
-
-	// setup
-
+func configureDevices() error {
 	machine.InitADC()
 
 	contrast.Configure(machine.ADCConfig{})
@@ -150,8 +186,7 @@ func main() {
 
 	err := i2c.Configure(machine.I2CConfig{})
 	if err != nil {
-		println("could not configure I2C:", err)
-		return
+		return err
 	}
 
 	i2c.Configure(i2cConfig)
@@ -169,9 +204,16 @@ func main() {
 		buttonPins[i].SetInterrupt(machine.PinFalling|machine.PinRising, butInt)
 	}
 
-	// down here is using stuff
+	return nil
+}
 
-	lcd.Print(stringTable[0])
+func main() {
+	time.Sleep(2 * time.Second)
+	configureDevices()
+
+	// setup
+
+	// down here is using stuff
 
 	for i := range leds {
 		switch i {
@@ -188,14 +230,19 @@ func main() {
 	go ticker()
 	go potWatcher(tickChan)
 
+	lcd.ClearDisplay()
+	lcd.SetCursor(0, 0)
+	lcd.Print(stringTable[0])
+
 	for {
 		select {
 		case upd := <-potUpdateChan:
-			println("updated: ", upd.updated)
-			println("contrast: ", upd.vals[0])
-			println("cyan: ", upd.vals[1])
-			println("magenta: ", upd.vals[2])
-			println("yellow: ", upd.vals[3])
+			var out numBuf
+			if (upd.updated & conPotUpdated) > 0 {
+				numOut(&out, num(upd.vals[0]))
+				lcd.SetCursor(0, 1)
+				lcd.Print(out[:])
+			}
 		}
 	}
 }
