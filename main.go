@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"intrepidfstopper/num"
 	"machine"
 	"time"
 
@@ -237,9 +238,9 @@ func main() {
 	for {
 		select {
 		case upd := <-potUpdateChan:
-			var out numBuf
+			var out num.NumBuf
 			if (upd.updated & conPotUpdated) > 0 {
-				numOut(&out, num(upd.vals[0]))
+				num.Out(&out, num.Num(upd.vals[0]))
 				lcd.SetCursor(0, 1)
 				lcd.Print(out[:])
 			}
