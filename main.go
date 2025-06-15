@@ -85,12 +85,11 @@ var (
 	activeMode mode
 	lastMode   mode
 
+	potManager = &potMgr{}
 	butManager = &butMgr{
 		intEvents: butIntEventChan,
 		events:    butEventChan,
 	}
-
-	potManager = &potMgr{}
 )
 
 type potUpdateStatus uint8
@@ -168,11 +167,6 @@ func configureDevices() error {
 	lcd.Configure(lcdConfig)
 
 	ledPin.Configure(ledPinConfig)
-
-	butManager = &butMgr{
-		intEvents: butIntEventChan,
-		events:    butEventChan,
-	}
 
 	/*
 		butInt := func(p machine.Pin) {

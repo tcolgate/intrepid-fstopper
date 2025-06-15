@@ -2,6 +2,7 @@ package main
 
 import (
 	"machine"
+	"math/bits"
 	"time"
 )
 
@@ -48,17 +49,7 @@ type butMgr struct {
 }
 
 func buttonToIndex(b button) int {
-	indx := 0
-	for {
-		if b == 1 {
-			return indx
-		}
-		indx += 1
-		b >>= 1
-		if b == 0 {
-			return 0
-		}
-	}
+	return bits.TrailingZeros8(uint8(b))
 }
 
 func (m *butMgr) process(t time.Time) {
