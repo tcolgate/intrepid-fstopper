@@ -18,6 +18,9 @@ const (
 
 	ButDoesLongPress = ButFocus | ButMode
 	ButDoesHold      = ButTimePlus | ButTimeMinus
+
+	// not sure why, but these two are inverted
+	butInverted = ButMode | ButSafelight
 )
 
 type ButtonEventType uint8
@@ -63,8 +66,25 @@ loop:
 				continue
 			}
 
-			switch u.Status {
-			case false: // buttonUp
+			status := u.Status
+			if 0 != (u.Button & butInverted) {
+				status = !status
+			}
+
+			switch status {
+			case false: // Down
+				m.DownTimes[butIndx] = now
+				switch {
+				case 0 != (u.Button & ButDoesLongPress):
+				case 0 != (u.Button & ButDoesHold):
+					fallthrough // hold buttons should produce a press on quick press too
+				default:
+					m.Events <- ButEvent{
+						Button:          u.Button,
+						ButtonEventType: ButEventPress,
+					}
+				}
+			case true: // Up
 				dt := m.DownTimes[butIndx]
 				if dt == 0 {
 					break
@@ -88,18 +108,6 @@ loop:
 				}
 
 				m.DownTimes[butIndx] = 0
-			case true: // buttonDown
-				m.DownTimes[butIndx] = now
-				switch {
-				case 0 != (u.Button & ButDoesLongPress):
-				case 0 != (u.Button & ButDoesHold):
-					fallthrough // hold buttons should produce a press on quick press too
-				default:
-					m.Events <- ButEvent{
-						Button:          u.Button,
-						ButtonEventType: ButEventPress,
-					}
-				}
 			}
 		default:
 			break loop
