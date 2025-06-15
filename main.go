@@ -2,7 +2,7 @@ package main
 
 import (
 	"image/color"
-	"intrepidfstopper/internal"
+	"intrepidfstopper/button"
 	"intrepidfstopper/num"
 	"machine"
 	"time"
@@ -83,11 +83,11 @@ var (
 	lastMode   mode
 
 	potUpdateChan   = make(chan potUpdate, 8)
-	butIntEventChan = make(chan internal.ButIntEvent, 8)
-	butEventChan    = make(chan internal.ButEvent, 8)
+	butIntEventChan = make(chan button.IntEvent, 8)
+	butEventChan    = make(chan button.Event, 8)
 
 	potManager = &potMgr{}
-	butManager = &internal.ButMgr{
+	butManager = &button.Mgr{
 		IntEvents: butIntEventChan,
 		Events:    butEventChan,
 	}
@@ -126,22 +126,24 @@ func setLEDPanel(c color.RGBA) {
 	}
 }
 
-func pinToButton(p machine.Pin) internal.Button {
+// pinToButton converts the hardware pin number to
+// an internal number that is easy to work with
+func pinToButton(p machine.Pin) button.Button {
 	switch p {
 	case machine.D7:
-		return internal.ButTimePlus
+		return button.TimePlus
 	case machine.D8:
-		return internal.ButTimeMinus
+		return button.TimeMinus
 	case machine.D9:
-		return internal.ButRun
+		return button.Run
 	case machine.D10:
-		return internal.ButFocus
+		return button.Focus
 	case machine.D2:
-		return internal.ButCancel
+		return button.Cancel
 	case machine.D11:
-		return internal.ButMode
+		return button.Mode
 	case machine.D12:
-		return internal.ButSafelight
+		return button.Safelight
 
 	default:
 		// should never get here
@@ -168,7 +170,7 @@ func configureDevices() error {
 	ledPin.Configure(ledPinConfig)
 
 	butInt := func(p machine.Pin) {
-		ev := internal.ButIntEvent{
+		ev := button.IntEvent{
 			Button: pinToButton(p),
 			Status: p.Get(),
 		}
@@ -235,7 +237,7 @@ func main() {
 				lcd.Print(out[:])
 			}
 		case ev := <-butEventChan:
-			println("evb ", ev.Button, "evt", ev.ButtonEventType)
+			println("evb ", ev.Button, "evt", ev.EventType)
 		}
 	}
 }
