@@ -216,7 +216,7 @@ func main() {
 	timeChan := make(chan int64, 1)
 	go func() {
 		for {
-			time.Sleep(1 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 			select {
 			case timeChan <- time.Now().UnixNano():
 			default:
