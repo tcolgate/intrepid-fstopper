@@ -21,14 +21,17 @@ const (
 
 	// not sure why, but these two are inverted
 	butInverted = ButMode | ButSafelight
+
+	ButLongPressTime = 1 * time.Second
+	ButHoldPressTime = 100 * time.Millisecond
 )
 
 type ButtonEventType uint8
 
 const (
-	ButEventPress     ButtonEventType = iota // a single press
-	ButEventLongPress                        // a long press, interpretted as one events
-	ButEventHold                             // a held press, interpretted as an ongoing event
+	ButEventPress      ButtonEventType = iota // a single press
+	ButEventLongPress                         // a long press, interpretted as one events
+	ButEventHoldRepeat                        // a held press, interpretted as an ongoing event
 )
 
 // ButIntEvent holds information from the button interrupts
@@ -47,7 +50,8 @@ type ButMgr struct {
 	IntEvents <-chan ButIntEvent
 	Events    chan<- ButEvent
 
-	DownTimes [7]int64
+	DownTimes     [7]int64
+	lastSentTimes [7]int64
 }
 
 func buttonToIndex(b Button) int {
@@ -83,6 +87,7 @@ loop:
 						Button:          u.Button,
 						ButtonEventType: ButEventPress,
 					}
+					m.lastSentTimes[butIndx] = now
 				}
 			case true: // Up
 				dt := m.DownTimes[butIndx]
@@ -93,7 +98,7 @@ loop:
 				case 0 != (u.Button & ButDoesHold):
 				case 0 != (u.Button & ButDoesLongPress):
 					d := now - dt
-					if d > int64(1*time.Second) {
+					if d > int64(ButLongPressTime) {
 						m.Events <- ButEvent{
 							Button:          u.Button,
 							ButtonEventType: ButEventLongPress,
@@ -104,6 +109,7 @@ loop:
 							ButtonEventType: ButEventPress,
 						}
 					}
+					m.lastSentTimes[butIndx] = now
 				default:
 				}
 
@@ -116,8 +122,10 @@ loop:
 
 	// produce events for long press and hold
 	var dt int64
+	var lst int64
 	for i := range len(m.DownTimes) {
 		dt = m.DownTimes[i]
+		lst = m.lastSentTimes[i]
 		if dt == 0 {
 			continue
 		}
@@ -125,8 +133,20 @@ loop:
 		but := Button(1 << i)
 		switch {
 		case 0 != (but & ButDoesHold):
+			if d < int64(ButLongPressTime-ButHoldPressTime) {
+				continue
+			}
+
+			if (now - lst) < int64(ButHoldPressTime) {
+				continue
+			}
+			m.Events <- ButEvent{
+				Button:          but,
+				ButtonEventType: ButEventHoldRepeat,
+			}
+			m.lastSentTimes[i] = now
 		case 0 != (but & ButDoesLongPress):
-			if d < int64(1*time.Second) {
+			if d < int64(ButLongPressTime) {
 				continue
 			}
 			m.Events <- ButEvent{
@@ -134,6 +154,7 @@ loop:
 				ButtonEventType: ButEventLongPress,
 			}
 			m.DownTimes[i] = 0
+			m.lastSentTimes[i] = now
 		}
 	}
 }
