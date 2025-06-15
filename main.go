@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"intrepidfstopper/internal"
 	"intrepidfstopper/num"
 	"machine"
 	"time"
@@ -34,10 +35,6 @@ const (
 )
 
 var (
-	potUpdateChan   = make(chan potUpdate, 4)
-	butIntEventChan = make(chan butIntEvent, 4)
-	butEventChan    = make(chan butEvent, 4)
-
 	// hardware setup
 
 	buttonPins = []machine.Pin{
@@ -85,14 +82,16 @@ var (
 	activeMode mode
 	lastMode   mode
 
+	potUpdateChan   = make(chan potUpdate, 8)
+	butIntEventChan = make(chan internal.ButIntEvent, 8)
+	butEventChan    = make(chan internal.ButEvent, 8)
+
 	potManager = &potMgr{}
-	butManager = &butMgr{
-		intEvents: butIntEventChan,
-		events:    butEventChan,
+	butManager = &internal.ButMgr{
+		IntEvents: butIntEventChan,
+		Events:    butEventChan,
 	}
 )
-
-type potUpdateStatus uint8
 
 const (
 	conPotUpdated = 1 << iota
@@ -104,29 +103,6 @@ const (
 type potUpdate struct {
 	vals    [4]uint16
 	updated uint8
-}
-
-func pinToButton(p machine.Pin) button {
-	switch p {
-	case machine.D7:
-		return butTimePlus
-	case machine.D8:
-		return butTimeMinus
-	case machine.D9:
-		return butRun
-	case machine.D10:
-		return butFocus
-	case machine.D2:
-		return butCancel
-	case machine.D11:
-		return butMode
-	case machine.D12:
-		return butSafelight
-
-	default:
-		// should never get here
-		return 0
-	}
 }
 
 func potChanged(o, n uint16) bool {
@@ -150,6 +126,29 @@ func setLEDPanel(c color.RGBA) {
 	}
 }
 
+func pinToButton(p machine.Pin) internal.Button {
+	switch p {
+	case machine.D7:
+		return internal.ButTimePlus
+	case machine.D8:
+		return internal.ButTimeMinus
+	case machine.D9:
+		return internal.ButRun
+	case machine.D10:
+		return internal.ButFocus
+	case machine.D2:
+		return internal.ButCancel
+	case machine.D11:
+		return internal.ButMode
+	case machine.D12:
+		return internal.ButSafelight
+
+	default:
+		// should never get here
+		panic("pin is not valid")
+	}
+}
+
 func configureDevices() error {
 	machine.InitADC()
 
@@ -168,22 +167,21 @@ func configureDevices() error {
 
 	ledPin.Configure(ledPinConfig)
 
-	/*
-		butInt := func(p machine.Pin) {
-			ev := butIntEvent{
-				button: pinToButton(p),
-				status: p.Get(),
-			}
-
-			select {
-			case butIntEventChan <- ev:
-			default:
-			}
+	butInt := func(p machine.Pin) {
+		ev := internal.ButIntEvent{
+			Button: pinToButton(p),
+			Status: p.Get(),
 		}
-	*/
+
+		select {
+		case butIntEventChan <- ev:
+		default:
+		}
+	}
+
 	for i := range buttonPins {
 		buttonPins[i].Configure(buttonPinsConfig)
-		buttonPins[i].SetInterrupt(machine.PinFalling|machine.PinRising, butManager.Int)
+		buttonPins[i].SetInterrupt(machine.PinFalling|machine.PinRising, butInt)
 	}
 
 	return nil
@@ -191,9 +189,7 @@ func configureDevices() error {
 
 func main() {
 	time.Sleep(2 * time.Second)
-	println("starting")
 	configureDevices()
-	println("configured")
 
 	// down here is using stuff
 
@@ -211,19 +207,26 @@ func main() {
 		setLEDPanel(color.RGBA{R: 0x0, G: 0x0, B: 0x00, A: 0xff})
 	*/
 
-	println("setting lcd")
 	lcd.ClearDisplay()
 	lcd.SetCursor(0, 0)
 	lcd.Print(stringTable[0])
-	println("string set")
+
+	timeChan := make(chan int64, 1)
+	go func() {
+		for {
+			time.Sleep(1 * time.Millisecond)
+			select {
+			case timeChan <- time.Now().UnixNano():
+			default:
+			}
+		}
+	}()
 
 	for {
-		t := time.Now()
-
-		butManager.process(t)
-		potManager.process(t)
-
 		select {
+		case t := <-timeChan:
+			butManager.Process(t)
+			potManager.process(t)
 		case upd := <-potUpdateChan:
 			var out num.NumBuf
 			if (upd.updated & conPotUpdated) > 0 {
@@ -231,10 +234,8 @@ func main() {
 				lcd.SetCursor(0, 1)
 				lcd.Print(out[:])
 			}
-		case upd := <-butEventChan:
-			println("butEv ", upd.button, " ev ", upd.buttonEventType)
-		default:
-			time.Sleep(10 * time.Microsecond)
+		case ev := <-butEventChan:
+			println("evb ", ev.Button, "evt", ev.ButtonEventType)
 		}
 	}
 }
