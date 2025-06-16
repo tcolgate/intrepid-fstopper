@@ -1,58 +1,60 @@
 use <lib.scad>
 
 module trayOuter(
-  w,
-  d,
-  h,
+  width,
+  depth,
+  height=3,
   cornerRadius=5,
 ) {
-    translate([(w * -0.5),(d * -0.5),0]){
+    translate([(width * -0.5),(depth * -0.5),0]){
       minkowski(){
-        cube([w,d,(h/2)]);
-        cylinder(r=cornerRadius,h=(h/2));
+        cube([width,depth,(height/2)]);
+        cylinder(r=cornerRadius,h=(height/2));
     }
   }
 }
 
 module trayInner(
-  w,
-  h,
+  width,
+  height=1.5,
   cornerRadius=2,
 ) {
-    translate([((w-cornerRadius) * -0.5),((w-cornerRadius) * -0.5),0]){
+    translate([((width-cornerRadius) * -0.5),((width-cornerRadius) * -0.5),0]){
       minkowski(){
-        cube([(w-cornerRadius),(w-cornerRadius),(h/2)]);
-        cylinder(r=cornerRadius,h=(h/2));
+        cube([(width-cornerRadius),(width-cornerRadius),(height/2)]);
+        cylinder(r=cornerRadius,h=(height/2));
       }
     }
 }
 
 module trayInsert(
-  w,
-  h,
+  width,
+  height=1.5,
   filterSize,
   cornerRadius=2,
+  fudge=1,
 ) {
     difference(){
       union(){       
-        trayInner(w,h,cornerRadius);
+        trayInner(width,height,cornerRadius);
         for (i = [0, 90, 180, 270]){
           rotate([0, 0, i]){
-            translate([(w/2 - 1),0,(h/2)]){
-              cylinder(h,r=3,center=true);
+            translate([(width/2 - 1),0,(height/2)]){
+              cylinder(h=height,r=3,center=true);
             };
           };
         };            
       };
-      cylinder(h=10,r=(filterSize/2 - 1),center=true);
+      cylinder(h=(height*2.2),r=(filterSize/2 - 1),center=true);
     };
 };
 
 
 module filterHolder(
-  width, 
-  depth, 
-  height, 
+  width,
+  depth,
+  height=3,
+  base=1.5,
   filterSize
 ) {
   union(){
@@ -60,11 +62,11 @@ module filterHolder(
       difference(){
         difference(){
           // tray outer
-          trayOuter(w=width,d=depth,h=height);
-          // tray inner void (1.5 is the thickness of the bottom plate)
-          translate([0,0,1.5]){
-            trayInner(w=filterSize,h=height,cornerRadius=0);
-          }
+          trayOuter(width=width,depth=depth,height=height);
+          // tray inner void
+          #translate([0,0,(height - base)]){
+            trayInner(width=filterSize,height=(height+1),cornerRadius=0);
+          };
         };
         // central hole
         cylinder(h=10,r=(filterSize/2 - 1),center=true);
@@ -76,7 +78,7 @@ module filterHolder(
               //stem
               cube([11,10,2],center=true);
               //handle
-              translate([-5,0,1.5]){
+              translate([-5,0,base]){
                   cube([2.5,13,5],center=true);
               }
           }
@@ -86,16 +88,16 @@ module filterHolder(
 
 
 filterHolder(
-  width=52.5,
-  depth=52.5,
-  height=2.5,
-  filterSize=50
+  width=63.8,
+  depth=63.8,
+  height=3,
+  filterSize=50.3
 );
 
-translate([60,0,0]){
+translate([75,0,0]){
   trayInsert(
-    w=50,
-    h=1.5,
-    filterSize=50
+    width=63.8,
+    height=1.5,
+    filterSize=50.3
   );
 };
