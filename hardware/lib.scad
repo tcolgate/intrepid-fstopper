@@ -6,9 +6,9 @@ module trayOuter(
   height=3,
   cornerRadius=5,
 ) {
-    translate([(width * -0.5),(depth * -0.5),0]){
+    translate([((width-(2*cornerRadius)) * -0.5),((depth-(2*cornerRadius)) * -0.5),0]){
       minkowski(){
-        cube([width,depth,(height/2)]);
+        cube([(width-(2*cornerRadius)),(depth-(2*cornerRadius)),(height/2)]);
         cylinder(r=cornerRadius,h=(height/2));
     }
   }
@@ -19,9 +19,9 @@ module trayInner(
   height=1.5,
   cornerRadius=2,
 ) {
-    translate([((width-cornerRadius) * -0.5),((width-cornerRadius) * -0.5),0]){
+    translate([((width-(2*cornerRadius)) * -0.5),((width-(2*cornerRadius)) * -0.5),0]){
       minkowski(){
-        cube([(width-cornerRadius),(width-cornerRadius),(height/2)]);
+        cube([(width-(2*cornerRadius)),(width-(2*cornerRadius)),(height/2)]);
         cylinder(r=cornerRadius,h=(height/2));
       }
     }
@@ -40,7 +40,7 @@ module trayInsert(
         for (i = [0, 90, 180, 270]){
           rotate([0, 0, i]){
             translate([(width/2 - 1),0,(height/2)]){
-              cylinder(h=height,r=3,center=true);
+              cylinder(h=height,r=2,center=true);
             };
           };
         };            
@@ -73,7 +73,7 @@ module filterHolder(
       }
 
       // handle
-      translate([(-width/2 -10),0,1]){
+      translate([(-width/2 - 5),0,1]){
           union(){
               //stem
               cube([11,10,2],center=true);
@@ -96,7 +96,7 @@ filterHolder(
 
 translate([75,0,0]){
   trayInsert(
-    width=63.8,
+    width=50.3,
     height=1.5,
     filterSize=50.3
   );
