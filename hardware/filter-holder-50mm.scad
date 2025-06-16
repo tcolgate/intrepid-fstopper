@@ -1,8 +1,8 @@
 use <lib.scad>
 
 filterHolder(
-  width=52.5,
-  depth=52.5,
-  height=2.5,
-  filterSize=50
+  width=63.8,
+  depth=63.8,
+  height=3,
+  filterSize=50.3
 );
