@@ -19,8 +19,6 @@ module trayInner(
   h,
   cornerRadius=2,
 ) {
-    *cube([w,w,h],center = true);
-
     translate([(w * -0.5),(w * -0.5),0]){
       cube([w,w,h]);
        
@@ -30,6 +28,19 @@ module trayInner(
     }
   }
 }
+
+module trayInsert(
+  w,
+  h,
+  filterSize,
+  cornerRadius=2,
+) {
+    difference(){
+      trayInner(w,h,cornerRadius);
+      cylinder(h=10,r=(filterSize/2 - 1),center=true);
+    };
+};
+
 
 module filterCarrier(
   width, 
@@ -42,10 +53,10 @@ module filterCarrier(
       difference(){
         difference(){
           // tray outer
-          trayOuter(w=width,d=depth,h=height)
-          // tray inner void
-          translate([0,0,(h-1.5)]){
-            #trayInner(w=filterSize,h=(10));    
+          trayOuter(w=width,d=depth,h=height);
+          // tray inner void (1.5 is the thickness of the bottom plate)
+          translate([0,0,1.5]){
+            trayInner(w=filterSize,h=h);    
           }
         };
         // central hole
@@ -73,4 +84,11 @@ filterCarrier(
   height=2.5,
   filterSize=50
 );
-*trayInner(w=50,h=(1.5));;
+
+translate([60,0,0]){
+  trayInsert(
+    w=50,
+    h=1.5,
+    filterSize=50
+  );
+};
