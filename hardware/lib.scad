@@ -78,8 +78,8 @@ module filterHolder(
               //stem
               cube([11,10,2],center=true);
               //handle
-              translate([-5,0,base]){
-                  cube([2.5,13,5],center=true);
+              translate([-5,0,(2-(height/2))]){
+                  cube([2.5,13,height],center=true);
               }
           }
       }
