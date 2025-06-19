@@ -24,15 +24,47 @@ type mode uint8
 
 const (
 	modeBW = iota
+	modeRGB
 	modeFocus
 )
 
 type subMode uint8
 
 const (
-	modeBWPrint = iota
-	modeBWTestStrip
+	modePrint subMode = iota
+	modeTestStrip
 )
+
+type stateBits int
+
+const (
+	statebitFocusColour stateBits = 1 << iota
+)
+
+func setStateBit(s *stateBits, b stateBits, v bool) {
+	*s = *s | b
+}
+
+func clearStateBit(s *stateBits, b stateBits, v bool) {
+	*s = *s & (^b)
+}
+
+func checkStateBit(s *stateBits, b stateBits) bool {
+	return (*s & b) > 0
+}
+
+func toggleStateBit(s *stateBits, b stateBits) {
+	*s = *s ^ b
+}
+
+type stateData struct {
+	flags stateBits
+
+	lastMode       mode // when returning from Focus
+	lastSubMode    subMode
+	currentMode    mode
+	currentSubMode subMode
+}
 
 var (
 	// hardware setup
@@ -73,9 +105,7 @@ var (
 
 	stringTable = [][]byte{
 		[]byte("Hello: "),
-		[]byte("C: "),
-		[]byte("M: "),
-		[]byte("Y: "),
+		[]byte("-- Focus  --"),
 	}
 
 	// Application state
@@ -85,12 +115,15 @@ var (
 	potUpdateChan   = make(chan potUpdate, 8)
 	butIntEventChan = make(chan button.IntEvent, 8)
 	butEventChan    = make(chan button.Event, 8)
+	updateState     = make(chan struct{}, 1)
 
 	potManager = &potMgr{}
 	butManager = &button.Mgr{
 		IntEvents: butIntEventChan,
 		Events:    butEventChan,
 	}
+
+	state = stateData{}
 )
 
 const (
@@ -196,22 +229,8 @@ func main() {
 	// down here is using stuff
 
 	/*
-		for i := range leds {
-			switch i {
-			case 0:
-				leds[i] = color.RGBA{R: 0xff, G: 0x0, B: 0x0}
-			case ledCount - 1:
-				leds[i] = color.RGBA{R: 0x0, G: 0x0, B: 0xff}
-			default:
-			}
-		}
-
 		setLEDPanel(color.RGBA{R: 0x0, G: 0x0, B: 0x00, A: 0xff})
 	*/
-
-	lcd.ClearDisplay()
-	lcd.SetCursor(0, 0)
-	lcd.Print(stringTable[0])
 
 	timeChan := make(chan int64, 1)
 	go func() {
@@ -237,7 +256,33 @@ func main() {
 				lcd.Print(out[:])
 			}
 		case ev := <-butEventChan:
-			println("evb ", ev.Button, "evt", ev.EventType)
+			switch ev.Button {
+			case button.Focus:
+				switch ev.EventType {
+				case button.EventPress:
+					if state.currentMode != modeFocus {
+						state.lastMode = state.currentMode
+						state.lastSubMode = state.currentSubMode
+					} else {
+						state.currentMode = state.lastMode
+						state.currentSubMode = state.lastSubMode
+					}
+					updateState <- struct{}{}
+				case button.EventLongPress:
+					toggleStateBit(&state.flags, statebitFocusColour)
+					updateState <- struct{}{}
+				}
+			}
+		case <-updateState:
+			lcd.ClearDisplay()
+			lcd.SetCursor(0, 0)
+			switch state.currentMode {
+			case modeFocus:
+				lcd.Print(stringTable[1])
+				setLEDPanel(color.RGBA{})
+			case modeBW:
+				lcd.Print(stringTable[0])
+			}
 		}
 	}
 }
