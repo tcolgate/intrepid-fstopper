@@ -89,28 +89,61 @@ module filterHolder(
 
 // Ilford Filter under lens carrier
 
+module attachmentPeg (
+  pegWidth = 8,
+  pegHeight = 16,
+  pegBridgeLen, // This is the length from the back edge of carrier to the front flat of the peg
+){
+      union(){
+         translate([-pegWidth/2,0,pegHeight/2]){
+           rotate([0,90,0]){
+             difference(){
+               union(){
+                   translate([pegHeight/2-pegHeight/4,0,0]){
+                     cube([pegHeight/4,(pegWidth),(pegWidth)]);
+                   }
+                   translate([pegHeight/2-pegHeight/4,pegWidth/2,0]){
+                     cube([(pegHeight/4),pegBridgeLen,(pegWidth)]);
+                   };
+               }
+               translate([-pegHeight/8,0,-0.5]){
+                 cylinder(r=((pegHeight+0.5)/2),h=(pegWidth+1));
+               };
+             };
+           };
+         };
+         translate([0,0,pegHeight/2]){
+         cylinder(r=(pegWidth/2),h=pegHeight,center=true);         }
+      };
+}
+
 module mainBody (
   width = 66.3,
   depth = 69.3,
   wall = 2,
   rearGap = 4,
   aperture = 57.4,
-  pegWidth = 8,
-  pegHeight = 16
+  pegWidth = 7.5,
+  pegHeight = 16.5,
+  pegOffsetX = 18,
+  pegOffsetY = 45,
 ){
+   $forwardShift = (((aperture - depth)/2)+rearGap);
+   $backEdgeLine = aperture/2 + rearGap;
+   $pegBridgeLen = ((pegOffsetY - (pegWidth/2)) - $backEdgeLine);
    union(){
-      translate([-18,45,0]){
-        union(){
-          translate([-(pegWidth/2),(-(pegWidth/2) - 10),(-wall/2)]){
-            cube([pegWidth,(pegWidth + 10),wall]);
-          };
-          translate([0,0,(-pegWidth + (wall/2))]){
-            cylinder(r=(pegWidth/2),h=(pegHeight),center=true);
-          };
+      translate([(pegOffsetX),(pegOffsetY),wall/2]){
+        rotate([180,0,0]){
+          attachmentPeg (
+            pegWidth = pegWidth,
+            pegHeight = pegHeight,
+            pegBridgeLen = $pegBridgeLen
+          );
         };
+        #cylinder(r=1,h=10,center=true);
       };
       difference(){
-          translate([0,(((aperture - depth)/2)+rearGap),0]){
+          translate([0,$forwardShift,0]){
               cube([width,depth,wall],center=true);
           };
           cylinder(h=(wall+2),r=(aperture/2),center=true);
@@ -135,5 +168,10 @@ module mainBody (
   );
 };
 
-mainBody(
+mainBody();
+
+*attachmentPeg (
+  pegWidth = 7.5,
+  pegHeight = 16,
+  pegBridgeLen= 10 // This is the length from the back edge of carrier to the front flat of the pe
 );
