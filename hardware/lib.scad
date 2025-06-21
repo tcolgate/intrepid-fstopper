@@ -1,5 +1,6 @@
 use <lib.scad>
 
+// Filter Holders with a retaining insert
 module trayOuter(
   width,
   depth,
@@ -86,18 +87,53 @@ module filterHolder(
   }
 };
 
+// Ilford Filter under lens carrier
 
-filterHolder(
+module mainBody (
+  width = 66.3,
+  depth = 69.3,
+  wall = 2,
+  rearGap = 4,
+  aperture = 57.4,
+  pegWidth = 8,
+  pegHeight = 16
+){
+   union(){
+      translate([-18,45,0]){
+        union(){
+          translate([-(pegWidth/2),(-(pegWidth/2) - 10),(-wall/2)]){
+            cube([pegWidth,(pegWidth + 10),wall]);
+          };
+          translate([0,0,(-pegWidth + (wall/2))]){
+            cylinder(r=(pegWidth/2),h=(pegHeight),center=true);
+          };
+        };
+      };
+      difference(){
+          translate([0,(((aperture - depth)/2)+rearGap),0]){
+              cube([width,depth,wall],center=true);
+          };
+          cylinder(h=(wall+2),r=(aperture/2),center=true);
+      }
+  }
+};
+
+
+
+*filterHolder(
   width=63.8,
   depth=63.8,
   height=3,
   filterSize=50.3
 );
 
-translate([75,0,0]){
+*translate([75,0,0]){
   trayInsert(
     width=50.3,
     height=1.5,
     filterSize=50.3
   );
 };
+
+mainBody(
+);
