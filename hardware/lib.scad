@@ -93,22 +93,31 @@ module attachmentPeg (
   pegWidth = 8,
   pegHeight = 16,
   pegBridgeLen, // This is the length from the back edge of carrier to the front flat of the peg
+  pegHolderDiameter = 16,
+  pegBridgeWidth=32,
+  pegBridgeHeight=16,
 ){
       union(){
          translate([-pegWidth/2,0,pegHeight/2]){
            rotate([0,90,0]){
              difference(){
                union(){
-                   translate([pegHeight/2-pegHeight/4,0,0]){
-                     cube([pegHeight/4,(pegWidth),(pegWidth)]);
+                   translate([0,0,0]){
+                     cube([pegHeight/2,(pegWidth),(pegWidth)]);
                    }
-                   translate([pegHeight/2-pegHeight/4,pegWidth/2,0]){
-                     cube([(pegHeight/4),pegBridgeLen,(pegWidth)]);
+                   translate([pegHeight/2-pegBridgeHeight,pegWidth/2,0]){
+                     cube([(pegBridgeHeight),pegBridgeLen,(pegWidth)]);
                    };
                }
                translate([-pegHeight/8,0,-0.5]){
-                 cylinder(r=((pegHeight+0.5)/2),h=(pegWidth+1));
-               };
+                   
+                 union(){
+                   cylinder(r=((pegHolderDiameter+0.2)/2),h=(pegBridgeWidth+1));
+                   translate([-pegHolderDiameter,-pegHolderDiameter/2,0]){
+                     cube([pegBridgeHeight+0.2,pegHolderDiameter,(pegBridgeWidth+1)]);
+                   };
+                  };
+                };
              };
            };
          };
@@ -123,28 +132,47 @@ module mainBody (
   wall = 2,
   rearGap = 4,
   aperture = 57.4,
-  pegWidth = 7.5,
-  pegHeight = 16.5,
-  pegOffsetX = 18,
+  pegWidth = 8,
+  pegHeight = 16,
+  pegOffsetX = 14,
   pegOffsetY = 45,
+  pegHolderDiameter = 16,
+  pegBridgeWidth=32,
+  pegBridgeHeight=16,
 ){
    $forwardShift = (((aperture - depth)/2)+rearGap);
    $backEdgeLine = aperture/2 + rearGap;
    $pegBridgeLen = ((pegOffsetY - (pegWidth/2)) - $backEdgeLine);
    union(){
-      translate([(pegOffsetX),(pegOffsetY),wall/2]){
+      translate([(pegOffsetX),(pegOffsetY),pegBridgeHeight - wall/2]){
         rotate([180,0,0]){
           attachmentPeg (
             pegWidth = pegWidth,
             pegHeight = pegHeight,
-            pegBridgeLen = $pegBridgeLen
+            pegBridgeLen = $pegBridgeLen,
+            pegHolderDiameter = pegHolderDiameter,
+            pegBridgeWidth = pegBridgeWidth,
+            pegBridgeHeight = pegBridgeHeight
           );
         };
-        #cylinder(r=1,h=10,center=true);
+        // This is here just to show the registration to pegOffset
+        *cylinder(r=1,h=10,center=true);
       };
       difference(){
           translate([0,$forwardShift,0]){
+              #union(){
               cube([width,depth,wall],center=true);
+               translate([-width/2-wall/2,0,pegBridgeHeight/2 - wall/2]){
+                cube([wall,depth,pegBridgeHeight],center=true);
+              };
+              translate([width/2+wall/2,0,pegBridgeHeight/2 - wall/2]){
+                cube([wall,depth,pegBridgeHeight],center=true);
+              };
+              translate([0,depth/2+wall/2,pegBridgeHeight/2 - wall/2]){
+                #cube([width+2*wall,wall,pegBridgeHeight],center=true);
+              };
+            };
+              
           };
           cylinder(h=(wall+2),r=(aperture/2),center=true);
       }
