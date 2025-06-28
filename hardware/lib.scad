@@ -91,7 +91,7 @@ module filterHolder(
 
 module attachmentPeg (
   pegWidth = 8,
-  pegHeight = 16,
+  pegHeight = 20,
   pegBridgeLen, // This is the length from the back edge of carrier to the front flat of the peg
   pegHolderDiameter = 16,
   pegBridgeWidth=32,
@@ -133,12 +133,12 @@ module mainBody (
   rearGap = 4,
   aperture = 57.4,
   pegWidth = 8,
-  pegHeight = 16,
+  pegHeight = 20,
   pegOffsetX = 14,
   pegOffsetY = 45,
   pegHolderDiameter = 16,
   pegBridgeWidth=32,
-  pegBridgeHeight=16,
+  pegBridgeHeight=20,
 ){
    $forwardShift = (((aperture - depth)/2)+rearGap);
    $backEdgeLine = aperture/2 + rearGap;
