@@ -1,0 +1,44 @@
+% Preamble: \pgfplotsset{width=7cm,compat=1.18}
+\documentclass{article}
+\usepackage{pgfplots}
+\usepackage{pdflscape}
+\pgfplotsset{compat=1.5}
+
+\begin{document}
+\begin{landscape}
+\begin{tikzpicture}
+\usetikzlibrary{plotmarks}
+\begin{axis}[
+    title=\jobname,
+    width=18cm,
+    height=10cm,
+    xlabel={LogE},
+    xmin=0,
+    xmax=3.5,
+    ylabel={D},
+    ymin=0,
+    ymax=2.5,
+    ticklabel style = {font=\tiny},
+    xtick distance=0.1,
+    minor x tick num=5,
+    ytick distance=0.1,
+    minor y tick num=5,
+    grid=both,
+    grid style={line width=.1pt, draw=gray!10},
+    major grid style={line width=.2pt,draw=gray!50},
+    every node near coord/.append style={font=\tiny}
+]
+    \addplot [gray,nodes near coords,point meta=explicit symbolic,mark=|] table  [meta=Step,y=Vis, x=LogE, col sep=space] {\jobname.dat};
+    \addplot [gray,dotted,mark=none] table  [y=BFvis, x=LogE, col sep=space] {\jobname.dat};
+    \addplot [gray,dashed,mark=none] table  [y=BFvis+0.1, x=LogE, col sep=space] {\jobname.dat};
+    \addplot [blue,mark=|] table  [y=BlueNormal, x=LogE, col sep=space] {\jobname.dat};
+    \addplot [blue,dotted,mark=none] table  [y=BFblue, x=LogE, col sep=space] {\jobname.dat};
+    \addplot [blue,dashed,mark=none] table  [y=BFblue+0.1, x=LogE, col sep=space] {\jobname.dat};
+    \addplot [green!60!black,mark=|] table [y=GreenNormal, x=LogE, col sep=space] {\jobname.dat};
+    \addplot [green!60!black,dotted,mark=none] table [y=BFgreen, x=LogE, col sep=space] {\jobname.dat};
+    \addplot [green!60!black,dashed,mark=none] table [y=BFgreen+0.1, x=LogE, col sep=space] {\jobname.dat};
+
+\end{axis}
+\end{tikzpicture}
+\end{landscape}
+\end{document}
