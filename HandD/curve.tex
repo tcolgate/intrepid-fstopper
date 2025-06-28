@@ -2,6 +2,7 @@
 \documentclass{article}
 \usepackage{pgfplots}
 \usepackage{pdflscape}
+\usepackage{xstring}
 \pgfplotsset{compat=1.5}
 
 \begin{document}
@@ -31,12 +32,14 @@
     \addplot [gray,nodes near coords,point meta=explicit symbolic,mark=|] table  [meta=Step,y=Vis, x=LogE, col sep=space] {\jobname.dat};
     \addplot [gray,dotted,mark=none] table  [y=BFvis, x=LogE, col sep=space] {\jobname.dat};
     \addplot [gray,dashed,mark=none] table  [y=BFvis+0.1, x=LogE, col sep=space] {\jobname.dat};
-    \addplot [blue,mark=|] table  [y=BlueNormal, x=LogE, col sep=space] {\jobname.dat};
-    \addplot [blue,dotted,mark=none] table  [y=BFblue, x=LogE, col sep=space] {\jobname.dat};
-    \addplot [blue,dashed,mark=none] table  [y=BFblue+0.1, x=LogE, col sep=space] {\jobname.dat};
-    \addplot [green!60!black,mark=|] table [y=GreenNormal, x=LogE, col sep=space] {\jobname.dat};
-    \addplot [green!60!black,dotted,mark=none] table [y=BFgreen, x=LogE, col sep=space] {\jobname.dat};
-    \addplot [green!60!black,dashed,mark=none] table [y=BFgreen+0.1, x=LogE, col sep=space] {\jobname.dat};
+    \IfSubStr{\jobname}{Pyro}{
+      \addplot [blue,mark=|] table  [y=BlueNormal, x=LogE, col sep=space] {\jobname.dat};
+      \addplot [blue,dotted,mark=none] table  [y=BFblue, x=LogE, col sep=space] {\jobname.dat};
+      \addplot [blue,dashed,mark=none] table  [y=BFblue+0.1, x=LogE, col sep=space] {\jobname.dat};
+      \addplot [green!60!black,mark=|] table [y=GreenNormal, x=LogE, col sep=space] {\jobname.dat};
+      \addplot [green!60!black,dotted,mark=none] table [y=BFgreen, x=LogE, col sep=space] {\jobname.dat};
+      \addplot [green!60!black,dashed,mark=none] table [y=BFgreen+0.1, x=LogE, col sep=space] {\jobname.dat};
+    }
 
 \end{axis}
 \end{tikzpicture}
