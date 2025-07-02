@@ -22,16 +22,16 @@
     ymin=0,
     ymax=2.5,
     ticklabel style = {font=\tiny},
-    xtick distance=0.1,
-    minor x tick num=3,
-    ytick distance=0.1,
-    minor y tick num=3,
+    xtick distance=0.15,
+    minor x tick num=14,
+    ytick distance=0.2,
+    minor y tick num=9,
     grid=both,
     grid style={line width=.1pt, draw=gray!10},
     major grid style={line width=.2pt,draw=gray!50},
     every node near coord/.append style={font=\tiny}
 ]
-    \addplot [gray,nodes near coords,point meta=explicit symbolic,mark=|] table  [meta=Step,y=Vis, x=LogE, col sep=space] {\jobname.dat};
+    \addplot [gray,nodes near coords,nodes near coords align={anchor=north},point meta=explicit symbolic,mark=|] table  [meta=Step,y=Vis, x=LogE, col sep=space] {\jobname.dat};
     \addplot [gray,dotted,mark=none] table  [y=BFvis, x=LogE, col sep=space] {\jobname.dat};
     \addplot [gray,dashed,mark=none] table  [y=BFvis+0.1, x=LogE, col sep=space] {\jobname.dat};
     \IfSubStr*{\jobname}{Pyro}{
