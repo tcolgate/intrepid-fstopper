@@ -7,7 +7,7 @@ type potMgr struct {
 	lastYellowV uint16
 }
 
-func (mgr *potMgr) process(t int64) {
+func (mgr *potMgr) Process(t int64) {
 	var updated uint8
 
 	if newConV := contrast.Get(); potChanged(newConV, mgr.lastConV) {

@@ -1,9 +1,7 @@
 package main
 
 import (
-	"image/color"
 	"intrepidfstopper/button"
-	"intrepidfstopper/num"
 	"machine"
 	"time"
 
@@ -59,11 +57,47 @@ func toggleStateBit(s *stateBits, b stateBits) {
 
 type stateData struct {
 	flags stateBits
+	pots  [4]uint8
+
+	baseTime        uint32 // This is the base exposure time
+	remaingingTime  uint32 // Time remaining during running exposure
+	exposureRunning bool   // is an exposure currently running
 
 	lastMode       mode // when returning from Focus
 	lastSubMode    subMode
 	currentMode    mode
 	currentSubMode subMode
+}
+
+func (s *stateData) ButtonPress(b button.Button) bool {
+	switch b {
+	case button.Focus:
+		if state.currentMode != modeFocus {
+			state.lastMode = state.currentMode
+			state.lastSubMode = state.currentSubMode
+			state.currentMode = modeFocus
+		} else {
+			state.currentMode = state.lastMode
+			state.currentSubMode = state.lastSubMode
+		}
+		return true
+	default:
+		return false
+	}
+}
+
+func (s *stateData) ButtonLongPress(b button.Button) bool {
+	switch b {
+	case button.Focus:
+		toggleStateBit(&state.flags, statebitFocusColour)
+		return true
+	default:
+		return false
+	}
+}
+
+func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
+	return false
 }
 
 var (
@@ -83,7 +117,6 @@ var (
 
 	ledPin       = machine.PD4
 	ledPinConfig = machine.PinConfig{Mode: machine.PinOutput}
-	leds         [ledCount]color.RGBA
 	ledDriver    = ws2812.NewSK6812(ledPin)
 
 	contrast = machine.ADC{machine.ADC0}
@@ -105,7 +138,7 @@ var (
 
 	stringTable = [][]byte{
 		[]byte("Hello: "),
-		[]byte("-- Focus  --"),
+		[]byte("---  Focus  ---"),
 	}
 
 	// Application state
@@ -153,9 +186,12 @@ func potChanged(o, n uint16) bool {
 	return false
 }
 
-func setLEDPanel(c color.RGBA) {
-	for i := range leds {
-		leds[i] = c
+func setLEDPanel(c [4]uint8) {
+	for i := 0; i < ledCount; i++ {
+		ledDriver.WriteByte(c[0]) // Green
+		ledDriver.WriteByte(c[1]) // Red
+		ledDriver.WriteByte(c[2]) // Blue
+		ledDriver.WriteByte(c[3]) // White
 	}
 }
 
@@ -226,12 +262,6 @@ func main() {
 	time.Sleep(2 * time.Second)
 	configureDevices()
 
-	// down here is using stuff
-
-	/*
-		setLEDPanel(color.RGBA{R: 0x0, G: 0x0, B: 0x00, A: 0xff})
-	*/
-
 	timeChan := make(chan int64, 1)
 	go func() {
 		for {
@@ -247,30 +277,28 @@ func main() {
 		select {
 		case t := <-timeChan:
 			butManager.Process(t)
-			potManager.process(t)
-		case upd := <-potUpdateChan:
-			var out num.NumBuf
-			if (upd.updated & conPotUpdated) > 0 {
-				num.Out(&out, num.Num(upd.vals[0]))
-				lcd.SetCursor(0, 1)
-				lcd.Print(out[:])
+			potManager.Process(t)
+			if state.exposureRunning {
+				select {
+				case updateState <- struct{}{}:
+				default:
+				}
 			}
+		case _ = <-potUpdateChan:
 		case ev := <-butEventChan:
-			switch ev.Button {
-			case button.Focus:
-				switch ev.EventType {
-				case button.EventPress:
-					if state.currentMode != modeFocus {
-						state.lastMode = state.currentMode
-						state.lastSubMode = state.currentSubMode
-					} else {
-						state.currentMode = state.lastMode
-						state.currentSubMode = state.lastSubMode
-					}
-					updateState <- struct{}{}
-				case button.EventLongPress:
-					toggleStateBit(&state.flags, statebitFocusColour)
-					updateState <- struct{}{}
+			updated := false
+			switch ev.EventType {
+			case button.EventPress:
+				updated = state.ButtonPress(ev.Button)
+			case button.EventLongPress:
+				updated = state.ButtonLongPress(ev.Button)
+			case button.EventHoldRepeat:
+				updated = state.ButtonHoldRepeat(ev.Button)
+			}
+			if updated {
+				select {
+				case updateState <- struct{}{}:
+				default:
 				}
 			}
 		case <-updateState:
@@ -279,9 +307,14 @@ func main() {
 			switch state.currentMode {
 			case modeFocus:
 				lcd.Print(stringTable[1])
-				setLEDPanel(color.RGBA{})
+				if !checkStateBit(&state.flags, statebitFocusColour) {
+					setLEDPanel([4]uint8{0, 255, 0, 0})
+				} else {
+					setLEDPanel([4]uint8{0, 0, 0, 255})
+				}
 			case modeBW:
 				lcd.Print(stringTable[0])
+				setLEDPanel([4]uint8{0, 0, 0, 0})
 			}
 		}
 	}
