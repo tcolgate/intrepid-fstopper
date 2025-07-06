@@ -186,16 +186,23 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 func (s *stateData) ButtonLongPress(b button.Button) bool {
 	switch b {
 	case button.Focus:
+		if s.exposureRunning {
+			return false
+		}
 		if s.currentMode == modeFocus {
 			if toggleStateBit(&state.flags, statebitFocusColour) {
 				s.currentLED = ledWhite
 			} else {
 				s.currentLED = ledRed
 			}
-			return true
+		} else {
+			state.lastMode = state.currentMode
+			state.lastSubMode = state.currentSubMode
+			state.currentMode = modeFocus
+			setStateBit(&state.flags, statebitFocusColour)
+			state.currentLED = ledWhite
 		}
-	default:
-		return false
+		return true
 	}
 	return false
 }
@@ -214,7 +221,7 @@ func (s *stateData) UpdateDisplay() {
 		lcd.Print(nb[:])
 
 		if s.exposureRunning {
-			num.Out(&nb, num.Num(s.remainingTime/100))
+			num.Out(&nb, num.Num(s.remainingTime/int64((10*time.Millisecond))))
 			lcd.SetCursor(8, 1)
 			lcd.Print(nb[:])
 		}
@@ -418,7 +425,7 @@ func main() {
 
 		// this can be a more subtle calculation
 		state.prevTick = nowNS
-		state.nextTick = int64(20 * time.Millisecond)
+		state.nextTick = int64(10 * time.Millisecond)
 		time.Until(now.Add(time.Duration(state.nextTick)))
 	}
 }
