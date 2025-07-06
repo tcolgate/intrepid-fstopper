@@ -134,14 +134,14 @@ func (s *stateData) UpdateDisplay() {
 	lcd.SetCursor(0, 0)
 	switch state.currentMode {
 	case modeFocus:
-		lcd.Print(stringTable[1])
+		lcd.Print(stringTable[1][0])
 		if !checkStateBit(&state.flags, statebitFocusColour) {
 			setLEDPanel([4]uint8{0, 255, 0, 0})
 		} else {
 			setLEDPanel([4]uint8{0, 0, 0, 255})
 		}
 	case modeBW:
-		lcd.Print(stringTable[0])
+		lcd.Print(stringTable[0][0])
 		setLEDPanel([4]uint8{0, 0, 0, 0})
 	}
 }
@@ -182,9 +182,15 @@ var (
 		Height: 2,
 	}
 
-	stringTable = [][]byte{
-		[]byte("Hello: "),
-		[]byte("---  Focus  ---"),
+	stringTable = [][2][]byte{
+		{
+			[]byte("Print           "),
+			[]byte("                "),
+		},
+		{
+			[]byte("---  Focus   ---"),
+			[]byte("                "),
+		},
 	}
 
 	// Application state
@@ -203,33 +209,6 @@ var (
 
 	state = stateData{}
 )
-
-const (
-	conPotUpdated = 1 << iota
-	cyanPotUpdated
-	magentaPotUpdated
-	yellowPotUpdated
-)
-
-type potUpdate struct {
-	vals    [4]uint16
-	updated uint8
-}
-
-func potChanged(o, n uint16) bool {
-	// This gives us 128 valid pot positions
-	minDiff := uint16(128)
-
-	if o > n {
-		return (minDiff < (o - n))
-	}
-
-	if o < n {
-		return (minDiff < (n - o))
-	}
-
-	return false
-}
 
 func setLEDPanel(c [4]uint8) {
 	for i := 0; i < ledCount; i++ {
