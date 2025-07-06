@@ -26,7 +26,7 @@ var (
 	ledRed   = [4]uint8{0, 255, 0, 0}
 
 	signMinus = []byte(`-`)[0]
-	signPlus  = []byte(`-`)[0]
+	signPlus  = []byte(`+`)[0]
 )
 
 type mode uint8
@@ -243,6 +243,14 @@ func (s *stateData) UpdateDisplay() {
 		num.OutLeft(&nb, num.Num(absExpFact))
 		copy(s.nextDisplay[1][5:9], nb[0:4])
 
+		res := num.Num(11_23)
+		num.Out(&nb, num.Num(res))
+		resLen := num.Len(res)
+		s.nextDisplay[1][13-resLen] = []byte("(")[0]
+		s.nextDisplay[1][14-resLen] = []byte("=")[0]
+		copy(s.nextDisplay[1][11:15], nb[0:4])
+		s.nextDisplay[1][15] = []byte(")")[0]
+
 		if s.exposureRunning {
 			num.Out(&nb, num.Num(s.remainingTime/int64((10*time.Millisecond))))
 			copy(s.nextDisplay[1][13:17], nb[0:4])
@@ -320,6 +328,9 @@ var (
 	}
 
 	state = stateData{
+		baseTime:           7_00,
+		exposureFactorUnit: 1, // default to 1/2 stops
+
 		lastDisplay: [2][]byte{
 			make([]byte, 16),
 			make([]byte, 16),
