@@ -1,4 +1,4 @@
-# Intrepid Enlarger Alternative Firemware
+# Intrepid Enlarger Alternative Firmware
 
 This repo contains an experiment to create an alternative firmware
 for the Intrepid Enlarger timer.
