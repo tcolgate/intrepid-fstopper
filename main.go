@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"intrepidfstopper/button"
 	"intrepidfstopper/num"
 	"machine"
@@ -82,6 +83,9 @@ type stateData struct {
 	currentSubMode subMode
 	lastLED        [4]uint8
 	currentLED     [4]uint8
+
+	lastDisplay [2][]byte
+	nextDisplay [2][]byte
 }
 
 /*
@@ -208,24 +212,32 @@ func (s *stateData) ButtonLongPress(b button.Button) bool {
 }
 
 func (s *stateData) UpdateDisplay() {
-	lcd.SetCursor(0, 0)
 	switch state.currentMode {
 	case modeFocus:
-		lcd.Print(stringTable[1][0])
+		copy(s.nextDisplay[0], stringTable[1][0])
+		copy(s.nextDisplay[1], stringTable[1][1])
 	case modeBW:
 		nb := num.NumBuf{}
 
-		lcd.Print(stringTable[0][0])
+		copy(s.nextDisplay[0], stringTable[0][0])
+		copy(s.nextDisplay[1], stringTable[0][1])
+
 		num.Out(&nb, num.Num(s.baseTime))
-		lcd.SetCursor(0, 1)
-		lcd.Print(nb[:])
+		copy(s.nextDisplay[1][0:4], nb[0:4])
 
 		if s.exposureRunning {
 			num.Out(&nb, num.Num(s.remainingTime/int64((10*time.Millisecond))))
-			lcd.SetCursor(8, 1)
-			lcd.Print(nb[:])
+			copy(s.nextDisplay[1][8:12], nb[0:4])
 		}
 	}
+	for i := uint8(0); i < 2; i++ {
+		if bytes.Compare(s.lastDisplay[i], s.nextDisplay[i]) != 0 {
+			lcd.SetCursor(0, i)
+			lcd.Print(s.nextDisplay[i])
+			copy(s.lastDisplay[i][0:16], s.nextDisplay[i][0:16])
+		}
+	}
+
 }
 
 var (
@@ -289,7 +301,16 @@ var (
 		Events:    butEventChan,
 	}
 
-	state = stateData{}
+	state = stateData{
+		lastDisplay: [2][]byte{
+			make([]byte, 16),
+			make([]byte, 16),
+		},
+		nextDisplay: [2][]byte{
+			make([]byte, 16),
+			make([]byte, 16),
+		},
+	}
 )
 
 func (s *stateData) SetLEDPanel() {
