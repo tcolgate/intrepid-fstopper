@@ -65,6 +65,7 @@ type stateData struct {
 	baseTime        uint32 // This is the base exposure time
 	remaingingTime  uint32 // Time remaining during running exposure
 	exposureRunning bool   // is an exposure currently running
+	exposurePaused  bool   // is an exposure currently running
 
 	lastMode       mode // when returning from Focus
 	lastSubMode    subMode
@@ -119,12 +120,28 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 		}
 	case button.Run:
 		if s.exposureRunning {
-			// pause exposure
+			s.exposurePaused = !s.exposurePaused
+			if s.exposurePaused {
+				setLEDPanel([4]uint8{0, 0, 0, 0})
+			} else {
+				setLEDPanel([4]uint8{0, 0, 0, 255})
+			}
+			return true
 		}
+
 		// start exposure
+		s.remaingingTime = s.baseTime
+		s.exposureRunning = true
+		s.exposurePaused = false
+		setLEDPanel([4]uint8{0, 0, 0, 255})
+		return true
 	case button.Cancel:
 		if s.exposureRunning {
-			return false
+			s.exposurePaused = false
+			s.exposureRunning = false
+			s.remaingingTime = 0
+			setLEDPanel([4]uint8{0, 0, 0, 0})
+			return true
 			// stop exposure, reset time
 		}
 		if state.currentMode == modeFocus {
@@ -176,11 +193,13 @@ func (s *stateData) UpdateDisplay() {
 		}
 	case modeBW:
 		lcd.Print(stringTable[0][0])
-		setLEDPanel([4]uint8{0, 0, 0, 0})
 		nb := num.NumBuf{}
 		num.Out(&nb, num.Num(s.baseTime))
 		lcd.SetCursor(0, 1)
 		lcd.Print(nb[:])
+
+		if s.exposureRunning {
+		}
 	}
 }
 
@@ -326,7 +345,6 @@ func main() {
 
 	for {
 		updated := false
-
 		now := time.Now()
 
 		// queueUp events from button and pot changes
