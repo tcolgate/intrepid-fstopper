@@ -8,8 +8,8 @@ import (
 type Button uint8
 
 const (
-	TimePlus Button = 1 << iota
-	TimeMinus
+	Plus Button = 1 << iota
+	Minus
 	Run
 	Focus
 	Cancel
@@ -17,7 +17,7 @@ const (
 	Mode
 
 	DoesLongPress = Focus | Mode
-	DoesHold      = TimePlus | TimeMinus
+	DoesHold      = Plus | Minus
 
 	// not sure why, but these two are inverted
 	inverted = Mode | Safelight

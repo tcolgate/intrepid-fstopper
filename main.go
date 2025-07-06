@@ -79,7 +79,7 @@ type stateData struct {
 
 func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
 	switch b {
-	case button.TimePlus:
+	case button.Plus:
 		if s.exposureRunning || state.currentMode == modeFocus {
 			return false
 		}
@@ -87,7 +87,7 @@ func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
 			s.baseTime += 10
 			return true
 		}
-	case button.TimeMinus:
+	case button.Minus:
 		if s.exposureRunning || state.currentMode == modeFocus {
 			return false
 		}
@@ -101,7 +101,7 @@ func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
 
 func (s *stateData) ButtonPress(b button.Button) bool {
 	switch b {
-	case button.TimePlus:
+	case button.Plus:
 		if s.exposureRunning || state.currentMode == modeFocus {
 			return false
 		}
@@ -109,7 +109,7 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 			s.baseTime += 10
 			return true
 		}
-	case button.TimeMinus:
+	case button.Minus:
 		if s.exposureRunning || state.currentMode == modeFocus {
 			return false
 		}
@@ -262,9 +262,9 @@ func setLEDPanel(c [4]uint8) {
 func pinToButton(p machine.Pin) button.Button {
 	switch p {
 	case machine.D7:
-		return button.TimePlus
+		return button.Plus
 	case machine.D8:
-		return button.TimeMinus
+		return button.Minus
 	case machine.D9:
 		return button.Run
 	case machine.D10:
