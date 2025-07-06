@@ -24,6 +24,9 @@ var (
 	ledOff   = [4]uint8{0, 0, 0, 0}
 	ledWhite = [4]uint8{0, 0, 0, 255}
 	ledRed   = [4]uint8{0, 255, 0, 0}
+
+	signMinus = []byte(`-`)[0]
+	signPlus  = []byte(`-`)[0]
 )
 
 type mode uint8
@@ -71,8 +74,11 @@ type stateData struct {
 	flags stateBits
 	pots  [4]uint8
 
-	baseTime        uint32 // This is the base exposure time
-	remainingTime   int64  // Time remaining during running exposure
+	baseTime           uint32 // This is the base exposure time
+	exposureFactor     int8   //
+	exposureFactorUnit uint8  // 0 = stops 1 = 1/2 stops 2 = 1/3 stops 3 = 1/10 stops
+
+	remainingTime   int64 // Time remaining during running exposure
 	currentExposure uint8
 	exposureRunning bool // is an exposure currently running
 	exposurePaused  bool // is an exposure currently running
@@ -225,9 +231,21 @@ func (s *stateData) UpdateDisplay() {
 		num.Out(&nb, num.Num(s.baseTime))
 		copy(s.nextDisplay[1][0:4], nb[0:4])
 
+		if s.exposureFactor < 0 {
+			s.nextDisplay[1][4] = signMinus
+		} else {
+			s.nextDisplay[1][4] = signPlus
+		}
+		absExpFact := s.exposureFactor
+		if absExpFact < 0 {
+			absExpFact = absExpFact * -1
+		}
+		num.OutLeft(&nb, num.Num(absExpFact))
+		copy(s.nextDisplay[1][5:9], nb[0:4])
+
 		if s.exposureRunning {
 			num.Out(&nb, num.Num(s.remainingTime/int64((10*time.Millisecond))))
-			copy(s.nextDisplay[1][8:12], nb[0:4])
+			copy(s.nextDisplay[1][13:17], nb[0:4])
 		}
 	}
 	for i := uint8(0); i < 2; i++ {
