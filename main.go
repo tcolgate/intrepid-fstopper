@@ -19,6 +19,12 @@ const (
 	longPress = 1 * time.Second
 )
 
+var (
+	ledOff   = [4]uint8{0, 0, 0, 0}
+	ledWhite = [4]uint8{0, 0, 0, 255}
+	ledRed   = [4]uint8{0, 255, 0, 0}
+)
+
 type mode uint8
 
 const (
@@ -52,25 +58,30 @@ func checkStateBit(s *stateBits, b stateBits) bool {
 	return (*s & b) > 0
 }
 
-func toggleStateBit(s *stateBits, b stateBits) {
+func toggleStateBit(s *stateBits, b stateBits) bool {
 	*s = *s ^ b
+	return (*s & b) > 0
 }
 
 type stateData struct {
-	nextTick uint32
+	nextTick int64
+	prevTick int64
 
 	flags stateBits
 	pots  [4]uint8
 
 	baseTime        uint32 // This is the base exposure time
-	remaingingTime  uint32 // Time remaining during running exposure
-	exposureRunning bool   // is an exposure currently running
-	exposurePaused  bool   // is an exposure currently running
+	remainingTime   int64  // Time remaining during running exposure
+	currentExposure uint8
+	exposureRunning bool // is an exposure currently running
+	exposurePaused  bool // is an exposure currently running
 
 	lastMode       mode // when returning from Focus
 	lastSubMode    subMode
 	currentMode    mode
 	currentSubMode subMode
+	lastLED        [4]uint8
+	currentLED     [4]uint8
 }
 
 /*
@@ -122,25 +133,25 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 		if s.exposureRunning {
 			s.exposurePaused = !s.exposurePaused
 			if s.exposurePaused {
-				setLEDPanel([4]uint8{0, 0, 0, 0})
+				state.currentLED = ledOff
 			} else {
-				setLEDPanel([4]uint8{0, 0, 0, 255})
+				state.currentLED = ledWhite
 			}
 			return true
 		}
 
 		// start exposure
-		s.remaingingTime = s.baseTime
+		s.remainingTime = int64(s.baseTime) * 10 * int64(time.Millisecond)
 		s.exposureRunning = true
 		s.exposurePaused = false
-		setLEDPanel([4]uint8{0, 0, 0, 255})
+		state.currentLED = ledWhite
 		return true
 	case button.Cancel:
 		if s.exposureRunning {
 			s.exposurePaused = false
 			s.exposureRunning = false
-			s.remaingingTime = 0
-			setLEDPanel([4]uint8{0, 0, 0, 0})
+			s.remainingTime = 0
+			state.currentLED = ledOff
 			return true
 			// stop exposure, reset time
 		}
@@ -148,6 +159,7 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 			state.currentMode = state.lastMode
 			state.currentSubMode = state.lastSubMode
 			clearStateBit(&state.flags, statebitFocusColour)
+			state.currentLED = ledOff
 			return true
 		}
 	case button.Focus:
@@ -158,10 +170,13 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 			state.lastMode = state.currentMode
 			state.lastSubMode = state.currentSubMode
 			state.currentMode = modeFocus
+			clearStateBit(&state.flags, statebitFocusColour)
+			state.currentLED = ledRed
 		} else {
 			state.currentMode = state.lastMode
 			state.currentSubMode = state.lastSubMode
 			clearStateBit(&state.flags, statebitFocusColour)
+			state.currentLED = ledOff
 		}
 		return true
 	}
@@ -172,7 +187,11 @@ func (s *stateData) ButtonLongPress(b button.Button) bool {
 	switch b {
 	case button.Focus:
 		if s.currentMode == modeFocus {
-			toggleStateBit(&state.flags, statebitFocusColour)
+			if toggleStateBit(&state.flags, statebitFocusColour) {
+				s.currentLED = ledWhite
+			} else {
+				s.currentLED = ledRed
+			}
 			return true
 		}
 	default:
@@ -186,19 +205,18 @@ func (s *stateData) UpdateDisplay() {
 	switch state.currentMode {
 	case modeFocus:
 		lcd.Print(stringTable[1][0])
-		if !checkStateBit(&state.flags, statebitFocusColour) {
-			setLEDPanel([4]uint8{0, 255, 0, 0})
-		} else {
-			setLEDPanel([4]uint8{0, 0, 0, 255})
-		}
 	case modeBW:
-		lcd.Print(stringTable[0][0])
 		nb := num.NumBuf{}
+
+		lcd.Print(stringTable[0][0])
 		num.Out(&nb, num.Num(s.baseTime))
 		lcd.SetCursor(0, 1)
 		lcd.Print(nb[:])
 
 		if s.exposureRunning {
+			num.Out(&nb, num.Num(s.remainingTime/100))
+			lcd.SetCursor(8, 1)
+			lcd.Print(nb[:])
 		}
 	}
 }
@@ -267,13 +285,18 @@ var (
 	state = stateData{}
 )
 
-func setLEDPanel(c [4]uint8) {
-	for i := 0; i < ledCount; i++ {
-		ledDriver.WriteByte(c[0]) // Green
-		ledDriver.WriteByte(c[1]) // Red
-		ledDriver.WriteByte(c[2]) // Blue
-		ledDriver.WriteByte(c[3]) // White
+func (s *stateData) SetLEDPanel() {
+	if s.lastLED == s.currentLED {
+		return
 	}
+	for i := 0; i < ledCount; i++ {
+		ledDriver.WriteByte(s.currentLED[0]) // Green
+		ledDriver.WriteByte(s.currentLED[1]) // Red
+		ledDriver.WriteByte(s.currentLED[2]) // Blue
+		ledDriver.WriteByte(s.currentLED[3]) // White
+	}
+	s.lastLED = s.currentLED
+
 }
 
 // pinToButton converts the hardware pin number to
@@ -345,11 +368,17 @@ func main() {
 
 	for {
 		updated := false
+		if state.prevTick == 0 {
+			state.prevTick = time.Now().UnixNano()
+			// force a display update on the first iteration
+			updated = true
+		}
 		now := time.Now()
+		nowNS := now.UnixNano()
 
 		// queueUp events from button and pot changes
-		butManager.Process(now.UnixNano())
-		potManager.Process(now.UnixNano())
+		butManager.Process(nowNS)
+		potManager.Process(nowNS)
 
 	processEvents:
 		// apply events to state
@@ -370,12 +399,26 @@ func main() {
 			}
 		}
 
+		if state.exposureRunning && !state.exposurePaused {
+			passed := nowNS - state.prevTick
+			state.remainingTime -= passed
+			if state.remainingTime <= 0 {
+				state.exposurePaused = false
+				state.exposureRunning = false
+				state.remainingTime = 0
+				state.currentLED = ledOff
+			}
+			updated = true
+		}
+
 		if updated {
+			state.SetLEDPanel()
 			state.UpdateDisplay()
 		}
 
 		// this can be a more subtle calculation
-		state.nextTick = uint32(20 * time.Millisecond)
+		state.prevTick = nowNS
+		state.nextTick = int64(20 * time.Millisecond)
 		time.Until(now.Add(time.Duration(state.nextTick)))
 	}
 }
