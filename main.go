@@ -2,6 +2,7 @@ package main
 
 import (
 	"intrepidfstopper/button"
+	"intrepidfstopper/num"
 	"machine"
 	"time"
 
@@ -76,12 +77,51 @@ type stateData struct {
 	 state and transitions
 */
 
+func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
+	switch b {
+	case button.TimePlus:
+		if s.exposureRunning || state.currentMode == modeFocus {
+			return false
+		}
+		if s.baseTime != 25500 {
+			s.baseTime += 10
+			return true
+		}
+	case button.TimeMinus:
+		if s.exposureRunning || state.currentMode == modeFocus {
+			return false
+		}
+		if s.baseTime != 0 {
+			s.baseTime -= 10
+			return true
+		}
+	}
+	return false
+}
+
 func (s *stateData) ButtonPress(b button.Button) bool {
 	switch b {
+	case button.TimePlus:
+		if s.exposureRunning || state.currentMode == modeFocus {
+			return false
+		}
+		if s.baseTime != 25500 {
+			s.baseTime += 10
+			return true
+		}
+	case button.TimeMinus:
+		if s.exposureRunning || state.currentMode == modeFocus {
+			return false
+		}
+		if s.baseTime != 0 {
+			s.baseTime -= 10
+			return true
+		}
 	case button.Run:
 		if s.exposureRunning {
 			// pause exposure
 		}
+		// start exposure
 	case button.Cancel:
 		if s.exposureRunning {
 			return false
@@ -107,8 +147,6 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 			clearStateBit(&state.flags, statebitFocusColour)
 		}
 		return true
-	default:
-		return false
 	}
 	return false
 }
@@ -126,10 +164,6 @@ func (s *stateData) ButtonLongPress(b button.Button) bool {
 	return false
 }
 
-func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
-	return false
-}
-
 func (s *stateData) UpdateDisplay() {
 	lcd.SetCursor(0, 0)
 	switch state.currentMode {
@@ -143,6 +177,10 @@ func (s *stateData) UpdateDisplay() {
 	case modeBW:
 		lcd.Print(stringTable[0][0])
 		setLEDPanel([4]uint8{0, 0, 0, 0})
+		nb := num.NumBuf{}
+		num.Out(&nb, num.Num(s.baseTime))
+		lcd.SetCursor(0, 1)
+		lcd.Print(nb[:])
 	}
 }
 
