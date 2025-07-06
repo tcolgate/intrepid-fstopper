@@ -5,19 +5,18 @@ flash:
 		-baudrate 9600 \
 		-size full \
 		-monitor \
-		-scheduler tasks \
+		-scheduler none \
 		-gc leaking \
 		-target ./timer-1.2-target.json \
 		-no-debug \
 		-work \
 		-stack-size 256B \
 		-print-allocs .
-	
 
 build:
 	tinygo build \
 		-baudrate 9600 \
-		-scheduler tasks \
+		-scheduler none \
 		-gc leaking \
 		-size full \
 		-monitor \

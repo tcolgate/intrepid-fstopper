@@ -39,11 +39,11 @@ const (
 	statebitFocusColour stateBits = 1 << iota
 )
 
-func setStateBit(s *stateBits, b stateBits, v bool) {
+func setStateBit(s *stateBits, b stateBits) {
 	*s = *s | b
 }
 
-func clearStateBit(s *stateBits, b stateBits, v bool) {
+func clearStateBit(s *stateBits, b stateBits) {
 	*s = *s & (^b)
 }
 
@@ -56,6 +56,8 @@ func toggleStateBit(s *stateBits, b stateBits) {
 }
 
 type stateData struct {
+	nextTick uint32
+
 	flags stateBits
 	pots  [4]uint8
 
@@ -69,9 +71,32 @@ type stateData struct {
 	currentSubMode subMode
 }
 
+/*
+   It would be nice to have a better structure abstracting the
+	 state and transitions
+*/
+
 func (s *stateData) ButtonPress(b button.Button) bool {
 	switch b {
+	case button.Run:
+		if s.exposureRunning {
+			// pause exposure
+		}
+	case button.Cancel:
+		if s.exposureRunning {
+			return false
+			// stop exposure, reset time
+		}
+		if state.currentMode == modeFocus {
+			state.currentMode = state.lastMode
+			state.currentSubMode = state.lastSubMode
+			clearStateBit(&state.flags, statebitFocusColour)
+			return true
+		}
 	case button.Focus:
+		if s.exposureRunning {
+			return false
+		}
 		if state.currentMode != modeFocus {
 			state.lastMode = state.currentMode
 			state.lastSubMode = state.currentSubMode
@@ -79,25 +104,46 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 		} else {
 			state.currentMode = state.lastMode
 			state.currentSubMode = state.lastSubMode
+			clearStateBit(&state.flags, statebitFocusColour)
 		}
 		return true
 	default:
 		return false
 	}
+	return false
 }
 
 func (s *stateData) ButtonLongPress(b button.Button) bool {
 	switch b {
 	case button.Focus:
-		toggleStateBit(&state.flags, statebitFocusColour)
-		return true
+		if s.currentMode == modeFocus {
+			toggleStateBit(&state.flags, statebitFocusColour)
+			return true
+		}
 	default:
 		return false
 	}
+	return false
 }
 
 func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
 	return false
+}
+
+func (s *stateData) UpdateDisplay() {
+	lcd.SetCursor(0, 0)
+	switch state.currentMode {
+	case modeFocus:
+		lcd.Print(stringTable[1])
+		if !checkStateBit(&state.flags, statebitFocusColour) {
+			setLEDPanel([4]uint8{0, 255, 0, 0})
+		} else {
+			setLEDPanel([4]uint8{0, 0, 0, 255})
+		}
+	case modeBW:
+		lcd.Print(stringTable[0])
+		setLEDPanel([4]uint8{0, 0, 0, 0})
+	}
 }
 
 var (
@@ -148,7 +194,6 @@ var (
 	potUpdateChan   = make(chan potUpdate, 8)
 	butIntEventChan = make(chan button.IntEvent, 8)
 	butEventChan    = make(chan button.Event, 8)
-	updateState     = make(chan struct{}, 1)
 
 	potManager = &potMgr{}
 	butManager = &button.Mgr{
@@ -262,60 +307,40 @@ func main() {
 	time.Sleep(2 * time.Second)
 	configureDevices()
 
-	timeChan := make(chan int64, 1)
-	go func() {
-		for {
-			time.Sleep(10 * time.Millisecond)
-			select {
-			case timeChan <- time.Now().UnixNano():
-			default:
-			}
-		}
-	}()
-
 	for {
-		select {
-		case t := <-timeChan:
-			butManager.Process(t)
-			potManager.Process(t)
-			if state.exposureRunning {
-				select {
-				case updateState <- struct{}{}:
-				default:
+		updated := false
+
+		now := time.Now()
+
+		// queueUp events from button and pot changes
+		butManager.Process(now.UnixNano())
+		potManager.Process(now.UnixNano())
+
+	processEvents:
+		// apply events to state
+		for {
+			select {
+			case _ = <-potUpdateChan:
+			case ev := <-butEventChan:
+				switch ev.EventType {
+				case button.EventPress:
+					updated = updated || state.ButtonPress(ev.Button)
+				case button.EventLongPress:
+					updated = updated || state.ButtonLongPress(ev.Button)
+				case button.EventHoldRepeat:
+					updated = updated || state.ButtonHoldRepeat(ev.Button)
 				}
-			}
-		case _ = <-potUpdateChan:
-		case ev := <-butEventChan:
-			updated := false
-			switch ev.EventType {
-			case button.EventPress:
-				updated = state.ButtonPress(ev.Button)
-			case button.EventLongPress:
-				updated = state.ButtonLongPress(ev.Button)
-			case button.EventHoldRepeat:
-				updated = state.ButtonHoldRepeat(ev.Button)
-			}
-			if updated {
-				select {
-				case updateState <- struct{}{}:
-				default:
-				}
-			}
-		case <-updateState:
-			lcd.ClearDisplay()
-			lcd.SetCursor(0, 0)
-			switch state.currentMode {
-			case modeFocus:
-				lcd.Print(stringTable[1])
-				if !checkStateBit(&state.flags, statebitFocusColour) {
-					setLEDPanel([4]uint8{0, 255, 0, 0})
-				} else {
-					setLEDPanel([4]uint8{0, 0, 0, 255})
-				}
-			case modeBW:
-				lcd.Print(stringTable[0])
-				setLEDPanel([4]uint8{0, 0, 0, 0})
+			default:
+				break processEvents
 			}
 		}
+
+		if updated {
+			state.UpdateDisplay()
+		}
+
+		// this can be a more subtle calculation
+		state.nextTick = uint32(20 * time.Millisecond)
+		time.Until(now.Add(time.Duration(state.nextTick)))
 	}
 }
