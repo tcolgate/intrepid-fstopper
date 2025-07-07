@@ -44,10 +44,10 @@ const (
 	modeTestStrip
 )
 
-type expUnits uint8
+type expUnit uint8
 
 const (
-	expUnitHalfStop expUnits = iota
+	expUnitHalfStop expUnit = iota
 	expUnitThirdStop
 	expUnitTenthStop
 	expUnitPercent
@@ -56,9 +56,9 @@ const (
 
 var (
 	expUnitNames = [5][]byte{
-		[]byte(`./2 `),
-		[]byte(`./3 `),
-		[]byte(`./10`),
+		[]byte("\xDF/2 "),
+		[]byte("\xDF/3 "),
+		[]byte("\xDF/10"),
 		[]byte(`%   `),
 		[]byte(`Free`),
 	}
@@ -94,9 +94,9 @@ type stateData struct {
 	flags stateBits
 	pots  [4]uint8
 
-	baseTime           uint32 // This is the base exposure time
-	exposureFactor     int8   //
-	exposureFactorUnit uint8  // 0 = stops 1 = 1/2 stops 2 = 1/3 stops 3 = 1/10 stops
+	baseTime           uint32  // This is the base exposure time
+	exposureFactor     int8    //
+	exposureFactorUnit expUnit // 0 = stops 1 = 1/2 stops 2 = 1/3 stops 3 = 1/10 stops
 
 	remainingTime   int64 // Time remaining during running exposure
 	currentExposure uint8
@@ -110,8 +110,10 @@ type stateData struct {
 	lastLED        [4]uint8
 	currentLED     [4]uint8
 
-	lastDisplay [2][]byte
-	nextDisplay [2][]byte
+	activeScreen     uint8
+	activeTouchPoint uint8
+	lastDisplay      [2][]byte
+	nextDisplay      [2][]byte
 }
 
 /*
@@ -125,16 +127,44 @@ func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
 		if s.exposureRunning || state.currentMode == modeFocus {
 			return false
 		}
-		if s.baseTime != 25500 {
-			s.baseTime += 10
+		if s.currentMode == modeBW {
+			switch s.activeTouchPoint {
+			case 0:
+				if s.baseTime != 25500 {
+					s.baseTime += 10
+				}
+			case 1:
+				if s.exposureFactor != 126 {
+					s.exposureFactor += 1
+				}
+			case 2:
+				s.exposureFactorUnit++
+				if s.exposureFactorUnit > 4 {
+					s.exposureFactorUnit = 0
+				}
+			}
 			return true
 		}
 	case button.Minus:
 		if s.exposureRunning || state.currentMode == modeFocus {
 			return false
 		}
-		if s.baseTime != 0 {
-			s.baseTime -= 10
+		if s.currentMode == modeBW {
+			switch s.activeTouchPoint {
+			case 0:
+				if s.baseTime != 0 {
+					s.baseTime -= 10
+				}
+			case 1:
+				if s.exposureFactor != -126 {
+					s.exposureFactor -= 1
+				}
+			case 2:
+				s.exposureFactorUnit--
+				if s.exposureFactorUnit < 0 {
+					s.exposureFactorUnit = 4
+				}
+			}
 			return true
 		}
 	}
@@ -147,16 +177,44 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 		if s.exposureRunning || state.currentMode == modeFocus {
 			return false
 		}
-		if s.baseTime != 25500 {
-			s.baseTime += 10
+		if s.currentMode == modeBW {
+			switch s.activeTouchPoint {
+			case 0:
+				if s.baseTime != 25500 {
+					s.baseTime += 10
+				}
+			case 1:
+				if s.exposureFactor != 126 {
+					s.exposureFactor += 1
+				}
+			case 2:
+				s.exposureFactorUnit++
+				if s.exposureFactorUnit > 4 {
+					s.exposureFactorUnit = 0
+				}
+			}
 			return true
 		}
 	case button.Minus:
 		if s.exposureRunning || state.currentMode == modeFocus {
 			return false
 		}
-		if s.baseTime != 0 {
-			s.baseTime -= 10
+		if s.currentMode == modeBW {
+			switch s.activeTouchPoint {
+			case 0:
+				if s.baseTime != 0 {
+					s.baseTime -= 10
+				}
+			case 1:
+				if s.exposureFactor != -126 {
+					s.exposureFactor -= 1
+				}
+			case 2:
+				s.exposureFactorUnit--
+				if s.exposureFactorUnit == 0 {
+					s.exposureFactorUnit = 4
+				}
+			}
 			return true
 		}
 	case button.Run:
@@ -260,6 +318,7 @@ func (s *stateData) UpdateDisplay() {
 		if tpi >= len(touchPoints[0]) {
 			tpi = len(touchPoints[0]) - 1
 		}
+		s.activeTouchPoint = uint8(tpi) // WRONG, shouldn't be updating state in here
 		tp = touchPoints[0][tpi]
 
 		copy(s.nextDisplay[0], stringTable[0][0])
@@ -279,6 +338,8 @@ func (s *stateData) UpdateDisplay() {
 		}
 		num.OutLeft(&nb, num.Num(absExpFact))
 		copy(s.nextDisplay[1][2:6], nb[0:4])
+
+		copy(s.nextDisplay[0][10:15], expUnitNames[s.exposureFactorUnit][0:4])
 
 		res := num.Num(11_23)
 		num.Out(&nb, num.Num(res))
