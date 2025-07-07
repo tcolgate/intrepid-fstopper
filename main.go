@@ -44,6 +44,26 @@ const (
 	modeTestStrip
 )
 
+type expUnits uint8
+
+const (
+	expUnitHalfStop expUnits = iota
+	expUnitThirdStop
+	expUnitTenthStop
+	expUnitPercent
+	expUnitFreeHand
+)
+
+var (
+	expUnitNames = [5][]byte{
+		[]byte(`./2 `),
+		[]byte(`./3 `),
+		[]byte(`./10`),
+		[]byte(`%   `),
+		[]byte(`Free`),
+	}
+)
+
 type stateBits int
 
 const (
@@ -218,30 +238,47 @@ func (s *stateData) ButtonLongPress(b button.Button) bool {
 }
 
 func (s *stateData) UpdateDisplay() {
-	switch state.currentMode {
-	case modeFocus:
+	nb := num.NumBuf{}
+	hasTouchPoints := false
+	var tp [2]uint8
+
+	switch {
+	case state.exposureRunning:
+		copy(s.nextDisplay[0], stringTable[2][0])
+		copy(s.nextDisplay[1], stringTable[2][1])
+
+		if s.exposureRunning {
+			num.Out(&nb, num.Num(s.remainingTime/int64((10*time.Millisecond))))
+			copy(s.nextDisplay[1][12:16], nb[0:4])
+		}
+	case state.currentMode == modeFocus:
 		copy(s.nextDisplay[0], stringTable[1][0])
 		copy(s.nextDisplay[1], stringTable[1][1])
-	case modeBW:
-		nb := num.NumBuf{}
+	case state.currentMode == modeBW:
+		hasTouchPoints = true
+		tpi := int(3 & (s.pots[0] >> 6))
+		if tpi >= len(touchPoints[0]) {
+			tpi = len(touchPoints[0]) - 1
+		}
+		tp = touchPoints[0][tpi]
 
 		copy(s.nextDisplay[0], stringTable[0][0])
 		copy(s.nextDisplay[1], stringTable[0][1])
 
 		num.Out(&nb, num.Num(s.baseTime))
-		copy(s.nextDisplay[1][0:4], nb[0:4])
+		copy(s.nextDisplay[0][2:6], nb[0:4])
 
 		if s.exposureFactor < 0 {
-			s.nextDisplay[1][4] = signMinus
+			s.nextDisplay[1][1] = signMinus
 		} else {
-			s.nextDisplay[1][4] = signPlus
+			s.nextDisplay[1][1] = signPlus
 		}
 		absExpFact := s.exposureFactor
 		if absExpFact < 0 {
 			absExpFact = absExpFact * -1
 		}
 		num.OutLeft(&nb, num.Num(absExpFact))
-		copy(s.nextDisplay[1][5:9], nb[0:4])
+		copy(s.nextDisplay[1][2:6], nb[0:4])
 
 		res := num.Num(11_23)
 		num.Out(&nb, num.Num(res))
@@ -250,12 +287,8 @@ func (s *stateData) UpdateDisplay() {
 		s.nextDisplay[1][14-resLen] = []byte("=")[0]
 		copy(s.nextDisplay[1][11:15], nb[0:4])
 		s.nextDisplay[1][15] = []byte(")")[0]
-
-		if s.exposureRunning {
-			num.Out(&nb, num.Num(s.remainingTime/int64((10*time.Millisecond))))
-			copy(s.nextDisplay[1][13:17], nb[0:4])
-		}
 	}
+
 	for i := uint8(0); i < 2; i++ {
 		if bytes.Compare(s.lastDisplay[i], s.nextDisplay[i]) != 0 {
 			lcd.SetCursor(0, i)
@@ -264,6 +297,10 @@ func (s *stateData) UpdateDisplay() {
 		}
 	}
 
+	if hasTouchPoints {
+		lcd.SetCursor(tp[1], tp[0])
+	}
+	lcd.CursorOn(hasTouchPoints)
 }
 
 var (
@@ -304,13 +341,21 @@ var (
 
 	stringTable = [][2][]byte{
 		{
-			[]byte("Print           "),
-			[]byte("                "),
+			[]byte("B: Adj  U:     >"),
+			[]byte("*              )"),
 		},
 		{
 			[]byte("---  Focus   ---"),
 			[]byte("                "),
 		},
+		{
+			[]byte("--- Exposure ---"),
+			[]byte("                "),
+		},
+	}
+	touchPoints = [][][2]uint8{
+		[][2]uint8{{0, 0}, {1, 0}, {0, 8}},
+		nil,
 	}
 
 	// Application state
@@ -441,7 +486,13 @@ func main() {
 		// apply events to state
 		for {
 			select {
-			case _ = <-potUpdateChan:
+			case pu := <-potUpdateChan:
+				if pu.updated > 0 {
+					updated = true
+					for i := 0; i <= 3; i++ {
+						state.pots[i] = uint8((255 & (pu.vals[i] >> 8)))
+					}
+				}
 			case ev := <-butEventChan:
 				switch ev.EventType {
 				case button.EventPress:
