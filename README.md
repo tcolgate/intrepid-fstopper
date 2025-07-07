@@ -43,6 +43,12 @@ The intention is to provide:
 
 Possible additions
 - Percentage from base time, rather than stops
+- Pulse a burst of red every second during freehand exposure to
+  help counting time (these would not contribute to exposure time,
+  and is intended to be an alternate to an audible blip (in colour
+  mode that would be turning the lamp off.
+- During BW print, when exposure is paused, the panel could switch
+  to red light
 
 ## Non-Goals
 
