@@ -18,7 +18,7 @@
     ticklabel style = {font=\tiny},
     xtick distance=50,
     minor x tick num=10,
-    ytick={0.33,0.5,0.66,1,1.33,1.5,1.66,2.0,2.33,2.5,2.66,3},
+    ytick={0.33,0.5,0.66,1,1.33,1.5,1.66,2.0,2.33,2.5,2.66,3,3.33,3.5,3.66,4,4.33,4.5,4.66,5,5.33,5.5,5.66},
     grid=both,
     grid style={line width=.1pt, draw=gray!10},
     major grid style={line width=.2pt,draw=gray!50},
@@ -29,7 +29,7 @@
     samples=100,
     color=green,
 ]
-{log10(((x / 90)^2) / log10(2)};
+{log10((x / 90)^2) / log10(2)};
 \addlegendentry{\(90mm\)}
 
 \addplot [
@@ -37,7 +37,7 @@
     samples=100,
     color=blue,
 ]
-{log10(((x / 135)^2) / log10(2)};
+{log10((x / 135)^2) / log10(2)};
 \addlegendentry{\(135mm\)}
 
 \addplot [
@@ -45,7 +45,7 @@
     samples=100,
     color=black,
 ]
-{log10(((x / 150)^2) / log10(2)};
+{log10((x / 150)^2) / log10(2)};
 \addlegendentry{\(150mm\)}
 
 \addplot [
@@ -53,7 +53,7 @@
     samples=100,
     color=red,
 ]
-{log10(((x / 210)^2) / log10(2)};
+{log10((x / 210)^2) / log10(2)};
 \addlegendentry{\(210mm\)}
 
 \end{axis}
