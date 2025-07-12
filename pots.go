@@ -12,50 +12,43 @@ type potUpdate struct {
 	updated uint8
 }
 
-func potChanged(o, n uint16) bool {
-	// This gives us 128 valid pot positions
-	minDiff := uint16(128)
-
-	if o > n {
-		return (minDiff < (o - n))
-	}
-
-	if o < n {
-		return (minDiff < (n - o))
-	}
-
-	return false
+type potMgr struct {
+	disabled [4]bool
+	quant    [4]uint16
+	last     [4]uint16
 }
 
+const (
+	uint16Max = ^(uint16(0))
+)
 
-type potMgr struct {
-	lastConV    uint16
-	lastCyanV   uint16
-	lastMagentV uint16
-	lastYellowV uint16
+func (mgr *potMgr) SetPotDisabled(p uint8, b bool) {
+	mgr.disabled[p] = b
+}
+
+func (mgr *potMgr) SetPotQuant(p uint8, q uint16) {
+	mgr.quant[p] = q
 }
 
 func (mgr *potMgr) Process(t int64) {
 	var updated uint8
 
-	if newConV := contrast.Get(); potChanged(newConV, mgr.lastConV) {
-		updated |= conPotUpdated
-		mgr.lastConV = newConV
-	}
+	for i := range pots {
+		if mgr.disabled[i] {
+			continue
+		}
 
-	if newCyanV := cyan.Get(); potChanged(newCyanV, mgr.lastCyanV) {
-		updated |= cyanPotUpdated
-		mgr.lastCyanV = newCyanV
-	}
-
-	if newMagentaV := magenta.Get(); potChanged(newMagentaV, mgr.lastMagentV) {
-		updated |= magentaPotUpdated
-		mgr.lastMagentV = newMagentaV
-	}
-
-	if newYellowV := yellow.Get(); potChanged(newYellowV, mgr.lastYellowV) {
-		updated |= yellowPotUpdated
-		mgr.lastYellowV = newYellowV
+		quant := uint16(128)
+		if mgr.quant[i] != 0 {
+			quant = mgr.quant[i]
+		}
+		step := (uint16Max) / quant
+		newV := pots[i].Get() / step
+		if newV != mgr.last[i] {
+			updatePotBits := uint8(1) << i
+			updated |= updatePotBits
+			mgr.last[i] = newV
+		}
 	}
 
 	if updated == 0 {
@@ -66,11 +59,7 @@ func (mgr *potMgr) Process(t int64) {
 		updated: updated,
 	}
 
-	update.vals[0] = mgr.lastConV
-	update.vals[1] = mgr.lastCyanV
-	update.vals[2] = mgr.lastMagentV
-	update.vals[3] = mgr.lastYellowV
-
+	update.vals = mgr.last
 	select {
 	case potUpdateChan <- update:
 	default:

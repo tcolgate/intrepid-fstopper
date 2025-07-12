@@ -18,6 +18,8 @@ const (
 	thirdStop = 125 // = 100 * (2 ^ (1 / 3))
 
 	longPress = 1 * time.Second
+
+	tick = int64(10 * time.Millisecond)
 )
 
 var (
@@ -92,7 +94,7 @@ type stateData struct {
 	prevTick int64
 
 	flags stateBits
-	pots  [4]uint8
+	pots  [4]uint16
 
 	baseTime           uint32  // This is the base exposure time
 	exposureFactor     int8    //
@@ -229,7 +231,7 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 		}
 
 		// start exposure
-		s.remainingTime = int64(s.baseTime) * 10 * int64(time.Millisecond)
+		s.remainingTime = int64(s.baseTime) * tick
 		s.exposureRunning = true
 		s.exposurePaused = false
 		state.currentLED = ledWhite
@@ -314,10 +316,7 @@ func (s *stateData) UpdateDisplay() {
 		copy(s.nextDisplay[1], stringTable[1][1])
 	case state.currentMode == modeBW:
 		hasTouchPoints = true
-		tpi := int(3 & (s.pots[0] >> 6))
-		if tpi >= len(touchPoints[0]) {
-			tpi = len(touchPoints[0]) - 1
-		}
+		tpi := s.pots[0]
 		s.activeTouchPoint = uint8(tpi) // WRONG, shouldn't be updating state in here
 		tp = touchPoints[0][tpi]
 
@@ -383,10 +382,12 @@ var (
 	ledPinConfig = machine.PinConfig{Mode: machine.PinOutput}
 	ledDriver    = ws2812.NewSK6812(ledPin)
 
-	contrast = machine.ADC{machine.ADC0}
-	cyan     = machine.ADC{machine.ADC1}
-	magenta  = machine.ADC{machine.ADC2}
-	yellow   = machine.ADC{machine.ADC3}
+	pots = [4]machine.ADC{
+		machine.ADC{machine.ADC0},
+		machine.ADC{machine.ADC1},
+		machine.ADC{machine.ADC2},
+		machine.ADC{machine.ADC3},
+	}
 
 	i2c       = machine.I2C0
 	i2cConfig = machine.I2CConfig{
@@ -490,10 +491,9 @@ func pinToButton(p machine.Pin) button.Button {
 func configureDevices() error {
 	machine.InitADC()
 
-	contrast.Configure(machine.ADCConfig{})
-	cyan.Configure(machine.ADCConfig{})
-	magenta.Configure(machine.ADCConfig{})
-	yellow.Configure(machine.ADCConfig{})
+	for i := range pots {
+		pots[i].Configure(machine.ADCConfig{})
+	}
 
 	err := i2c.Configure(machine.I2CConfig{})
 	if err != nil {
@@ -529,6 +529,11 @@ func main() {
 	time.Sleep(2 * time.Second)
 	configureDevices()
 
+	potManager.SetPotQuant(0, 3)
+	potManager.SetPotDisabled(1, true)
+	potManager.SetPotDisabled(2, true)
+	potManager.SetPotDisabled(3, true)
+
 	for {
 		updated := false
 		if state.prevTick == 0 {
@@ -550,9 +555,7 @@ func main() {
 			case pu := <-potUpdateChan:
 				if pu.updated > 0 {
 					updated = true
-					for i := 0; i <= 3; i++ {
-						state.pots[i] = uint8((255 & (pu.vals[i] >> 8)))
-					}
+					state.pots = pu.vals
 				}
 			case ev := <-butEventChan:
 				switch ev.EventType {
@@ -587,7 +590,7 @@ func main() {
 
 		// this can be a more subtle calculation
 		state.prevTick = nowNS
-		state.nextTick = int64(10 * time.Millisecond)
+		state.nextTick = tick
 		time.Until(now.Add(time.Duration(state.nextTick)))
 	}
 }
