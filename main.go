@@ -105,17 +105,24 @@ type stateData struct {
 	exposureRunning bool // is an exposure currently running
 	exposurePaused  bool // is an exposure currently running
 
-	lastMode       mode // when returning from Focus
 	lastSubMode    subMode
 	currentMode    mode
 	currentSubMode subMode
 	lastLED        [4]uint8
 	currentLED     [4]uint8
 
-	activeScreen     uint8
-	activeTouchPoint uint8
-	lastDisplay      [2][]byte
-	nextDisplay      [2][]byte
+	activeTouchPoints     []touchPoint
+	activeTouchPointIndex uint8
+	lastDisplay           [2][]byte
+	nextDisplay           [2][]byte
+
+	exposureMode Mode
+	focusMode    Mode
+	bwMode       Mode
+
+	lastMode   Mode
+	activeMode Mode
+	nextMode   Mode
 }
 
 /*
@@ -126,100 +133,22 @@ type stateData struct {
 func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
 	switch b {
 	case button.Plus:
-		if s.exposureRunning || state.currentMode == modeFocus {
-			return false
-		}
-		if s.currentMode == modeBW {
-			switch s.activeTouchPoint {
-			case 0:
-				if s.baseTime != 25500 {
-					s.baseTime += 10
-				}
-			case 1:
-				if s.exposureFactor != 126 {
-					s.exposureFactor += 1
-				}
-			case 2:
-				s.exposureFactorUnit++
-				if s.exposureFactorUnit > 4 {
-					s.exposureFactorUnit = 0
-				}
-			}
-			return true
-		}
+		return s.activeMode.LongPlus(s.activeTouchPointIndex)
 	case button.Minus:
-		if s.exposureRunning || state.currentMode == modeFocus {
-			return false
-		}
-		if s.currentMode == modeBW {
-			switch s.activeTouchPoint {
-			case 0:
-				if s.baseTime != 0 {
-					s.baseTime -= 10
-				}
-			case 1:
-				if s.exposureFactor != -126 {
-					s.exposureFactor -= 1
-				}
-			case 2:
-				s.exposureFactorUnit--
-				if s.exposureFactorUnit < 0 {
-					s.exposureFactorUnit = 4
-				}
-			}
-			return true
-		}
+		return s.activeMode.LongMinus(s.activeTouchPointIndex)
+	default:
+		return false
 	}
-	return false
 }
 
 func (s *stateData) ButtonPress(b button.Button) bool {
 	switch b {
 	case button.Plus:
-		if s.exposureRunning || state.currentMode == modeFocus {
-			return false
-		}
-		if s.currentMode == modeBW {
-			switch s.activeTouchPoint {
-			case 0:
-				if s.baseTime != 25500 {
-					s.baseTime += 10
-				}
-			case 1:
-				if s.exposureFactor != 126 {
-					s.exposureFactor += 1
-				}
-			case 2:
-				s.exposureFactorUnit++
-				if s.exposureFactorUnit > 4 {
-					s.exposureFactorUnit = 0
-				}
-			}
-			return true
-		}
+		s.activeMode.Plus(s.activeTouchPointIndex)
 	case button.Minus:
-		if s.exposureRunning || state.currentMode == modeFocus {
-			return false
-		}
-		if s.currentMode == modeBW {
-			switch s.activeTouchPoint {
-			case 0:
-				if s.baseTime != 0 {
-					s.baseTime -= 10
-				}
-			case 1:
-				if s.exposureFactor != -126 {
-					s.exposureFactor -= 1
-				}
-			case 2:
-				s.exposureFactorUnit--
-				if s.exposureFactorUnit == 0 {
-					s.exposureFactorUnit = 4
-				}
-			}
-			return true
-		}
+		s.activeMode.Minus(s.activeTouchPointIndex)
 	case button.Run:
+		s.activeMode.Minus(s.activeTouchPointIndex)
 		if s.exposureRunning {
 			s.exposurePaused = !s.exposurePaused
 			if s.exposurePaused {
@@ -276,9 +205,6 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 func (s *stateData) ButtonLongPress(b button.Button) bool {
 	switch b {
 	case button.Focus:
-		if s.exposureRunning {
-			return false
-		}
 		if s.currentMode == modeFocus {
 			if toggleStateBit(&state.flags, statebitFocusColour) {
 				s.currentLED = ledWhite
@@ -298,9 +224,12 @@ func (s *stateData) ButtonLongPress(b button.Button) bool {
 }
 
 func (s *stateData) UpdateDisplay() {
+
 	nb := num.NumBuf{}
 	hasTouchPoints := false
-	var tp [2]uint8
+	var tp touchPoint
+
+	s.activeMode.UpdateDisplay(&s.lastDisplay)
 
 	switch {
 	case state.exposureRunning:
@@ -311,14 +240,11 @@ func (s *stateData) UpdateDisplay() {
 			num.Out(&nb, num.Num(s.remainingTime/int64((10*time.Millisecond))))
 			copy(s.nextDisplay[1][12:16], nb[0:4])
 		}
-	case state.currentMode == modeFocus:
-		copy(s.nextDisplay[0], stringTable[1][0])
-		copy(s.nextDisplay[1], stringTable[1][1])
 	case state.currentMode == modeBW:
 		hasTouchPoints = true
 		tpi := s.pots[0]
 		s.activeTouchPoint = uint8(tpi) // WRONG, shouldn't be updating state in here
-		tp = touchPoints[0][tpi]
+		tp = s.activeTouchPoints[tpi]
 
 		copy(s.nextDisplay[0], stringTable[0][0])
 		copy(s.nextDisplay[1], stringTable[0][1])
@@ -357,11 +283,14 @@ func (s *stateData) UpdateDisplay() {
 		}
 	}
 
-	if hasTouchPoints {
+	if len(s.activeTouchPoints) > 0 {
 		lcd.SetCursor(tp[1], tp[0])
 	}
+
 	lcd.CursorOn(hasTouchPoints)
 }
+
+type touchPoint [2]uint8
 
 var (
 	// hardware setup
@@ -415,8 +344,8 @@ var (
 			[]byte("                "),
 		},
 	}
-	touchPoints = [][][2]uint8{
-		[][2]uint8{{0, 0}, {1, 0}, {0, 8}},
+	touchPoints = [][]touchPoint{
+		[]touchPoint{{0, 0}, {1, 0}, {0, 8}},
 		nil,
 	}
 
@@ -434,6 +363,10 @@ var (
 		Events:    butEventChan,
 	}
 
+	bwM       = &exposureMode{}
+	exposureM = &exposureMode{}
+	focusM    = &focusMode{}
+
 	state = stateData{
 		baseTime:           7_00,
 		exposureFactorUnit: 1, // default to 1/2 stops
@@ -446,6 +379,12 @@ var (
 			make([]byte, 16),
 			make([]byte, 16),
 		},
+
+		exposureMode: exposureM,
+		bwMode:       bwM,
+		focusMode:    focusM,
+
+		activeMode: exposureM,
 	}
 )
 
@@ -530,24 +469,43 @@ func main() {
 	configureDevices()
 
 	potManager.SetPotQuant(0, 3)
+
 	potManager.SetPotDisabled(1, true)
 	potManager.SetPotDisabled(2, true)
 	potManager.SetPotDisabled(3, true)
+	state.nextMode = state.exposureMode
 
 	for {
 		updated := false
 		if state.prevTick == 0 {
 			state.prevTick = time.Now().UnixNano()
-			// force a display update on the first iteration
 			updated = true
 		}
+
 		now := time.Now()
 		nowNS := now.UnixNano()
+
+		if state.activeMode != state.nextMode {
+			if state.activeMode != nil {
+				state.nextMode = state.activeMode.SwitchAway()
+			}
+			state.nextMode.SwitchTo(state.activeMode)
+			state.activeMode = state.nextMode
+			state.activeTouchPoints = state.activeMode.TouchPoints()
+
+			if len(state.activeTouchPoints) == 0 {
+				potManager.SetDisabled(0, true)
+			} else {
+				potManager.SetDisabled(0, false)
+				potManager.SetPotQuant(0, uint16(len(state.activeTouchPoints)))
+			}
+		}
 
 		// queueUp events from button and pot changes
 		butManager.Process(nowNS)
 		potManager.Process(nowNS)
 
+		var nextMode Mode
 	processEvents:
 		// apply events to state
 		for {
@@ -581,11 +539,20 @@ func main() {
 				state.currentLED = ledOff
 			}
 			updated = true
+			updateDisplay, _ := state.activeMode.Tick(passed)
+			updated = updated || updateDisplay
 		}
 
+		var exitMode bool
 		if updated {
 			state.SetLEDPanel()
 			state.UpdateDisplay()
+		}
+		if exitMode {
+			state.lastMode = state.activeMode
+			nextMode = state.activeMode.SwitchAway()
+			state.activeMode = nextMode
+			nextMode.SwitchTo(state.lastMode)
 		}
 
 		// this can be a more subtle calculation
