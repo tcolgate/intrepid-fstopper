@@ -19,7 +19,6 @@ func newExpMode(s *stateData) *Mode {
 		state: s,
 	}
 	return &Mode{
-		TouchPoints:   m.TouchPoints,
 		SwitchTo:      m.SwitchTo,
 		SwitchAway:    m.SwitchAway,
 		Tick:          m.Tick,
@@ -30,15 +29,18 @@ func newExpMode(s *stateData) *Mode {
 }
 
 func (e *exposureMode) SwitchTo(prev *Mode) {
+	// need to get the exposure details in here
+	// from the calling mode
 	e.prevMode = prev
+	e.remainingTime = 500 * tick
+	e.running = true
+	e.state.SetLEDPanel(ledWhite)
 }
 
 func (e *exposureMode) SwitchAway() *Mode {
-	return e.prevMode
-}
+	e.state.SetLEDPanel(ledOff)
 
-func (e *exposureMode) TouchPoints() []touchPoint {
-	return nil
+	return e.prevMode
 }
 
 func (e *exposureMode) Tick(passed int64) (bool, bool) {
@@ -52,59 +54,24 @@ func (e *exposureMode) Tick(passed int64) (bool, bool) {
 		e.paused = false
 		e.running = false
 		e.remainingTime = 0
-		//state.currentLED = ledOff
+		e.state.SetLEDPanel(ledOff)
 		return true, true
 	}
 
 	return true, false
 }
 
-/*
-	case button.Run:
-		if s.exposureRunning {
-			s.exposurePaused = !s.exposurePaused
-			if s.exposurePaused {
-				state.currentLED = ledOff
-			} else {
-				state.currentLED = ledWhite
-			}
-			return true
-		}
-
-		// start exposure
-		s.remainingTime = int64(s.baseTime) * tick
-		s.exposureRunning = true
-		s.exposurePaused = false
-		state.currentLED = ledWhite
-		return true
-	case button.Cancel:
-		if s.exposureRunning {
-			s.exposurePaused = false
-			s.exposureRunning = false
-			s.remainingTime = 0
-			state.currentLED = ledOff
-			return true
-			// stop exposure, reset time
-		}
-		if state.currentMode == modeFocus {
-			state.currentMode = state.lastMode
-			state.currentSubMode = state.lastSubMode
-			clearStateBit(&state.flags, statebitFocusColour)
-			state.currentLED = ledOff
-			return true
-		}
-*/
-
 func (e *exposureMode) PressRun() (bool, bool) {
 	e.paused = !e.paused
 
 	if e.paused {
-		//		state.currentLED = ledOff
+		// or, maybe optionally ledRed?
+		e.state.SetLEDPanel(ledOff)
 	} else {
-		//		state.currentLED = ledWhite
+		e.state.SetLEDPanel(ledWhite)
 	}
 
-	return false, false
+	return true, false
 }
 
 func (e *exposureMode) PressCancel(touchPoint uint8) (bool, bool) {
@@ -112,7 +79,7 @@ func (e *exposureMode) PressCancel(touchPoint uint8) (bool, bool) {
 	e.paused = false
 	e.running = false
 	e.remainingTime = 0
-	//state.currentLED = ledOff
+	e.state.SetLEDPanel(ledOff)
 
 	return true, true
 }

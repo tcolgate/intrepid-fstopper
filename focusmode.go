@@ -14,7 +14,6 @@ func newFocusMode(s *stateData) *Mode {
 		state: s,
 	}
 	return &Mode{
-		TouchPoints:   m.TouchPoints,
 		SwitchTo:      m.SwitchTo,
 		SwitchAway:    m.SwitchAway,
 		UpdateDisplay: m.UpdateDisplay,
@@ -35,10 +34,6 @@ func (e *focusMode) SwitchAway() *Mode {
 	e.state.SetLEDPanel(e.state.focusColour)
 
 	return e.prevMode
-}
-
-func (e *focusMode) TouchPoints() []touchPoint {
-	return nil
 }
 
 func (e *focusMode) PressFocus() (bool, bool) {

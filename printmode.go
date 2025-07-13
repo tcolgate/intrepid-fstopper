@@ -54,6 +54,11 @@ func (e *printMode) TouchPoints() []touchPoint {
 }
 
 func (e *printMode) PressRun() (bool, bool) {
+	// we should set up a set of exposures here
+	// - duration
+	// - type (e.g. regular vs freehand)
+	// - things about the LED (e.g. brightness)
+
 	e.nextMode = e.state.exposureMode
 	return true, true
 }

@@ -65,6 +65,7 @@ var (
 	}
 )
 
+// TODO: remove? not used at the moment
 type stateBits int
 
 const (
@@ -114,11 +115,6 @@ type stateData struct {
 	lastColour  [4]uint8
 	focusColour [4]uint8
 }
-
-/*
-   It would be nice to have a better structure abstracting the
-	 state and transitions
-*/
 
 func (s *stateData) ButtonHoldRepeat(b button.Button) (bool, bool) {
 	switch b {
@@ -401,8 +397,10 @@ func main() {
 	time.Sleep(2 * time.Second)
 	configureDevices()
 
+	// pot 0 is the touch point selector
 	potManager.SetPotQuant(0, 3)
 
+	// Not using these three pots currently
 	potManager.SetDisabled(1, true)
 	potManager.SetDisabled(2, true)
 	potManager.SetDisabled(3, true)
@@ -411,7 +409,6 @@ func main() {
 	state.focusMode = focusM
 	state.bwMode = bwM
 
-	state.activeMode = state.bwMode
 	nextMode := state.bwMode
 
 	for {
@@ -427,7 +424,10 @@ func main() {
 		if state.activeMode != nextMode {
 			nextMode.SwitchTo(state.activeMode)
 			state.activeMode = nextMode
-			state.activeTouchPoints = state.activeMode.TouchPoints()
+			state.activeTouchPoints = nil
+			if state.activeMode.TouchPoints != nil {
+				state.activeTouchPoints = state.activeMode.TouchPoints()
+			}
 
 			if len(state.activeTouchPoints) == 0 {
 				potManager.SetDisabled(0, true)
@@ -451,6 +451,10 @@ func main() {
 				if pu.updated > 0 {
 					updateDisplay = true
 					state.pots = pu.vals
+
+					if len(state.activeTouchPoints) > 0 {
+						state.activeTouchPointIndex = uint8(state.pots[0])
+					}
 				}
 			case ev := <-butEventChan:
 				var ud, em bool
