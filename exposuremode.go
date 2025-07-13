@@ -19,19 +19,13 @@ func newExpMode(s *stateData) *Mode {
 		state: s,
 	}
 	return &Mode{
-		TouchPoints:    m.TouchPoints,
-		SwitchTo:       m.SwitchTo,
-		SwitchAway:     m.SwitchAway,
-		Tick:           m.Tick,
-		UpdateDisplay:  m.UpdateDisplay,
-		PressPlus:      m.PressPlus,
-		PressLongPlus:  m.PressLongPlus,
-		PressMinus:     m.PressMinus,
-		PressLongMinus: m.PressLongMinus,
-		PressRun:       m.PressRun,
-		PressFocus:     m.PressFocus,
-		PressLongFocus: m.PressLongFocus,
-		PressCancel:    m.PressCancel,
+		TouchPoints:   m.TouchPoints,
+		SwitchTo:      m.SwitchTo,
+		SwitchAway:    m.SwitchAway,
+		Tick:          m.Tick,
+		UpdateDisplay: m.UpdateDisplay,
+		PressRun:      m.PressRun,
+		PressCancel:   m.PressCancel,
 	}
 }
 
@@ -101,7 +95,7 @@ func (e *exposureMode) Tick(passed int64) (bool, bool) {
 		}
 */
 
-func (e *exposureMode) PressRun() bool {
+func (e *exposureMode) PressRun() (bool, bool) {
 	e.paused = !e.paused
 
 	if e.paused {
@@ -110,15 +104,7 @@ func (e *exposureMode) PressRun() bool {
 		//		state.currentLED = ledWhite
 	}
 
-	return true
-}
-
-func (e *exposureMode) PressFocus() bool {
-	return false
-}
-
-func (e *exposureMode) PressLongFocus() bool {
-	return false
+	return false, false
 }
 
 func (e *exposureMode) PressCancel(touchPoint uint8) (bool, bool) {
@@ -131,23 +117,7 @@ func (e *exposureMode) PressCancel(touchPoint uint8) (bool, bool) {
 	return true, true
 }
 
-func (e *exposureMode) PressPlus(touchPoint uint8) bool {
-	return false
-}
-
-func (e *exposureMode) PressLongPlus(touchPoint uint8) bool {
-	return false
-}
-
-func (e *exposureMode) PressMinus(touchPoint uint8) bool {
-	return false
-}
-
-func (e *exposureMode) PressLongMinus(touchPoint uint8) bool {
-	return false
-}
-
-func (e *exposureMode) UpdateDisplay(nextDisplay *[2][]byte) *touchPoint {
+func (e *exposureMode) UpdateDisplay(nextDisplay *[2][]byte) {
 	nb := num.NumBuf{}
 	copy(nextDisplay[0], stringTable[2][0])
 	copy(nextDisplay[1], stringTable[2][1])
@@ -156,6 +126,4 @@ func (e *exposureMode) UpdateDisplay(nextDisplay *[2][]byte) *touchPoint {
 		num.Out(&nb, num.Num(e.remainingTime/int64((10*time.Millisecond))))
 		copy(nextDisplay[1][12:16], nb[0:4])
 	}
-
-	return nil
 }

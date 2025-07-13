@@ -2,9 +2,11 @@ package main
 
 import "intrepidfstopper/num"
 
-type bwMode struct {
+type printMode struct {
 	prevMode *Mode
-	state    *stateData
+	nextMode *Mode
+
+	state *stateData
 
 	baseTime           uint64
 	paused             bool
@@ -15,7 +17,9 @@ type bwMode struct {
 }
 
 func newBWMode(s *stateData) *Mode {
-	m := &bwMode{
+	m := &printMode{
+		state: s,
+
 		baseTime:           7_00,
 		exposureFactorUnit: 1, // default to 1/2 stops
 	}
@@ -24,7 +28,6 @@ func newBWMode(s *stateData) *Mode {
 		TouchPoints:    m.TouchPoints,
 		SwitchTo:       m.SwitchTo,
 		SwitchAway:     m.SwitchAway,
-		Tick:           m.Tick,
 		UpdateDisplay:  m.UpdateDisplay,
 		PressPlus:      m.PressPlus,
 		PressLongPlus:  m.PressLongPlus,
@@ -37,41 +40,45 @@ func newBWMode(s *stateData) *Mode {
 	}
 }
 
-func (e *bwMode) SwitchTo(prev *Mode) {
+func (e *printMode) SwitchTo(prev *Mode) {
 	e.prevMode = prev
 }
 
-func (e *bwMode) SwitchAway() *Mode {
-	return e.prevMode
+func (e *printMode) SwitchAway() *Mode {
+	println("printmode switchaway, e", e)
+	return e.nextMode
 }
 
-func (e *bwMode) TouchPoints() []touchPoint {
+func (e *printMode) TouchPoints() []touchPoint {
 	return touchPoints[0]
 }
 
-func (e *bwMode) Tick(passed int64) (bool, bool) {
-	return false, false
+func (e *printMode) PressRun() (bool, bool) {
+	e.nextMode = e.state.exposureMode
+	return true, true
 }
 
-func (e *bwMode) PressRun() bool {
-	return true
+func (e *printMode) PressFocus() (bool, bool) {
+	println("printmode focus pressed, e: ", e.state)
+	e.state.focusColour = ledRed
+	e.nextMode = e.state.focusMode
+	return true, true
 }
 
-func (e *bwMode) PressFocus() bool {
-	return true
+func (e *printMode) PressLongFocus() (bool, bool) {
+	println("printmode focus long pressed")
+	e.state.focusColour = ledWhite
+	e.nextMode = e.state.focusMode
+	return true, true
 }
 
-func (e *bwMode) PressLongFocus() bool {
-	return true
-}
-
-func (e *bwMode) PressCancel(touchPoint uint8) (bool, bool) {
+func (e *printMode) PressCancel(touchPoint uint8) (bool, bool) {
 	// should reset stuff and/or delete the current
 	// exposure
 	return false, false
 }
 
-func (e *bwMode) PressPlus(touchPointIndex uint8) bool {
+func (e *printMode) PressPlus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
 	case 0:
 		if e.baseTime != 25500 {
@@ -87,12 +94,12 @@ func (e *bwMode) PressPlus(touchPointIndex uint8) bool {
 			e.exposureFactorUnit = 0
 		}
 	default:
-		return false
+		return false, false
 	}
-	return true
+	return true, false
 }
 
-func (e *bwMode) PressLongPlus(touchPointIndex uint8) bool {
+func (e *printMode) PressLongPlus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
 	case 0:
 		if e.baseTime != 25500 {
@@ -108,12 +115,12 @@ func (e *bwMode) PressLongPlus(touchPointIndex uint8) bool {
 			e.exposureFactorUnit = 0
 		}
 	default:
-		return false
+		return false, false
 	}
-	return true
+	return true, false
 }
 
-func (e *bwMode) PressMinus(touchPointIndex uint8) bool {
+func (e *printMode) PressMinus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
 	case 0:
 		if e.baseTime != 0 {
@@ -129,12 +136,12 @@ func (e *bwMode) PressMinus(touchPointIndex uint8) bool {
 			e.exposureFactorUnit = 4
 		}
 	default:
-		return false
+		return false, false
 	}
-	return true
+	return true, false
 }
 
-func (e *bwMode) PressLongMinus(touchPointIndex uint8) bool {
+func (e *printMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
 	case 0:
 		if e.baseTime != 0 {
@@ -150,12 +157,12 @@ func (e *bwMode) PressLongMinus(touchPointIndex uint8) bool {
 			e.exposureFactorUnit = 4
 		}
 	default:
-		return false
+		return false, false
 	}
-	return true
+	return true, false
 }
 
-func (e *bwMode) UpdateDisplay(nextDisplay *[2][]byte) *touchPoint {
+func (e *printMode) UpdateDisplay(nextDisplay *[2][]byte) {
 	nb := &num.NumBuf{}
 	copy(nextDisplay[0], stringTable[0][0])
 	copy(nextDisplay[1], stringTable[0][1])
@@ -184,6 +191,4 @@ func (e *bwMode) UpdateDisplay(nextDisplay *[2][]byte) *touchPoint {
 	nextDisplay[1][14-resLen] = []byte("=")[0]
 	copy(nextDisplay[1][11:15], nb[0:4])
 	nextDisplay[1][15] = []byte(")")[0]
-
-	return nil
 }

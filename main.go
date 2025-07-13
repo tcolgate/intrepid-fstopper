@@ -98,20 +98,21 @@ type stateData struct {
 	lastSubMode    subMode
 	currentSubMode subMode
 
-	lastLED [4]uint8
-
 	activeTouchPoints     []touchPoint
 	activeTouchPointIndex uint8
-	lastDisplay           [2][]byte
-	nextDisplay           [2][]byte
+
+	activeDisplay bool
+	display1      [2][]byte
+	display2      [2][]byte
 
 	exposureMode *Mode
 	focusMode    *Mode
 	bwMode       *Mode
 
-	lastMode   *Mode
 	activeMode *Mode
-	nextMode   *Mode
+
+	lastColour  [4]uint8
+	focusColour [4]uint8
 }
 
 /*
@@ -119,7 +120,7 @@ type stateData struct {
 	 state and transitions
 */
 
-func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
+func (s *stateData) ButtonHoldRepeat(b button.Button) (bool, bool) {
 	switch b {
 	case button.Plus:
 		if state.activeMode.PressLongPlus != nil {
@@ -130,10 +131,10 @@ func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
 			return s.activeMode.PressLongMinus(s.activeTouchPointIndex)
 		}
 	}
-	return false
+	return false, false
 }
 
-func (s *stateData) ButtonPress(b button.Button) bool {
+func (s *stateData) ButtonPress(b button.Button) (bool, bool) {
 	switch b {
 	case button.Plus:
 		if state.activeMode.PressPlus != nil {
@@ -168,8 +169,7 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 		*/
 	case button.Cancel:
 		if state.activeMode.PressCancel != nil {
-			redraw, _ := s.activeMode.PressCancel(s.activeTouchPointIndex)
-			return redraw
+			return s.activeMode.PressCancel(s.activeTouchPointIndex)
 		}
 
 		/*
@@ -193,62 +193,36 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 		if state.activeMode.PressFocus != nil {
 			return s.activeMode.PressFocus()
 		}
-		/*
-			if s.exposureRunning {
-				return false
-			}
-			if state.currentMode != modeFocus {
-				state.lastMode = state.currentMode
-				state.lastSubMode = state.currentSubMode
-				state.currentMode = modeFocus
-				clearStateBit(&state.flags, statebitFocusColour)
-				state.currentLED = ledRed
-			} else {
-				state.currentMode = state.lastMode
-				state.currentSubMode = state.lastSubMode
-				clearStateBit(&state.flags, statebitFocusColour)
-				state.currentLED = ledOff
-			}
-			return true
-		*/
 	}
-	return false
+	return false, false
 }
 
-func (s *stateData) ButtonLongPress(b button.Button) bool {
+func (s *stateData) ButtonLongPress(b button.Button) (bool, bool) {
 	switch b {
 	case button.Focus:
-		if s.activeMode.PressFocus != nil {
-			return s.activeMode.PressFocus()
+		if s.activeMode.PressLongFocus != nil {
+			return s.activeMode.PressLongFocus()
 		}
-
-		/*
-			if s.currentMode == modeFocus {
-				if toggleStateBit(&state.flags, statebitFocusColour) {
-					s.currentLED = ledWhite
-				} else {
-					s.currentLED = ledRed
-				}
-			} else {
-				state.lastMode = state.currentMode
-				state.lastSubMode = state.currentSubMode
-				state.currentMode = modeFocus
-				setStateBit(&state.flags, statebitFocusColour)
-				state.currentLED = ledWhite
-			}
-		*/
 	}
-	return false
+	return false, false
 }
 
 func (s *stateData) UpdateDisplay() {
-	s.activeMode.UpdateDisplay(&s.lastDisplay)
+	println("in update display")
+	lastDisplay := &s.display1
+	nextDisplay := &s.display2
+	if s.activeDisplay {
+		lastDisplay = &s.display2
+		nextDisplay = &s.display1
+	}
+
+	s.activeMode.UpdateDisplay(nextDisplay)
 
 	for i := uint8(0); i < 2; i++ {
-		if bytes.Compare(s.lastDisplay[i], s.nextDisplay[i]) != 0 {
+		if bytes.Compare(lastDisplay[i], nextDisplay[i]) != 0 {
 			lcd.SetCursor(0, i)
-			lcd.Print(s.nextDisplay[i])
-			copy(s.lastDisplay[i][0:16], s.nextDisplay[i][0:16])
+			lcd.Print(nextDisplay[i])
+			copy(lastDisplay[i][0:16], nextDisplay[i][0:16])
 		}
 	}
 
@@ -335,11 +309,11 @@ var (
 	}
 
 	state = stateData{
-		lastDisplay: [2][]byte{
+		display1: [2][]byte{
 			make([]byte, 16),
 			make([]byte, 16),
 		},
-		nextDisplay: [2][]byte{
+		display2: [2][]byte{
 			make([]byte, 16),
 			make([]byte, 16),
 		},
@@ -351,7 +325,7 @@ var (
 )
 
 func (s *stateData) SetLEDPanel(col [4]uint8) {
-	if s.lastLED == col {
+	if s.lastColour == col {
 		return
 	}
 	for i := 0; i < ledCount; i++ {
@@ -360,8 +334,7 @@ func (s *stateData) SetLEDPanel(col [4]uint8) {
 		ledDriver.WriteByte(col[2]) // Blue
 		ledDriver.WriteByte(col[3]) // White
 	}
-	s.lastLED = col
-
+	s.lastColour = col
 }
 
 // pinToButton converts the hardware pin number to
@@ -433,12 +406,13 @@ func main() {
 	potManager.SetDisabled(1, true)
 	potManager.SetDisabled(2, true)
 	potManager.SetDisabled(3, true)
-	state.nextMode = state.exposureMode
 
 	state.exposureMode = exposureM
 	state.focusMode = focusM
 	state.bwMode = bwM
+
 	state.activeMode = state.bwMode
+	nextMode := state.bwMode
 
 	for {
 		exitMode := false
@@ -450,13 +424,9 @@ func main() {
 
 		now := time.Now()
 		nowNS := now.UnixNano()
-
-		if state.activeMode != state.nextMode {
-			if state.activeMode != nil {
-				state.nextMode = state.activeMode.SwitchAway()
-			}
-			state.nextMode.SwitchTo(state.activeMode)
-			state.activeMode = state.nextMode
+		if state.activeMode != nextMode {
+			nextMode.SwitchTo(state.activeMode)
+			state.activeMode = nextMode
 			state.activeTouchPoints = state.activeMode.TouchPoints()
 
 			if len(state.activeTouchPoints) == 0 {
@@ -465,13 +435,14 @@ func main() {
 				potManager.SetDisabled(0, false)
 				potManager.SetPotQuant(0, uint16(len(state.activeTouchPoints)))
 			}
+
+			updateDisplay = true
 		}
 
 		// queueUp events from button and pot changes
 		butManager.Process(nowNS)
 		potManager.Process(nowNS)
 
-		var nextMode *Mode
 	processEvents:
 		// apply events to state
 		for {
@@ -482,35 +453,39 @@ func main() {
 					state.pots = pu.vals
 				}
 			case ev := <-butEventChan:
+				var ud, em bool
 				switch ev.EventType {
 				case button.EventPress:
-					updateDisplay = updateDisplay || state.ButtonPress(ev.Button)
+					ud, em = state.ButtonPress(ev.Button)
 				case button.EventLongPress:
-					updateDisplay = updateDisplay || state.ButtonLongPress(ev.Button)
+					ud, em = state.ButtonLongPress(ev.Button)
 				case button.EventHoldRepeat:
-					updateDisplay = updateDisplay || state.ButtonHoldRepeat(ev.Button)
+					ud, em = state.ButtonHoldRepeat(ev.Button)
 				}
+				updateDisplay = updateDisplay || ud
+				exitMode = exitMode || em
 			default:
 				break processEvents
 			}
 		}
 
 		passed := nowNS - state.prevTick
-
-		if state.activeMode.Tick != nil {
-			ud, _ := state.activeMode.Tick(passed)
-			updateDisplay = updateDisplay || ud
+		if !(exitMode || updateDisplay) {
+			if state.activeMode.Tick != nil {
+				ud, em := state.activeMode.Tick(passed)
+				updateDisplay = updateDisplay || ud
+				exitMode = exitMode || em
+			}
 		}
 
 		if updateDisplay {
+			println("calling update display", nowNS)
 			state.UpdateDisplay()
 		}
 
 		if exitMode {
-			state.lastMode = state.activeMode
+			println("calling switchAway", nowNS)
 			nextMode = state.activeMode.SwitchAway()
-			state.activeMode = nextMode
-			nextMode.SwitchTo(state.lastMode)
 		}
 
 		// this can be a more subtle calculation

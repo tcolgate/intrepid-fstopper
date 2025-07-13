@@ -2,7 +2,11 @@ package main
 
 type focusMode struct {
 	prevMode *Mode
-	state    *stateData
+
+	// focusColour is set on state, as it needs to be
+	// adjustable by the mode that saw the focsu press
+	// events to select colour
+	state *stateData
 }
 
 func newFocusMode(s *stateData) *Mode {
@@ -10,16 +14,11 @@ func newFocusMode(s *stateData) *Mode {
 		state: s,
 	}
 	return &Mode{
-		TouchPoints:    m.TouchPoints,
-		SwitchTo:       m.SwitchTo,
-		SwitchAway:     m.SwitchAway,
-		Tick:           m.Tick,
-		UpdateDisplay:  m.UpdateDisplay,
-		PressPlus:      m.PressPlus,
-		PressLongPlus:  m.PressLongPlus,
-		PressMinus:     m.PressMinus,
-		PressLongMinus: m.PressLongMinus,
-		PressRun:       m.PressRun,
+		TouchPoints:   m.TouchPoints,
+		SwitchTo:      m.SwitchTo,
+		SwitchAway:    m.SwitchAway,
+		UpdateDisplay: m.UpdateDisplay,
+
 		PressFocus:     m.PressFocus,
 		PressLongFocus: m.PressLongFocus,
 		PressCancel:    m.PressCancel,
@@ -27,10 +26,14 @@ func newFocusMode(s *stateData) *Mode {
 }
 
 func (e *focusMode) SwitchTo(prev *Mode) {
+	e.state.SetLEDPanel(e.state.focusColour)
 	e.prevMode = prev
 }
 
 func (e *focusMode) SwitchAway() *Mode {
+	e.state.focusColour = ledOff
+	e.state.SetLEDPanel(e.state.focusColour)
+
 	return e.prevMode
 }
 
@@ -38,51 +41,26 @@ func (e *focusMode) TouchPoints() []touchPoint {
 	return nil
 }
 
-func (e *focusMode) Tick(passed int64) (bool, bool) {
+func (e *focusMode) PressFocus() (bool, bool) {
+	return true, true
+}
+
+func (e *focusMode) PressLongFocus() (bool, bool) {
+	switch e.state.focusColour {
+	case ledRed:
+		e.state.focusColour = ledWhite
+	default:
+		e.state.focusColour = ledRed
+	}
+	e.state.SetLEDPanel(e.state.focusColour)
 	return false, false
 }
 
-func (e *focusMode) PressRun() bool {
-	return false
-}
-
-func (e *focusMode) PressFocus() bool {
-	// this should cancel focus mode
-	return true
-}
-
-func (e *focusMode) PressLongFocus() bool {
-	// this should toggle red/white led
-	return false
-}
-
 func (e *focusMode) PressCancel(touchPoint uint8) (bool, bool) {
-	return false, true
+	return true, true
 }
 
-func (e *focusMode) PressPlus(touchPoint uint8) bool {
-	return false
-}
-
-func (e *focusMode) PressLongPlus(touchPoint uint8) bool {
-	return false
-}
-
-func (e *focusMode) PressMinus(touchPoint uint8) bool {
-	return false
-}
-
-func (e *focusMode) PressLongMinus(touchPoint uint8) bool {
-	return false
-}
-
-func (e *focusMode) UpdateDisplay(nextDisplay *[2][]byte) *touchPoint {
+func (e *focusMode) UpdateDisplay(nextDisplay *[2][]byte) {
 	copy(nextDisplay[0], stringTable[1][0])
 	copy(nextDisplay[1], stringTable[1][1])
-
-	return nil
-}
-
-func (e *focusMode) NextMode() *Mode {
-	return nil
 }
