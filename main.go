@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"intrepidfstopper/button"
-	"intrepidfstopper/num"
 	"machine"
 	"time"
 
@@ -96,33 +95,23 @@ type stateData struct {
 	flags stateBits
 	pots  [4]uint16
 
-	baseTime           uint32  // This is the base exposure time
-	exposureFactor     int8    //
-	exposureFactorUnit expUnit // 0 = stops 1 = 1/2 stops 2 = 1/3 stops 3 = 1/10 stops
-
-	remainingTime   int64 // Time remaining during running exposure
-	currentExposure uint8
-	exposureRunning bool // is an exposure currently running
-	exposurePaused  bool // is an exposure currently running
-
 	lastSubMode    subMode
-	currentMode    mode
 	currentSubMode subMode
-	lastLED        [4]uint8
-	currentLED     [4]uint8
+
+	lastLED [4]uint8
 
 	activeTouchPoints     []touchPoint
 	activeTouchPointIndex uint8
 	lastDisplay           [2][]byte
 	nextDisplay           [2][]byte
 
-	exposureMode Mode
-	focusMode    Mode
-	bwMode       Mode
+	exposureMode *Mode
+	focusMode    *Mode
+	bwMode       *Mode
 
-	lastMode   Mode
-	activeMode Mode
-	nextMode   Mode
+	lastMode   *Mode
+	activeMode *Mode
+	nextMode   *Mode
 }
 
 /*
@@ -133,71 +122,95 @@ type stateData struct {
 func (s *stateData) ButtonHoldRepeat(b button.Button) bool {
 	switch b {
 	case button.Plus:
-		return s.activeMode.LongPlus(s.activeTouchPointIndex)
+		if state.activeMode.PressLongPlus != nil {
+			return s.activeMode.PressLongPlus(s.activeTouchPointIndex)
+		}
 	case button.Minus:
-		return s.activeMode.LongMinus(s.activeTouchPointIndex)
-	default:
-		return false
+		if state.activeMode.PressLongMinus != nil {
+			return s.activeMode.PressLongMinus(s.activeTouchPointIndex)
+		}
 	}
+	return false
 }
 
 func (s *stateData) ButtonPress(b button.Button) bool {
 	switch b {
 	case button.Plus:
-		s.activeMode.Plus(s.activeTouchPointIndex)
+		if state.activeMode.PressPlus != nil {
+			return s.activeMode.PressPlus(s.activeTouchPointIndex)
+		}
 	case button.Minus:
-		s.activeMode.Minus(s.activeTouchPointIndex)
+		if state.activeMode.PressMinus != nil {
+			return s.activeMode.PressMinus(s.activeTouchPointIndex)
+		}
 	case button.Run:
-		s.activeMode.Minus(s.activeTouchPointIndex)
-		if s.exposureRunning {
-			s.exposurePaused = !s.exposurePaused
-			if s.exposurePaused {
-				state.currentLED = ledOff
-			} else {
-				state.currentLED = ledWhite
-			}
-			return true
+		if state.activeMode.PressRun != nil {
+			return s.activeMode.PressRun()
 		}
 
-		// start exposure
-		s.remainingTime = int64(s.baseTime) * tick
-		s.exposureRunning = true
-		s.exposurePaused = false
-		state.currentLED = ledWhite
-		return true
-	case button.Cancel:
-		if s.exposureRunning {
+		/*
+			if s.exposureRunning {
+				s.exposurePaused = !s.exposurePaused
+				if s.exposurePaused {
+					state.currentLED = ledOff
+				} else {
+					state.currentLED = ledWhite
+				}
+				return true
+			}
+
+			// start exposure
+			s.remainingTime = int64(s.baseTime) * tick
+			s.exposureRunning = true
 			s.exposurePaused = false
-			s.exposureRunning = false
-			s.remainingTime = 0
-			state.currentLED = ledOff
+			state.currentLED = ledWhite
 			return true
-			// stop exposure, reset time
+		*/
+	case button.Cancel:
+		if state.activeMode.PressCancel != nil {
+			redraw, _ := s.activeMode.PressCancel(s.activeTouchPointIndex)
+			return redraw
 		}
-		if state.currentMode == modeFocus {
-			state.currentMode = state.lastMode
-			state.currentSubMode = state.lastSubMode
-			clearStateBit(&state.flags, statebitFocusColour)
-			state.currentLED = ledOff
-			return true
-		}
+
+		/*
+			if s.exposureRunning {
+				s.exposurePaused = false
+				s.exposureRunning = false
+				s.remainingTime = 0
+				state.currentLED = ledOff
+				return true
+				// stop exposure, reset time
+			}
+			if state.currentMode == modeFocus {
+				state.currentMode = state.lastMode
+				state.currentSubMode = state.lastSubMode
+				clearStateBit(&state.flags, statebitFocusColour)
+				state.currentLED = ledOff
+				return true
+			}
+		*/
 	case button.Focus:
-		if s.exposureRunning {
-			return false
+		if state.activeMode.PressFocus != nil {
+			return s.activeMode.PressFocus()
 		}
-		if state.currentMode != modeFocus {
-			state.lastMode = state.currentMode
-			state.lastSubMode = state.currentSubMode
-			state.currentMode = modeFocus
-			clearStateBit(&state.flags, statebitFocusColour)
-			state.currentLED = ledRed
-		} else {
-			state.currentMode = state.lastMode
-			state.currentSubMode = state.lastSubMode
-			clearStateBit(&state.flags, statebitFocusColour)
-			state.currentLED = ledOff
-		}
-		return true
+		/*
+			if s.exposureRunning {
+				return false
+			}
+			if state.currentMode != modeFocus {
+				state.lastMode = state.currentMode
+				state.lastSubMode = state.currentSubMode
+				state.currentMode = modeFocus
+				clearStateBit(&state.flags, statebitFocusColour)
+				state.currentLED = ledRed
+			} else {
+				state.currentMode = state.lastMode
+				state.currentSubMode = state.lastSubMode
+				clearStateBit(&state.flags, statebitFocusColour)
+				state.currentLED = ledOff
+			}
+			return true
+		*/
 	}
 	return false
 }
@@ -205,75 +218,31 @@ func (s *stateData) ButtonPress(b button.Button) bool {
 func (s *stateData) ButtonLongPress(b button.Button) bool {
 	switch b {
 	case button.Focus:
-		if s.currentMode == modeFocus {
-			if toggleStateBit(&state.flags, statebitFocusColour) {
-				s.currentLED = ledWhite
-			} else {
-				s.currentLED = ledRed
-			}
-		} else {
-			state.lastMode = state.currentMode
-			state.lastSubMode = state.currentSubMode
-			state.currentMode = modeFocus
-			setStateBit(&state.flags, statebitFocusColour)
-			state.currentLED = ledWhite
+		if s.activeMode.PressFocus != nil {
+			return s.activeMode.PressFocus()
 		}
-		return true
+
+		/*
+			if s.currentMode == modeFocus {
+				if toggleStateBit(&state.flags, statebitFocusColour) {
+					s.currentLED = ledWhite
+				} else {
+					s.currentLED = ledRed
+				}
+			} else {
+				state.lastMode = state.currentMode
+				state.lastSubMode = state.currentSubMode
+				state.currentMode = modeFocus
+				setStateBit(&state.flags, statebitFocusColour)
+				state.currentLED = ledWhite
+			}
+		*/
 	}
 	return false
 }
 
 func (s *stateData) UpdateDisplay() {
-
-	nb := num.NumBuf{}
-	hasTouchPoints := false
-	var tp touchPoint
-
 	s.activeMode.UpdateDisplay(&s.lastDisplay)
-
-	switch {
-	case state.exposureRunning:
-		copy(s.nextDisplay[0], stringTable[2][0])
-		copy(s.nextDisplay[1], stringTable[2][1])
-
-		if s.exposureRunning {
-			num.Out(&nb, num.Num(s.remainingTime/int64((10*time.Millisecond))))
-			copy(s.nextDisplay[1][12:16], nb[0:4])
-		}
-	case state.currentMode == modeBW:
-		hasTouchPoints = true
-		tpi := s.pots[0]
-		s.activeTouchPoint = uint8(tpi) // WRONG, shouldn't be updating state in here
-		tp = s.activeTouchPoints[tpi]
-
-		copy(s.nextDisplay[0], stringTable[0][0])
-		copy(s.nextDisplay[1], stringTable[0][1])
-
-		num.Out(&nb, num.Num(s.baseTime))
-		copy(s.nextDisplay[0][2:6], nb[0:4])
-
-		if s.exposureFactor < 0 {
-			s.nextDisplay[1][1] = signMinus
-		} else {
-			s.nextDisplay[1][1] = signPlus
-		}
-		absExpFact := s.exposureFactor
-		if absExpFact < 0 {
-			absExpFact = absExpFact * -1
-		}
-		num.OutLeft(&nb, num.Num(absExpFact))
-		copy(s.nextDisplay[1][2:6], nb[0:4])
-
-		copy(s.nextDisplay[0][10:15], expUnitNames[s.exposureFactorUnit][0:4])
-
-		res := num.Num(11_23)
-		num.Out(&nb, num.Num(res))
-		resLen := num.Len(res)
-		s.nextDisplay[1][13-resLen] = []byte("(")[0]
-		s.nextDisplay[1][14-resLen] = []byte("=")[0]
-		copy(s.nextDisplay[1][11:15], nb[0:4])
-		s.nextDisplay[1][15] = []byte(")")[0]
-	}
 
 	for i := uint8(0); i < 2; i++ {
 		if bytes.Compare(s.lastDisplay[i], s.nextDisplay[i]) != 0 {
@@ -284,10 +253,12 @@ func (s *stateData) UpdateDisplay() {
 	}
 
 	if len(s.activeTouchPoints) > 0 {
+		tp := s.activeTouchPoints[s.activeTouchPointIndex]
 		lcd.SetCursor(tp[1], tp[0])
+		lcd.CursorOn(true)
+	} else {
+		lcd.CursorOn(false)
 	}
-
-	lcd.CursorOn(hasTouchPoints)
 }
 
 type touchPoint [2]uint8
@@ -363,14 +334,7 @@ var (
 		Events:    butEventChan,
 	}
 
-	bwM       = &exposureMode{}
-	exposureM = &exposureMode{}
-	focusM    = &focusMode{}
-
 	state = stateData{
-		baseTime:           7_00,
-		exposureFactorUnit: 1, // default to 1/2 stops
-
 		lastDisplay: [2][]byte{
 			make([]byte, 16),
 			make([]byte, 16),
@@ -379,26 +343,24 @@ var (
 			make([]byte, 16),
 			make([]byte, 16),
 		},
-
-		exposureMode: exposureM,
-		bwMode:       bwM,
-		focusMode:    focusM,
-
-		activeMode: exposureM,
 	}
+
+	bwM       = newBWMode(&state)
+	exposureM = newExpMode(&state)
+	focusM    = newFocusMode(&state)
 )
 
-func (s *stateData) SetLEDPanel() {
-	if s.lastLED == s.currentLED {
+func (s *stateData) SetLEDPanel(col [4]uint8) {
+	if s.lastLED == col {
 		return
 	}
 	for i := 0; i < ledCount; i++ {
-		ledDriver.WriteByte(s.currentLED[0]) // Green
-		ledDriver.WriteByte(s.currentLED[1]) // Red
-		ledDriver.WriteByte(s.currentLED[2]) // Blue
-		ledDriver.WriteByte(s.currentLED[3]) // White
+		ledDriver.WriteByte(col[0]) // Green
+		ledDriver.WriteByte(col[1]) // Red
+		ledDriver.WriteByte(col[2]) // Blue
+		ledDriver.WriteByte(col[3]) // White
 	}
-	s.lastLED = s.currentLED
+	s.lastLED = col
 
 }
 
@@ -427,7 +389,7 @@ func pinToButton(p machine.Pin) button.Button {
 	}
 }
 
-func configureDevices() error {
+func configureDevices() {
 	machine.InitADC()
 
 	for i := range pots {
@@ -436,7 +398,7 @@ func configureDevices() error {
 
 	err := i2c.Configure(machine.I2CConfig{})
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	i2c.Configure(i2cConfig)
@@ -460,8 +422,6 @@ func configureDevices() error {
 		buttonPins[i].Configure(buttonPinsConfig)
 		buttonPins[i].SetInterrupt(machine.PinFalling|machine.PinRising, butInt)
 	}
-
-	return nil
 }
 
 func main() {
@@ -470,16 +430,22 @@ func main() {
 
 	potManager.SetPotQuant(0, 3)
 
-	potManager.SetPotDisabled(1, true)
-	potManager.SetPotDisabled(2, true)
-	potManager.SetPotDisabled(3, true)
+	potManager.SetDisabled(1, true)
+	potManager.SetDisabled(2, true)
+	potManager.SetDisabled(3, true)
 	state.nextMode = state.exposureMode
 
+	state.exposureMode = exposureM
+	state.focusMode = focusM
+	state.bwMode = bwM
+	state.activeMode = state.bwMode
+
 	for {
-		updated := false
+		exitMode := false
+		updateDisplay := false
 		if state.prevTick == 0 {
 			state.prevTick = time.Now().UnixNano()
-			updated = true
+			updateDisplay = true
 		}
 
 		now := time.Now()
@@ -505,49 +471,41 @@ func main() {
 		butManager.Process(nowNS)
 		potManager.Process(nowNS)
 
-		var nextMode Mode
+		var nextMode *Mode
 	processEvents:
 		// apply events to state
 		for {
 			select {
 			case pu := <-potUpdateChan:
 				if pu.updated > 0 {
-					updated = true
+					updateDisplay = true
 					state.pots = pu.vals
 				}
 			case ev := <-butEventChan:
 				switch ev.EventType {
 				case button.EventPress:
-					updated = updated || state.ButtonPress(ev.Button)
+					updateDisplay = updateDisplay || state.ButtonPress(ev.Button)
 				case button.EventLongPress:
-					updated = updated || state.ButtonLongPress(ev.Button)
+					updateDisplay = updateDisplay || state.ButtonLongPress(ev.Button)
 				case button.EventHoldRepeat:
-					updated = updated || state.ButtonHoldRepeat(ev.Button)
+					updateDisplay = updateDisplay || state.ButtonHoldRepeat(ev.Button)
 				}
 			default:
 				break processEvents
 			}
 		}
 
-		if state.exposureRunning && !state.exposurePaused {
-			passed := nowNS - state.prevTick
-			state.remainingTime -= passed
-			if state.remainingTime <= 0 {
-				state.exposurePaused = false
-				state.exposureRunning = false
-				state.remainingTime = 0
-				state.currentLED = ledOff
-			}
-			updated = true
-			updateDisplay, _ := state.activeMode.Tick(passed)
-			updated = updated || updateDisplay
+		passed := nowNS - state.prevTick
+
+		if state.activeMode.Tick != nil {
+			ud, _ := state.activeMode.Tick(passed)
+			updateDisplay = updateDisplay || ud
 		}
 
-		var exitMode bool
-		if updated {
-			state.SetLEDPanel()
+		if updateDisplay {
 			state.UpdateDisplay()
 		}
+
 		if exitMode {
 			state.lastMode = state.activeMode
 			nextMode = state.activeMode.SwitchAway()

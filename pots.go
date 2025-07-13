@@ -22,7 +22,7 @@ const (
 	uint16Max = ^(uint16(0))
 )
 
-func (mgr *potMgr) SetPotDisabled(p uint8, b bool) {
+func (mgr *potMgr) SetDisabled(p uint8, b bool) {
 	mgr.disabled[p] = b
 }
 

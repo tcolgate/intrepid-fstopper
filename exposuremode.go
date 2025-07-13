@@ -6,26 +6,48 @@ import (
 )
 
 type exposureMode struct {
-	prevMode Mode
+	prevMode *Mode
+	state    *stateData
 
 	paused        bool
 	running       bool
 	remainingTime int64
 }
 
-func (e exposureMode) SwitchTo(prev Mode) {
+func newExpMode(s *stateData) *Mode {
+	m := &exposureMode{
+		state: s,
+	}
+	return &Mode{
+		TouchPoints:    m.TouchPoints,
+		SwitchTo:       m.SwitchTo,
+		SwitchAway:     m.SwitchAway,
+		Tick:           m.Tick,
+		UpdateDisplay:  m.UpdateDisplay,
+		PressPlus:      m.PressPlus,
+		PressLongPlus:  m.PressLongPlus,
+		PressMinus:     m.PressMinus,
+		PressLongMinus: m.PressLongMinus,
+		PressRun:       m.PressRun,
+		PressFocus:     m.PressFocus,
+		PressLongFocus: m.PressLongFocus,
+		PressCancel:    m.PressCancel,
+	}
+}
+
+func (e *exposureMode) SwitchTo(prev *Mode) {
 	e.prevMode = prev
 }
 
-func (e exposureMode) SwitchAway() Mode {
+func (e *exposureMode) SwitchAway() *Mode {
 	return e.prevMode
 }
 
-func (e exposureMode) TouchPoints() []touchPoint {
+func (e *exposureMode) TouchPoints() []touchPoint {
 	return nil
 }
 
-func (e exposureMode) Tick(passed int64) (bool, bool) {
+func (e *exposureMode) Tick(passed int64) (bool, bool) {
 	if e.paused {
 		return false, false
 	}
@@ -36,60 +58,96 @@ func (e exposureMode) Tick(passed int64) (bool, bool) {
 		e.paused = false
 		e.running = false
 		e.remainingTime = 0
-		state.currentLED = ledOff
+		//state.currentLED = ledOff
 		return true, true
 	}
 
 	return true, false
 }
 
-func (e exposureMode) Run() bool {
+/*
+	case button.Run:
+		if s.exposureRunning {
+			s.exposurePaused = !s.exposurePaused
+			if s.exposurePaused {
+				state.currentLED = ledOff
+			} else {
+				state.currentLED = ledWhite
+			}
+			return true
+		}
+
+		// start exposure
+		s.remainingTime = int64(s.baseTime) * tick
+		s.exposureRunning = true
+		s.exposurePaused = false
+		state.currentLED = ledWhite
+		return true
+	case button.Cancel:
+		if s.exposureRunning {
+			s.exposurePaused = false
+			s.exposureRunning = false
+			s.remainingTime = 0
+			state.currentLED = ledOff
+			return true
+			// stop exposure, reset time
+		}
+		if state.currentMode == modeFocus {
+			state.currentMode = state.lastMode
+			state.currentSubMode = state.lastSubMode
+			clearStateBit(&state.flags, statebitFocusColour)
+			state.currentLED = ledOff
+			return true
+		}
+*/
+
+func (e *exposureMode) PressRun() bool {
 	e.paused = !e.paused
 
 	if e.paused {
-		state.currentLED = ledOff
+		//		state.currentLED = ledOff
 	} else {
-		state.currentLED = ledWhite
+		//		state.currentLED = ledWhite
 	}
 
 	return true
 }
 
-func (e exposureMode) Focus() bool {
+func (e *exposureMode) PressFocus() bool {
 	return false
 }
 
-func (e exposureMode) LongFocus() bool {
+func (e *exposureMode) PressLongFocus() bool {
 	return false
 }
 
-func (e exposureMode) Cancel(touchPoint uint8) (bool, bool) {
+func (e *exposureMode) PressCancel(touchPoint uint8) (bool, bool) {
 	// cancel running exposure, reset
 	e.paused = false
 	e.running = false
 	e.remainingTime = 0
-	state.currentLED = ledOff
+	//state.currentLED = ledOff
 
 	return true, true
 }
 
-func (e exposureMode) Plus(touchPoint uint8) bool {
+func (e *exposureMode) PressPlus(touchPoint uint8) bool {
 	return false
 }
 
-func (e exposureMode) LongPlus(touchPoint uint8) bool {
+func (e *exposureMode) PressLongPlus(touchPoint uint8) bool {
 	return false
 }
 
-func (e exposureMode) Minus(touchPoint uint8) bool {
+func (e *exposureMode) PressMinus(touchPoint uint8) bool {
 	return false
 }
 
-func (e exposureMode) LongMinus(touchPoint uint8) bool {
+func (e *exposureMode) PressLongMinus(touchPoint uint8) bool {
 	return false
 }
 
-func (e exposureMode) UpdateDisplay(nextDisplay *[2][]byte) *touchPoint {
+func (e *exposureMode) UpdateDisplay(nextDisplay *[2][]byte) *touchPoint {
 	nb := num.NumBuf{}
 	copy(nextDisplay[0], stringTable[2][0])
 	copy(nextDisplay[1], stringTable[2][1])

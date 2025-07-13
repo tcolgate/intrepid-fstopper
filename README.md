@@ -38,8 +38,8 @@ The intention is to provide:
   - adjust by 1/2,1/3 or 1/10 stops
   - 9,7,5 or 3 strip  test strips (could be arbitrary, but that's not that useful)
 - Multi-exposure
-- Tri-colour printing (with f-stop timing)
 - Freehand exposure
+- Tri-colour printing (with f-stop timing)
 
 Possible additions
 - Percentage from base time, rather than stops
@@ -57,3 +57,30 @@ Possible additions
   have quite broad spectral ranges which makes accurate colour
   calibration difficult, if not really possible. As such I am
   focused on white light usage only.
+- I may be lying about the previous point. An RGB exposure mode
+  and while it may not be accurate, it will be more "honest" than
+  the existing CMY mode. It would be interesting to compare to
+  the tri-colour nad filtered options.
+
+## Programming Style
+
+The firmware is implemented using TinyGo, but due to the constraints of the
+atmega chips, only a strict subset of Go's functionality can be used.
+
+- Channels are OK, occasionally useful (essentially a pre-existing, generic
+  ring buffer.
+- Slices are fine
+- I have avoided maps (avoided the need for any of the key hashing logic)
+- No interfaces, raw storage is fine, but the runtime required to use them
+  blows the image size.
+- No Go routines (I did use them with success, but they did not provide big win,
+  and caused latency, and were hard to debug when they broke stuff, which was
+  trivial to do)
+- No in-function heap allocation, minimize stack usage, no GC
+- Almost no stdlib usage (all attempts resulted in blowing out image size)
+- Minimize function call stack depth
+- If you want to be able to test code you need to be in a dedicated package, without
+  reference to the `machine` package, and should run under a standalone go test on the
+  build host.
+- THere's a fair bit of global state, I've hidden it in types that should be testable, but
+  then these get used as singletons.

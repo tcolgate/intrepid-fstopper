@@ -3,7 +3,8 @@ package main
 import "intrepidfstopper/num"
 
 type bwMode struct {
-	prevMode Mode
+	prevMode *Mode
+	state    *stateData
 
 	baseTime           uint64
 	paused             bool
@@ -13,41 +14,64 @@ type bwMode struct {
 	exposureFactorUnit expUnit
 }
 
-func (e bwMode) SwitchTo(prev Mode) {
+func newBWMode(s *stateData) *Mode {
+	m := &bwMode{
+		baseTime:           7_00,
+		exposureFactorUnit: 1, // default to 1/2 stops
+	}
+
+	return &Mode{
+		TouchPoints:    m.TouchPoints,
+		SwitchTo:       m.SwitchTo,
+		SwitchAway:     m.SwitchAway,
+		Tick:           m.Tick,
+		UpdateDisplay:  m.UpdateDisplay,
+		PressPlus:      m.PressPlus,
+		PressLongPlus:  m.PressLongPlus,
+		PressMinus:     m.PressMinus,
+		PressLongMinus: m.PressLongMinus,
+		PressRun:       m.PressRun,
+		PressFocus:     m.PressFocus,
+		PressLongFocus: m.PressLongFocus,
+		PressCancel:    m.PressCancel,
+	}
+}
+
+func (e *bwMode) SwitchTo(prev *Mode) {
 	e.prevMode = prev
 }
 
-func (e bwMode) SwitchAway() Mode {
+func (e *bwMode) SwitchAway() *Mode {
 	return e.prevMode
 }
 
-func (e bwMode) TouchPoints() []touchPoint {
+func (e *bwMode) TouchPoints() []touchPoint {
 	return touchPoints[0]
 }
 
-func (e bwMode) Tick(passed int64) (bool, bool) {
+func (e *bwMode) Tick(passed int64) (bool, bool) {
 	return false, false
 }
 
-func (e bwMode) Run() bool {
+func (e *bwMode) PressRun() bool {
 	return true
 }
 
-func (e bwMode) Focus() bool {
+func (e *bwMode) PressFocus() bool {
 	return true
 }
 
-func (e bwMode) LongFocus() bool {
+func (e *bwMode) PressLongFocus() bool {
 	return true
 }
 
-func (e bwMode) Cancel(touchPoint uint8) (bool, bool) {
+func (e *bwMode) PressCancel(touchPoint uint8) (bool, bool) {
 	// should reset stuff and/or delete the current
 	// exposure
 	return false, false
 }
 
-func (e bwMode) Plus(touchPointIndex uint8) bool {
+func (e *bwMode) PressPlus(touchPointIndex uint8) bool {
 	switch touchPointIndex {
 	case 0:
 		if e.baseTime != 25500 {
@@ -68,7 +92,7 @@ func (e bwMode) Plus(touchPointIndex uint8) bool {
 	return true
 }
 
-func (e bwMode) LongPlus(touchPointIndex uint8) bool {
+func (e *bwMode) PressLongPlus(touchPointIndex uint8) bool {
 	switch touchPointIndex {
 	case 0:
 		if e.baseTime != 25500 {
@@ -89,7 +113,7 @@ func (e bwMode) LongPlus(touchPointIndex uint8) bool {
 	return true
 }
 
-func (e bwMode) Minus(touchPointIndex uint8) bool {
+func (e *bwMode) PressMinus(touchPointIndex uint8) bool {
 	switch touchPointIndex {
 	case 0:
 		if e.baseTime != 0 {
@@ -110,7 +134,7 @@ func (e bwMode) Minus(touchPointIndex uint8) bool {
 	return true
 }
 
-func (e bwMode) LongMinus(touchPointIndex uint8) bool {
+func (e *bwMode) PressLongMinus(touchPointIndex uint8) bool {
 	switch touchPointIndex {
 	case 0:
 		if e.baseTime != 0 {
@@ -131,7 +155,7 @@ func (e bwMode) LongMinus(touchPointIndex uint8) bool {
 	return true
 }
 
-func (e bwMode) UpdateDisplay(nextDisplay *[2][]byte) *touchPoint {
+func (e *bwMode) UpdateDisplay(nextDisplay *[2][]byte) *touchPoint {
 	nb := &num.NumBuf{}
 	copy(nextDisplay[0], stringTable[0][0])
 	copy(nextDisplay[1], stringTable[0][1])

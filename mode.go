@@ -1,23 +1,20 @@
 package main
 
-type Mode interface {
-	TouchPoints() []touchPoint
-	SwitchTo(Mode)
-	SwitchAway() Mode
+type Mode struct {
+	TouchPoints func() []touchPoint
+	SwitchTo    func(*Mode)
+	SwitchAway  func() *Mode
 
-	Tick(passed int64) (updateDisplay bool, exit bool)
-	UpdateDisplay(*[2][]byte) *touchPoint
+	Tick          func(passed int64) (updateDisplay bool, exit bool)
+	UpdateDisplay func(*[2][]byte) *touchPoint
 
-	Plus(touchPointaIndex uint8) bool
-	LongPlus(touchPointaIndex uint8) bool
-	Minus(touchPointaIndex uint8) bool
-	LongMinus(touchPointaIndex uint8) bool
+	PressPlus      func(touchPointaIndex uint8) bool
+	PressLongPlus  func(touchPointaIndex uint8) bool
+	PressMinus     func(touchPointaIndex uint8) bool
+	PressLongMinus func(touchPointaIndex uint8) bool
 
-	Run() bool
-	Focus() bool
-	LongFocus() bool
-	Cancel(touchPointIndex uint8) (updateDisplay bool, exit bool)
-}
-
-type baseMode struct {
+	PressRun       func() bool
+	PressFocus     func() bool
+	PressLongFocus func() bool
+	PressCancel    func(touchPointIndex uint8) (updateDisplay bool, exit bool)
 }
