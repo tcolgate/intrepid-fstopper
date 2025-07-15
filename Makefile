@@ -22,6 +22,8 @@ build:
 		-monitor \
 		-target ./timer-1.2-target.json \
 		-print-allocs . \
+		-stack-size 256B \
+		-no-debug \
 		-o intrep-ftimer.hex
 	du -h intrep-ftimer.hex
 

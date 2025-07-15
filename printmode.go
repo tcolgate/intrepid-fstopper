@@ -45,7 +45,6 @@ func (e *printMode) SwitchTo(prev *Mode) {
 }
 
 func (e *printMode) SwitchAway() *Mode {
-	println("printmode switchaway, e", e)
 	return e.nextMode
 }
 
@@ -64,15 +63,13 @@ func (e *printMode) PressRun() (bool, bool) {
 }
 
 func (e *printMode) PressFocus() (bool, bool) {
-	println("printmode focus pressed, e: ", e.state)
-	e.state.focusColour = ledRed
+	e.state.bits.setFocusColour(false)
 	e.nextMode = e.state.focusMode
 	return true, true
 }
 
 func (e *printMode) PressLongFocus() (bool, bool) {
-	println("printmode focus long pressed")
-	e.state.focusColour = ledWhite
+	e.state.bits.setFocusColour(true)
 	e.nextMode = e.state.focusMode
 	return true, true
 }
@@ -167,10 +164,10 @@ func (e *printMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
 	return true, false
 }
 
-func (e *printMode) UpdateDisplay(nextDisplay *[2][]byte) {
+func (e *printMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
-	copy(nextDisplay[0], stringTable[0][0])
-	copy(nextDisplay[1], stringTable[0][1])
+	nextDisplay[0] = stringTable[0][0]
+	nextDisplay[1] = stringTable[0][1]
 
 	num.Out(nb, num.Num(e.baseTime))
 	copy(nextDisplay[0][2:6], nb[0:4])
