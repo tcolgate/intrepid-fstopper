@@ -15,14 +15,26 @@ flash:
 
 build:
 	tinygo build \
-		-baudrate 9600 \
+		-target ./timer-1.2-target.json \
+		-stack-size 256B \
 		-scheduler none \
 		-gc leaking \
 		-size full \
-		-monitor \
-		-target ./timer-1.2-target.json \
 		-print-allocs . \
+		-no-debug \
 		-o intrep-ftimer.hex
+	#	-o intrep-ftimer.elf
+	du -h intrep-ftimer.hex
+
+build-elf:
+	tinygo build \
+		-target ./timer-1.2-target.json \
+		-stack-size 256B \
+		-scheduler none \
+		-gc leaking \
+		-size full \
+		-print-allocs . \
+		-o intrep-ftimer.elf
 	du -h intrep-ftimer.hex
 
 monitor:

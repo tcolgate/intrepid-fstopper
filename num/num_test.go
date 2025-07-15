@@ -77,3 +77,123 @@ func TestLen(t *testing.T) {
 		})
 	}
 }
+
+func TestIntOut(t *testing.T) {
+	var tests = []struct {
+		name     string
+		expected string
+		given    Num
+	}{
+		{"", " 123", 123},
+		{"", "9999", IntMax}, // TODO(tcm): could round up here
+		{"", "9900", 9_900},
+		{"", "5000", 5_000},
+		{"", " 160", 160},
+		{"", "   0", 0_00},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			var b NumBuf
+			IntOut(&b, tt.given)
+			actual := string(b[:])
+			if actual != tt.expected {
+				t.Errorf("(%d): expected %q, actual %q", tt.given, tt.expected, actual)
+			}
+		})
+	}
+}
+
+func TestIntOutLeft(t *testing.T) {
+	var tests = []struct {
+		name     string
+		expected string
+		given    Num
+	}{
+		{"", "123 ", 123},
+		{"", "9999", IntMax}, // TODO(tcm): could round up here
+		{"", "5000", 5000},
+		{"", "99  ", 99},
+		{"", "160 ", 160},
+		{"", "0   ", 0_00},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			var b NumBuf
+			IntOutLeft(&b, tt.given)
+			actual := string(b[:])
+			if actual != tt.expected {
+				t.Errorf("(%d): expected %q, actual %q", tt.given, tt.expected, actual)
+			}
+		})
+	}
+}
+
+func TestIntLen(t *testing.T) {
+	var tests = []struct {
+		name     string
+		expected int
+		given    Num
+	}{
+		{"", 4, 1_230},
+		{"", 4, IntMax},
+		{"", 4, 9_900},
+		{"", 3, 500},
+		{"", 2, 16},
+		{"", 1, 0},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			actual := IntLen(tt.given)
+			if actual != tt.expected {
+				t.Errorf("(%d): expected %d, actual %d", tt.given, tt.expected, actual)
+			}
+		})
+	}
+}
+
+func TestMul(t *testing.T) {
+	var tests = []struct {
+		name     string
+		expected Num
+		a        Num
+		b        int64
+	}{
+		{"", 1_230, 1_230, 100},
+		{"", 123, 1_230, 10},
+		{"", 12_300, 1_230, 1000},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			actual := Mul(tt.a, tt.b)
+			if actual != tt.expected {
+				t.Errorf("(%d * %d): expected %d, actual %d", tt.a, tt.b, tt.expected, actual)
+			}
+		})
+	}
+}
+
+func TestDiv(t *testing.T) {
+	var tests = []struct {
+		name     string
+		expected Num
+		a        Num
+		b        int64
+	}{
+		{"", 1_230, 1_230, 100},
+		{"", 12_300, 1_230, 10},
+		{"", 123, 1_230, 1000},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			actual := Div(tt.a, tt.b)
+			if actual != tt.expected {
+				t.Errorf("(%d / %d): expected %d, actual %d", tt.a, tt.b, tt.expected, actual)
+			}
+		})
+	}
+}

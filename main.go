@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"intrepidfstopper/button"
 	"machine"
 	"time"
@@ -19,6 +18,8 @@ const (
 	longPress = 1 * time.Second
 
 	tick = int64(10 * time.Millisecond)
+
+	maxExposures = 6
 )
 
 var (
@@ -48,72 +49,54 @@ const (
 type expUnit uint8
 
 const (
-	expUnitHalfStop expUnit = iota
+	expUnitAbsolute expUnit = iota
+	expUnitHalfStop
 	expUnitThirdStop
 	expUnitTenthStop
 	expUnitPercent
 	expUnitFreeHand
+	expUnitOff
+	expUnitLast
 )
 
 var (
-	expUnitNames = [5][]byte{
-		[]byte("\xDF/2 "),
-		[]byte("\xDF/3 "),
-		[]byte("\xDF/10"),
-		[]byte(`%   `),
-		[]byte(`Free`),
+	expUnitNames = [7][4]byte{
+		[4]byte([]byte(`s   `)),
+		[4]byte([]byte("/2\xDF ")),
+		[4]byte([]byte("/3\xDF ")),
+		[4]byte([]byte("/10\xDF")),
+		[4]byte([]byte(`%   `)),
+		[4]byte([]byte(`Free`)),
+		[4]byte([]byte(`Off `)),
 	}
 )
-
-// TODO: remove? not used at the moment
-type stateBits int
-
-const (
-	statebitFocusColour stateBits = 1 << iota
-)
-
-func setStateBit(s *stateBits, b stateBits) {
-	*s = *s | b
-}
-
-func clearStateBit(s *stateBits, b stateBits) {
-	*s = *s & (^b)
-}
-
-func checkStateBit(s *stateBits, b stateBits) bool {
-	return (*s & b) > 0
-}
-
-func toggleStateBit(s *stateBits, b stateBits) bool {
-	*s = *s ^ b
-	return (*s & b) > 0
-}
 
 type stateData struct {
 	nextTick int64
 	prevTick int64
 
-	flags stateBits
-	pots  [4]uint16
-
-	lastSubMode    subMode
-	currentSubMode subMode
+	pots [4]uint16
 
 	activeTouchPoints     []touchPoint
 	activeTouchPointIndex uint8
 
 	activeDisplay bool
-	display1      [2][]byte
-	display2      [2][]byte
+	display1      [2][16]byte
+	display2      [2][16]byte
 
 	exposureMode *Mode
 	focusMode    *Mode
 	bwMode       *Mode
+	activeMode   *Mode
 
-	activeMode *Mode
-
+	// Focus light settings
+	// printMode/teststripMode write focusColor on long press
+	// focusMode reads and writes
 	lastColour  [4]uint8
-	focusColour [4]uint8
+	focusColour bool
+
+	// printMode/testStripMode writes, exposureMode reads
+	exposureSet exposureSet
 }
 
 func (s *stateData) ButtonHoldRepeat(b button.Button) (bool, bool) {
@@ -145,46 +128,11 @@ func (s *stateData) ButtonPress(b button.Button) (bool, bool) {
 			return s.activeMode.PressRun()
 		}
 
-		/*
-			if s.exposureRunning {
-				s.exposurePaused = !s.exposurePaused
-				if s.exposurePaused {
-					state.currentLED = ledOff
-				} else {
-					state.currentLED = ledWhite
-				}
-				return true
-			}
-
-			// start exposure
-			s.remainingTime = int64(s.baseTime) * tick
-			s.exposureRunning = true
-			s.exposurePaused = false
-			state.currentLED = ledWhite
-			return true
-		*/
 	case button.Cancel:
 		if state.activeMode.PressCancel != nil {
 			return s.activeMode.PressCancel(s.activeTouchPointIndex)
 		}
 
-		/*
-			if s.exposureRunning {
-				s.exposurePaused = false
-				s.exposureRunning = false
-				s.remainingTime = 0
-				state.currentLED = ledOff
-				return true
-				// stop exposure, reset time
-			}
-			if state.currentMode == modeFocus {
-				state.currentMode = state.lastMode
-				state.currentSubMode = state.lastSubMode
-				clearStateBit(&state.flags, statebitFocusColour)
-				state.currentLED = ledOff
-				return true
-			}
-		*/
 	case button.Focus:
 		if state.activeMode.PressFocus != nil {
 			return s.activeMode.PressFocus()
@@ -204,21 +152,21 @@ func (s *stateData) ButtonLongPress(b button.Button) (bool, bool) {
 }
 
 func (s *stateData) UpdateDisplay() {
-	println("in update display")
 	lastDisplay := &s.display1
 	nextDisplay := &s.display2
 	if s.activeDisplay {
 		lastDisplay = &s.display2
 		nextDisplay = &s.display1
 	}
+	s.activeDisplay = !s.activeDisplay
 
 	s.activeMode.UpdateDisplay(nextDisplay)
 
 	for i := uint8(0); i < 2; i++ {
-		if bytes.Compare(lastDisplay[i], nextDisplay[i]) != 0 {
+		if lastDisplay[i] != nextDisplay[i] {
 			lcd.SetCursor(0, i)
-			lcd.Print(nextDisplay[i])
-			copy(lastDisplay[i][0:16], nextDisplay[i][0:16])
+			lcd.Print(nextDisplay[i][:])
+			lastDisplay[i] = nextDisplay[i]
 		}
 	}
 
@@ -271,22 +219,26 @@ var (
 		Height: 2,
 	}
 
-	stringTable = [][2][]byte{
+	stringTable = [][2][16]byte{
 		{
-			[]byte("B: Adj  U:     >"),
-			[]byte("*              )"),
+			[16]byte([]byte("    s           ")),
+			[16]byte([]byte("           E: / ")),
 		},
 		{
-			[]byte("---  Focus   ---"),
-			[]byte("                "),
+			[16]byte([]byte("---  Focus   ---")),
+			[16]byte([]byte("                ")),
 		},
 		{
-			[]byte("--- Exposure ---"),
-			[]byte("                "),
+			[16]byte([]byte("--- Exposure ---")),
+			[16]byte([]byte("                ")),
+		},
+		{
+			[16]byte([]byte("                ")),
+			[16]byte([]byte("                ")),
 		},
 	}
 	touchPoints = [][]touchPoint{
-		[]touchPoint{{0, 0}, {1, 0}, {0, 8}},
+		[]touchPoint{{0, 3}, {0, 7}, {0, 12}},
 		nil,
 	}
 
@@ -305,14 +257,8 @@ var (
 	}
 
 	state = stateData{
-		display1: [2][]byte{
-			make([]byte, 16),
-			make([]byte, 16),
-		},
-		display2: [2][]byte{
-			make([]byte, 16),
-			make([]byte, 16),
-		},
+		display1: stringTable[3],
+		display2: stringTable[3],
 	}
 
 	bwM       = newBWMode(&state)
@@ -483,12 +429,10 @@ func main() {
 		}
 
 		if updateDisplay {
-			println("calling update display", nowNS)
 			state.UpdateDisplay()
 		}
 
 		if exitMode {
-			println("calling switchAway", nowNS)
 			nextMode = state.activeMode.SwitchAway()
 		}
 

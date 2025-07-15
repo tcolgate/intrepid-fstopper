@@ -8,20 +8,13 @@ type printMode struct {
 
 	state *stateData
 
-	baseTime           uint64
-	paused             bool
-	running            bool
-	remainingTime      int64
-	exposureFactor     int32
-	exposureFactorUnit expUnit
+	// which exposure are we edditing
+	activeExposure uint8
 }
 
 func newBWMode(s *stateData) *Mode {
 	m := &printMode{
 		state: s,
-
-		baseTime:           7_00,
-		exposureFactorUnit: 1, // default to 1/2 stops
 	}
 
 	return &Mode{
@@ -45,7 +38,6 @@ func (e *printMode) SwitchTo(prev *Mode) {
 }
 
 func (e *printMode) SwitchAway() *Mode {
-	println("printmode switchaway, e", e)
 	return e.nextMode
 }
 
@@ -59,20 +51,33 @@ func (e *printMode) PressRun() (bool, bool) {
 	// - type (e.g. regular vs freehand)
 	// - things about the LED (e.g. brightness)
 
+	for i := range e.state.exposureSet.exposures {
+		switch e.state.exposureSet.exposures[i].expUnit {
+		case expUnitOff:
+		case expUnitFreeHand:
+		default:
+			for j := range e.state.exposureSet.exposures[i].colVals {
+				e.state.exposureSet.exposures[i].colTime[j] = expUnitToS(
+					e.state.exposureSet.baseTime,
+					e.state.exposureSet.exposures[i].expUnit,
+					e.state.exposureSet.exposures[i].colVals[j],
+				)
+			}
+		}
+	}
+
 	e.nextMode = e.state.exposureMode
 	return true, true
 }
 
 func (e *printMode) PressFocus() (bool, bool) {
-	println("printmode focus pressed, e: ", e.state)
-	e.state.focusColour = ledRed
+	e.state.focusColour = false
 	e.nextMode = e.state.focusMode
 	return true, true
 }
 
 func (e *printMode) PressLongFocus() (bool, bool) {
-	println("printmode focus long pressed")
-	e.state.focusColour = ledWhite
+	e.state.focusColour = true
 	e.nextMode = e.state.focusMode
 	return true, true
 }
@@ -86,18 +91,11 @@ func (e *printMode) PressCancel(touchPoint uint8) (bool, bool) {
 func (e *printMode) PressPlus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
 	case 0:
-		if e.baseTime != 25500 {
-			e.baseTime += 10
-		}
+		e.state.exposureSet.adjustBaseTime(10)
 	case 1:
-		if e.exposureFactor != 126 {
-			e.exposureFactor += 1
-		}
+		e.state.exposureSet.adjustExposureTime(e.activeExposure, 0, 10)
 	case 2:
-		e.exposureFactorUnit++
-		if e.exposureFactorUnit > 4 {
-			e.exposureFactorUnit = 0
-		}
+		e.state.exposureSet.cycleExpUnit(e.activeExposure, true)
 	default:
 		return false, false
 	}
@@ -107,18 +105,11 @@ func (e *printMode) PressPlus(touchPointIndex uint8) (bool, bool) {
 func (e *printMode) PressLongPlus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
 	case 0:
-		if e.baseTime != 25500 {
-			e.baseTime += 10
-		}
+		e.state.exposureSet.adjustBaseTime(100)
 	case 1:
-		if e.exposureFactor != 126 {
-			e.exposureFactor += 1
-		}
+		e.state.exposureSet.adjustExposureTime(e.activeExposure, 0, 100)
 	case 2:
-		e.exposureFactorUnit++
-		if e.exposureFactorUnit > 4 {
-			e.exposureFactorUnit = 0
-		}
+		e.state.exposureSet.cycleExpUnit(e.activeExposure, true)
 	default:
 		return false, false
 	}
@@ -128,18 +119,11 @@ func (e *printMode) PressLongPlus(touchPointIndex uint8) (bool, bool) {
 func (e *printMode) PressMinus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
 	case 0:
-		if e.baseTime != 0 {
-			e.baseTime -= 10
-		}
+		e.state.exposureSet.adjustBaseTime(-10)
 	case 1:
-		if e.exposureFactor != -126 {
-			e.exposureFactor -= 1
-		}
+		e.state.exposureSet.adjustExposureTime(e.activeExposure, 0, -10)
 	case 2:
-		e.exposureFactorUnit--
-		if e.exposureFactorUnit == 0 {
-			e.exposureFactorUnit = 4
-		}
+		e.state.exposureSet.cycleExpUnit(e.activeExposure, false)
 	default:
 		return false, false
 	}
@@ -149,51 +133,53 @@ func (e *printMode) PressMinus(touchPointIndex uint8) (bool, bool) {
 func (e *printMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
 	case 0:
-		if e.baseTime != 0 {
-			e.baseTime -= 10
-		}
+		e.state.exposureSet.adjustBaseTime(-100)
 	case 1:
-		if e.exposureFactor != -126 {
-			e.exposureFactor -= 1
-		}
+		e.state.exposureSet.adjustExposureTime(e.activeExposure, 0, -100)
 	case 2:
-		e.exposureFactorUnit--
-		if e.exposureFactorUnit < 0 {
-			e.exposureFactorUnit = 4
-		}
+		e.state.exposureSet.cycleExpUnit(e.activeExposure, false)
 	default:
 		return false, false
 	}
 	return true, false
 }
 
-func (e *printMode) UpdateDisplay(nextDisplay *[2][]byte) {
+func (e *printMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
-	copy(nextDisplay[0], stringTable[0][0])
-	copy(nextDisplay[1], stringTable[0][1])
+	nextDisplay[0] = stringTable[0][0]
+	nextDisplay[1] = stringTable[0][1]
 
-	num.Out(nb, num.Num(e.baseTime))
-	copy(nextDisplay[0][2:6], nb[0:4])
+	num.Out(nb, num.Num(e.state.exposureSet.baseTime))
+	copy(nextDisplay[0][0:4], nb[0:4])
 
-	if e.exposureFactor < 0 {
-		nextDisplay[1][1] = signMinus
-	} else {
-		nextDisplay[1][1] = signPlus
+	currExpIndex := 0
+	nextDisplay[1][13] = byte('1' + currExpIndex)
+	nextDisplay[1][15] = byte('0' + maxExposures)
+
+	currExp := e.state.exposureSet.exposures[currExpIndex]
+	switch currExp.expUnit {
+	case expUnitOff, expUnitFreeHand:
+		nextDisplay[0][6] = byte(' ')
+		copy(nextDisplay[1][2:6], []byte(`    `))
+	default:
+		if currExp.colVals[0] < 0 {
+			nextDisplay[0][6] = signMinus
+		} else {
+			nextDisplay[0][6] = signPlus
+		}
+
+		absExpFact := currExp.colVals[0]
+		if absExpFact < 0 {
+			absExpFact = absExpFact * -1
+		}
+		switch currExp.expUnit {
+		case expUnitAbsolute:
+			num.OutLeft(nb, num.Num(absExpFact))
+		default:
+			num.IntOutLeft(nb, num.Num(absExpFact))
+		}
+		copy(nextDisplay[0][7:11], nb[0:4])
 	}
-	absExpFact := e.exposureFactor
-	if absExpFact < 0 {
-		absExpFact = absExpFact * -1
-	}
-	num.OutLeft(nb, num.Num(absExpFact))
-	copy(nextDisplay[1][2:6], nb[0:4])
 
-	copy(nextDisplay[0][10:15], expUnitNames[e.exposureFactorUnit][0:4])
-
-	res := num.Num(11_23)
-	num.Out(nb, num.Num(res))
-	resLen := num.Len(res)
-	nextDisplay[1][13-resLen] = []byte("(")[0]
-	nextDisplay[1][14-resLen] = []byte("=")[0]
-	copy(nextDisplay[1][11:15], nb[0:4])
-	nextDisplay[1][15] = []byte(")")[0]
+	copy(nextDisplay[0][12:16], expUnitNames[currExp.expUnit][0:4])
 }

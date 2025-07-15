@@ -32,7 +32,9 @@ func (e *exposureMode) SwitchTo(prev *Mode) {
 	// need to get the exposure details in here
 	// from the calling mode
 	e.prevMode = prev
-	e.remainingTime = 500 * tick
+
+	e.remainingTime = int64(e.state.exposureSet.exposures[0].colTime[0]) * int64((10 * time.Millisecond))
+
 	e.running = true
 	e.state.SetLEDPanel(ledWhite)
 }
@@ -84,10 +86,10 @@ func (e *exposureMode) PressCancel(touchPoint uint8) (bool, bool) {
 	return true, true
 }
 
-func (e *exposureMode) UpdateDisplay(nextDisplay *[2][]byte) {
+func (e *exposureMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 	nb := num.NumBuf{}
-	copy(nextDisplay[0], stringTable[2][0])
-	copy(nextDisplay[1], stringTable[2][1])
+	nextDisplay[0] = stringTable[2][0]
+	nextDisplay[1] = stringTable[2][1]
 
 	if e.running {
 		num.Out(&nb, num.Num(e.remainingTime/int64((10*time.Millisecond))))
