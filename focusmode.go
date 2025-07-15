@@ -25,13 +25,16 @@ func newFocusMode(s *stateData) *Mode {
 }
 
 func (e *focusMode) SwitchTo(prev *Mode) {
-	e.state.SetLEDPanel(e.state.focusColour)
+	if !e.state.focusColour {
+		e.state.SetLEDPanel(ledRed)
+	} else {
+		e.state.SetLEDPanel(ledWhite)
+	}
 	e.prevMode = prev
 }
 
 func (e *focusMode) SwitchAway() *Mode {
-	e.state.focusColour = ledOff
-	e.state.SetLEDPanel(e.state.focusColour)
+	e.state.SetLEDPanel(ledOff)
 
 	return e.prevMode
 }
@@ -41,13 +44,12 @@ func (e *focusMode) PressFocus() (bool, bool) {
 }
 
 func (e *focusMode) PressLongFocus() (bool, bool) {
-	switch e.state.focusColour {
-	case ledRed:
-		e.state.focusColour = ledWhite
-	default:
-		e.state.focusColour = ledRed
+	e.state.focusColour = !e.state.focusColour
+	if !e.state.focusColour {
+		e.state.SetLEDPanel(ledRed)
+	} else {
+		e.state.SetLEDPanel(ledWhite)
 	}
-	e.state.SetLEDPanel(e.state.focusColour)
 	return false, false
 }
 
@@ -55,7 +57,7 @@ func (e *focusMode) PressCancel(touchPoint uint8) (bool, bool) {
 	return true, true
 }
 
-func (e *focusMode) UpdateDisplay(nextDisplay *[2][]byte) {
-	copy(nextDisplay[0], stringTable[1][0])
-	copy(nextDisplay[1], stringTable[1][1])
+func (e *focusMode) UpdateDisplay(nextDisplay *[2][16]byte) {
+	nextDisplay[0] = stringTable[1][0]
+	nextDisplay[1] = stringTable[1][1]
 }
