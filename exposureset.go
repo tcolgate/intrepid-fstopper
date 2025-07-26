@@ -222,7 +222,7 @@ func expUnitToS(b uint16, u expUnit, v int16) uint16 {
 	case expUnitAbsolute:
 		return bound(int32(b) + int32(v))
 	case expUnitPercent:
-		return bound((int32(b) / 100) * int32(v))
+		return bound((int32(b) + (int32(b)/100)*int32(v)))
 	case expUnitHalfStop:
 		return halfStops(b, v)
 	case expUnitThirdStop:
