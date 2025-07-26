@@ -4,7 +4,7 @@
 package num
 
 // Num is a number represented os hundredths
-type Num uint32
+type Num uint16
 
 const (
 	Max    Num = (1 << 16) - 1
@@ -157,18 +157,18 @@ func IntLen(n Num) int {
 	}
 }
 
-func Mul(a Num, b int64) Num {
+func Mul(a Num, b int32) Num {
 	switch b {
 	case 0:
 		return 0
 	case 100:
 		return a
 	default:
-		return Num((int64(a) * int64(b)) / 100)
+		return Num((int32(a) * int32(b)) / 100)
 	}
 }
 
-func Div(a Num, b int64) Num {
+func Div(a Num, b int32) Num {
 	switch b {
 	case 0:
 		// should panic, but then what?
@@ -176,6 +176,6 @@ func Div(a Num, b int64) Num {
 	case 100:
 		return a
 	default:
-		return Num(((int64(a) * 100) / int64(b)))
+		return Num(((int32(a) * 100) / int32(b)))
 	}
 }

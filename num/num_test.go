@@ -159,7 +159,7 @@ func TestMul(t *testing.T) {
 		name     string
 		expected Num
 		a        Num
-		b        int64
+		b        int32
 	}{
 		{"", 1_230, 1_230, 100},
 		{"", 123, 1_230, 10},
@@ -181,7 +181,7 @@ func TestDiv(t *testing.T) {
 		name     string
 		expected Num
 		a        Num
-		b        int64
+		b        int32
 	}{
 		{"", 1_230, 1_230, 100},
 		{"", 12_300, 1_230, 10},

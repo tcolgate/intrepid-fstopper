@@ -17,7 +17,7 @@ type testStrip struct {
 }
 
 type exposureSet struct {
-	baseTime  uint32 // Only one base time is ever configured
+	baseTime  uint16 // Only one base time is ever configured
 	isTest    uint8
 	testStrip testStrip
 	exposures [maxExposures]exposure
@@ -29,22 +29,22 @@ type exposure struct {
 	colVals [3]int16
 
 	// These are read by exposureMode
-	colTime [3]uint32
+	colTime [3]uint16
 }
 
 func (es *exposureSet) adjustBaseTime(delta int16) bool {
 	switch {
 	case delta > 0:
-		es.baseTime += uint32(delta)
+		es.baseTime += uint16(delta)
 		if es.baseTime >= 25500 {
 			es.baseTime = 25500
 		}
 		return true
 	case delta < 0:
-		if es.baseTime < uint32(-1*delta) {
+		if es.baseTime < uint16(-1*delta) {
 			es.baseTime = 0
 		} else {
-			es.baseTime -= uint32(delta * -1)
+			es.baseTime -= uint16(delta * -1)
 		}
 		return true
 	default:
@@ -52,19 +52,19 @@ func (es *exposureSet) adjustBaseTime(delta int16) bool {
 	}
 }
 
-func expUnitToS(b uint32, u expUnit, v int16) uint32 {
+func expUnitToS(b uint16, u expUnit, v int16) uint16 {
 	switch u {
 	case expUnitAbsolute:
 		if v >= 0 {
-			return b + uint32(v)
+			return b + uint16(v)
 		}
-		return b - uint32(v*-1)
+		return b - uint16(v*-1)
 	case expUnitPercent:
-		off := ((int64(b) / 100) * int64(v))
+		off := ((int32(b) / 100) * int32(v))
 		if v >= 0 {
-			return b + uint32(off)
+			return b + uint16(off)
 		}
-		return b - uint32(off*-1)
+		return b - uint16(off*-1)
 
 	case expUnitHalfStop:
 		wholeStops := v / 2
@@ -91,9 +91,9 @@ func expUnitToS(b uint32, u expUnit, v int16) uint32 {
 		}
 
 		if v > 0 {
-			return b + uint32(adj)
+			return b + uint16(adj)
 		} else {
-			return b - uint32(adj)
+			return b - uint16(adj)
 		}
 	case expUnitThirdStop:
 		return b
@@ -104,10 +104,10 @@ func expUnitToS(b uint32, u expUnit, v int16) uint32 {
 	}
 }
 
-func expSToUnit(b uint32, u expUnit, s uint32) int16 {
+func expSToUnit(b uint16, u expUnit, s uint16) int16 {
 	switch u {
 	case expUnitAbsolute:
-		return int16(int64(s) - int64(b))
+		return int16(int32(s) - int32(b))
 	case expUnitPercent:
 	default:
 		return 0
@@ -117,7 +117,7 @@ func expSToUnit(b uint32, u expUnit, s uint32) int16 {
 
 // convExpUnit converts between different exposure units
 // to give nicer UX when changing expUnit used
-func convExpUnit(t, f expUnit, b uint32, v int16) int16 {
+func convExpUnit(t, f expUnit, b uint16, v int16) int16 {
 	s := expUnitToS(b, f, v)
 	return expSToUnit(b, t, s)
 }

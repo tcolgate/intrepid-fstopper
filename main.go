@@ -17,7 +17,7 @@ const (
 
 	longPress = 1 * time.Second
 
-	tick = int64(10 * time.Millisecond)
+	tick = uint32(10 * time.Millisecond)
 
 	maxExposures = 6
 )
@@ -422,7 +422,7 @@ func main() {
 		passed := nowNS - state.prevTick
 		if !(exitMode || updateDisplay) {
 			if state.activeMode.Tick != nil {
-				ud, em := state.activeMode.Tick(passed)
+				ud, em := state.activeMode.Tick(int32(passed))
 				updateDisplay = updateDisplay || ud
 				exitMode = exitMode || em
 			}
@@ -438,7 +438,7 @@ func main() {
 
 		// this can be a more subtle calculation
 		state.prevTick = nowNS
-		state.nextTick = tick
+		state.nextTick = int64(tick)
 		time.Until(now.Add(time.Duration(state.nextTick)))
 	}
 }
