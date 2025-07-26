@@ -12,8 +12,14 @@ import (
 const (
 	ledCount = 56
 
-	halfStop  = 141 // = 100 * (2 ^ (1 / 2))
-	thirdStop = 125 // = 100 * (2 ^ (1 / 3))
+	halfStop    = 141 // = 100 * (2 ^ (1 / 2))
+	negHalfStop = 71  // = 100 * 1/(2 ^ (1 / 2))
+
+	thirdStop    = 125 // = 100 * 1/(2 ^ (1 / 3))
+	negThirdStop = 79
+
+	tenthStop    = 107 // = 100 * (2 ^ (1 / 10))
+	negTenthStop = 93  // = 100 * 1/(2 ^ (1 / 10))
 
 	longPress = 1 * time.Second
 
@@ -236,6 +242,10 @@ var (
 			[16]byte([]byte("                ")),
 			[16]byte([]byte("                ")),
 		},
+		{
+			[16]byte([]byte("-- Test Strip --")),
+			[16]byte([]byte("                ")),
+		},
 	}
 	touchPoints = [][]touchPoint{
 		[]touchPoint{{0, 3}, {0, 7}, {0, 12}},
@@ -340,7 +350,7 @@ func configureDevices() {
 }
 
 func main() {
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 	configureDevices()
 
 	// pot 0 is the touch point selector
@@ -350,6 +360,15 @@ func main() {
 	potManager.SetDisabled(1, true)
 	potManager.SetDisabled(2, true)
 	potManager.SetDisabled(3, true)
+
+	state.exposureSet.baseTime = 7_00
+	for i := range state.exposureSet.exposures {
+		if i == 0 {
+			state.exposureSet.exposures[i].expUnit = expUnitAbsolute
+			continue
+		}
+		state.exposureSet.exposures[i].expUnit = expUnitOff
+	}
 
 	state.exposureMode = exposureM
 	state.focusMode = focusM
@@ -422,7 +441,7 @@ func main() {
 		passed := nowNS - state.prevTick
 		if !(exitMode || updateDisplay) {
 			if state.activeMode.Tick != nil {
-				ud, em := state.activeMode.Tick(int32(passed))
+				ud, em := state.activeMode.Tick(passed)
 				updateDisplay = updateDisplay || ud
 				exitMode = exitMode || em
 			}

@@ -11,7 +11,8 @@ type exposureMode struct {
 
 	paused        bool
 	running       bool
-	remainingTime int32
+	remainingTime int64
+	activeExp     uint8
 }
 
 func newExpMode(s *stateData) *Mode {
@@ -33,7 +34,7 @@ func (e *exposureMode) SwitchTo(prev *Mode) {
 	// from the calling mode
 	e.prevMode = prev
 
-	e.remainingTime = int32(e.state.exposureSet.exposures[0].colTime[0]) * int32((10 * time.Millisecond))
+	e.remainingTime = int64(e.state.exposureSet.exposures[0].colTime[0]) * int64(tick)
 
 	e.running = true
 	e.state.SetLEDPanel(ledWhite)
@@ -45,7 +46,7 @@ func (e *exposureMode) SwitchAway() *Mode {
 	return e.prevMode
 }
 
-func (e *exposureMode) Tick(passed int32) (bool, bool) {
+func (e *exposureMode) Tick(passed int64) (bool, bool) {
 	if e.paused {
 		return false, false
 	}
@@ -88,11 +89,18 @@ func (e *exposureMode) PressCancel(touchPoint uint8) (bool, bool) {
 
 func (e *exposureMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 	nb := num.NumBuf{}
-	nextDisplay[0] = stringTable[2][0]
-	nextDisplay[1] = stringTable[2][1]
+	if !e.state.exposureSet.isTest {
+		nextDisplay[0] = stringTable[2][0]
+		nextDisplay[1] = stringTable[2][1]
 
-	if e.running {
-		num.Out(&nb, num.Num(e.remainingTime/int32((10*time.Millisecond))))
-		copy(nextDisplay[1][12:16], nb[0:4])
+	} else {
+		nextDisplay[0] = stringTable[4][0]
+		nextDisplay[1] = stringTable[4][1]
+	}
+
+	num.Out(&nb, num.Num(e.remainingTime/int64((10*time.Millisecond))))
+	copy(nextDisplay[1][12:16], nb[0:4])
+	if !e.paused {
+		copy(nextDisplay[1][0:7], []byte("Paused ")[0:7])
 	}
 }

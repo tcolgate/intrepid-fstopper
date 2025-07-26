@@ -18,7 +18,7 @@ type testStrip struct {
 
 type exposureSet struct {
 	baseTime  uint16 // Only one base time is ever configured
-	isTest    uint8
+	isTest    bool
 	testStrip testStrip
 	exposures [maxExposures]exposure
 }
@@ -52,74 +52,186 @@ func (es *exposureSet) adjustBaseTime(delta int16) bool {
 	}
 }
 
+func bound(v int32) uint16 {
+	switch {
+	case v >= 600_00:
+		return 600_00
+	case v <= 0:
+		return 0
+	default:
+		return uint16(v)
+	}
+}
+
+func halfStops(b uint16, v int16) uint16 {
+	if v == 0 {
+		return b
+	}
+
+	neg := v < 0
+	if neg {
+		v = v * -1
+	}
+
+	adj := int32(b)
+
+	i := v
+	for {
+		if i <= 1 {
+			break
+		}
+		if !neg {
+			adj = int32(uint16(adj) << 1)
+			if adj > 600_00 {
+				return 600_00
+			}
+		} else {
+			adj = int32(uint16(adj) >> 1)
+			if adj < 0 {
+				return 0
+			}
+		}
+		i -= 2
+	}
+
+	if i == 0 {
+		return bound(adj)
+	}
+
+	if !neg {
+		adj = int32(num.Mul(num.Num(adj), halfStop))
+		if adj > 600_00 {
+			return 600_00
+		}
+	} else {
+		adj = int32(num.Mul(num.Num(adj), halfStop))
+		if adj < 0 {
+			return 0
+		}
+	}
+
+	return bound(adj)
+}
+
+func thirdStops(b uint16, v int16) uint16 {
+	if v == 0 {
+		return b
+	}
+
+	neg := v < 0
+	if neg {
+		v = v * -1
+	}
+
+	adj := int32(b)
+
+	i := v
+	for {
+		if i <= 2 {
+			break
+		}
+		if !neg {
+			adj = int32(uint16(adj) << 1)
+			if adj > 600_00 {
+				return 600_00
+			}
+		} else {
+			adj = int32(uint16(adj) >> 1)
+			if adj < 0 {
+				return 0
+			}
+		}
+		i -= 3
+	}
+
+	if i == 0 {
+		return bound(adj)
+	}
+
+	for i = i; i > 0; i -= 1 {
+		if !neg {
+			adj = int32(num.Mul(num.Num(adj), thirdStop))
+			if adj > 600_00 {
+				return 600_00
+			}
+		} else {
+			adj = int32(num.Mul(num.Num(adj), negThirdStop))
+			if adj < 0 {
+				return 0
+			}
+		}
+	}
+
+	return bound(adj)
+}
+
+func tenthStops(b uint16, v int16) uint16 {
+	if v == 0 {
+		return b
+	}
+
+	neg := v < 0
+	if neg {
+		v = v * -1
+	}
+
+	adj := int32(b)
+
+	i := v
+	for {
+		if i <= 9 {
+			break
+		}
+		if !neg {
+			adj = int32(uint16(adj) << 1)
+			if adj > 600_00 {
+				return 600_00
+			}
+		} else {
+			adj = int32(uint16(adj) >> 1)
+			if adj < 0 {
+				return 0
+			}
+		}
+		i -= 10
+	}
+
+	if i == 0 {
+		return bound(adj)
+	}
+
+	for i = i; i > 0; i -= 1 {
+		if !neg {
+			adj = int32(num.Mul(num.Num(adj), tenthStop))
+			if adj > 600_00 {
+				return 600_00
+			}
+		} else {
+			adj = int32(num.Mul(num.Num(adj), negTenthStop))
+			if adj < 0 {
+				return 0
+			}
+		}
+	}
+
+	return bound(adj)
+}
+
 func expUnitToS(b uint16, u expUnit, v int16) uint16 {
 	switch u {
 	case expUnitAbsolute:
-		if v >= 0 {
-			return b + uint16(v)
-		}
-		return b - uint16(v*-1)
+		return bound(int32(b) + int32(v))
 	case expUnitPercent:
-		off := ((int32(b) / 100) * int32(v))
-		if v >= 0 {
-			return b + uint16(off)
-		}
-		return b - uint16(off*-1)
-
+		return bound((int32(b) / 100) * int32(v))
 	case expUnitHalfStop:
-		wholeStops := v / 2
-		needsHalfStop := (v % 2) != 0
-		if wholeStops < 0 {
-			wholeStops = wholeStops * -1
-		}
-		var adj num.Num
-
-		if v >= 0 {
-			adj = adj << wholeStops
-		} else {
-			if needsHalfStop {
-				// easier for the math if we go down an extra
-				// stop and back up one
-				adj = adj >> (wholeStops + 1)
-			} else {
-				adj = adj >> (wholeStops)
-			}
-		}
-
-		if needsHalfStop {
-			adj = num.Mul(num.Num(adj), halfStop)
-		}
-
-		if v > 0 {
-			return b + uint16(adj)
-		} else {
-			return b - uint16(adj)
-		}
+		return halfStops(b, v)
 	case expUnitThirdStop:
-		return b
+		return thirdStops(b, v)
 	case expUnitTenthStop:
-		return b
+		return tenthStops(b, v)
 	default:
 		return 0
 	}
-}
-
-func expSToUnit(b uint16, u expUnit, s uint16) int16 {
-	switch u {
-	case expUnitAbsolute:
-		return int16(int32(s) - int32(b))
-	case expUnitPercent:
-	default:
-		return 0
-	}
-	return 0
-}
-
-// convExpUnit converts between different exposure units
-// to give nicer UX when changing expUnit used
-func convExpUnit(t, f expUnit, b uint16, v int16) int16 {
-	s := expUnitToS(b, f, v)
-	return expSToUnit(b, t, s)
 }
 
 func (es *exposureSet) cycleExpUnit(exp uint8, up bool) bool {
@@ -144,21 +256,25 @@ func (es *exposureSet) cycleExpUnit(exp uint8, up bool) bool {
 	}
 
 	es.exposures[exp].expUnit = expUnit(curr)
-	es.exposures[exp].colVals[0] = convExpUnit(expUnit(curr), og, es.baseTime, es.exposures[exp].colVals[0])
-	es.exposures[exp].colVals[1] = convExpUnit(expUnit(curr), og, es.baseTime, es.exposures[exp].colVals[1])
-	es.exposures[exp].colVals[2] = convExpUnit(expUnit(curr), og, es.baseTime, es.exposures[exp].colVals[2])
+	es.exposures[exp].colVals = [3]int16{0, 0, 0}
 
 	return true
 }
 
 func (es *exposureSet) adjustExposureTime(exp uint8, col uint8, delta int16) bool {
+	// TODO: cap these values
+
 	switch es.exposures[exp].expUnit {
 	case expUnitOff, expUnitFreeHand:
 		return false
-	case expUnitAbsolute:
+	case expUnitAbsolute, expUnitPercent:
 		es.exposures[exp].colVals[col] += delta
 	default:
-		es.exposures[exp].colVals[col] += 1
+		if delta > 0 {
+			es.exposures[exp].colVals[col] += 1
+		} else {
+			es.exposures[exp].colVals[col] -= 1
+		}
 	}
 
 	return true

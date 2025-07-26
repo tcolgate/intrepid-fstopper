@@ -6,7 +6,7 @@ type Mode struct {
 	SwitchTo   func(*Mode)  // enter a mode, passed the current mode (we may want to return to it)
 	SwitchAway func() *Mode // exit a mode, returns the next mode we should enter
 
-	Tick          func(passed int32) (updateDisplay bool, exit bool)
+	Tick          func(passed int64) (updateDisplay bool, exit bool)
 	UpdateDisplay func(*[2][16]byte)
 
 	PressPlus      func(touchPointIndex uint8) (updateDisplay bool, exit bool)
