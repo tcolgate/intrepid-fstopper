@@ -100,7 +100,7 @@ func (e *exposureMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 
 	num.Out(&nb, num.Num(e.remainingTime/int64((10*time.Millisecond))))
 	copy(nextDisplay[1][12:16], nb[0:4])
-	if !e.paused {
+	if e.paused {
 		copy(nextDisplay[1][0:7], []byte("Paused ")[0:7])
 	}
 }
