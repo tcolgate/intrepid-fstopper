@@ -235,7 +235,7 @@ var (
 			[16]byte([]byte("                ")),
 		},
 		{
-			[16]byte([]byte("--- Exposure ---")),
+			[16]byte([]byte("- Exposure  /  -")),
 			[16]byte([]byte("                ")),
 		},
 		{
