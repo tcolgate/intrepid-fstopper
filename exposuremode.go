@@ -107,8 +107,8 @@ func (e *exposureMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 		nextDisplay[1] = stringTable[4][1]
 	}
 
-	nextDisplay[0][10] = byte('1' + e.activeExp)
-	nextDisplay[0][12] = byte('0' + e.totalExps)
+	nextDisplay[0][11] = byte('1' + e.activeExp)
+	nextDisplay[0][13] = byte('1' + e.totalExps)
 
 	num.Out(&nb, num.Num(e.remainingTime/int64((10*time.Millisecond))))
 	copy(nextDisplay[1][12:16], nb[0:4])
