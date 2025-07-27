@@ -31,6 +31,8 @@ func newBWMode(s *stateData) *Mode {
 		PressLongFocus:  m.PressLongFocus,
 		PressCancel:     m.PressCancel,
 		PressLongCancel: m.PressLongCancel,
+		PressMode:       m.PressMode,
+		PressLongMode:   m.PressLongMode,
 	}
 }
 
@@ -205,4 +207,12 @@ func (e *printMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 	}
 
 	copy(nextDisplay[0][12:16], expUnitNames[currExp.expUnit][0:4])
+}
+
+func (e *printMode) PressMode() (bool, bool) {
+	return false, false
+}
+
+func (e *printMode) PressLongMode() (bool, bool) {
+	return false, false
 }

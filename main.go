@@ -93,6 +93,7 @@ type stateData struct {
 	exposureMode *Mode
 	focusMode    *Mode
 	bwMode       *Mode
+	tsMode       *Mode
 	activeMode   *Mode
 
 	// Focus light settings
@@ -253,6 +254,7 @@ var (
 	}
 	touchPoints = [][]touchPoint{
 		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}},
+		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}},
 		nil,
 	}
 
@@ -276,6 +278,7 @@ var (
 	}
 
 	bwM       = newBWMode(&state)
+	tsM       = newTestStripMode(&state)
 	exposureM = newExpMode(&state)
 	focusM    = newFocusMode(&state)
 )
@@ -377,6 +380,7 @@ func main() {
 	state.exposureMode = exposureM
 	state.focusMode = focusM
 	state.bwMode = bwM
+	state.tsMode = tsM
 
 	nextMode := state.bwMode
 

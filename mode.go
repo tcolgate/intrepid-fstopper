@@ -16,6 +16,8 @@ type Mode struct {
 	PressCancel     func(touchPointIndex uint8) (updateDisplay bool, exit bool)
 	PressLongCancel func(touchPointIndex uint8) (updateDisplay bool, exit bool)
 
+	PressMode      func() (updateDisplay bool, exit bool)
+	PressLongMode  func() (updateDisplay bool, exit bool)
 	PressRun       func() (updateDisplay bool, exit bool)
 	PressFocus     func() (updateDisplay bool, exit bool)
 	PressLongFocus func() (updateDisplay bool, exit bool)
