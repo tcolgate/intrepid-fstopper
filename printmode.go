@@ -18,18 +18,19 @@ func newBWMode(s *stateData) *Mode {
 	}
 
 	return &Mode{
-		TouchPoints:    m.TouchPoints,
-		SwitchTo:       m.SwitchTo,
-		SwitchAway:     m.SwitchAway,
-		UpdateDisplay:  m.UpdateDisplay,
-		PressPlus:      m.PressPlus,
-		PressLongPlus:  m.PressLongPlus,
-		PressMinus:     m.PressMinus,
-		PressLongMinus: m.PressLongMinus,
-		PressRun:       m.PressRun,
-		PressFocus:     m.PressFocus,
-		PressLongFocus: m.PressLongFocus,
-		PressCancel:    m.PressCancel,
+		TouchPoints:     m.TouchPoints,
+		SwitchTo:        m.SwitchTo,
+		SwitchAway:      m.SwitchAway,
+		UpdateDisplay:   m.UpdateDisplay,
+		PressPlus:       m.PressPlus,
+		PressLongPlus:   m.PressLongPlus,
+		PressMinus:      m.PressMinus,
+		PressLongMinus:  m.PressLongMinus,
+		PressRun:        m.PressRun,
+		PressFocus:      m.PressFocus,
+		PressLongFocus:  m.PressLongFocus,
+		PressCancel:     m.PressCancel,
+		PressLongCancel: m.PressLongCancel,
 	}
 }
 
@@ -82,10 +83,32 @@ func (e *printMode) PressLongFocus() (bool, bool) {
 	return true, true
 }
 
-func (e *printMode) PressCancel(touchPoint uint8) (bool, bool) {
-	// should reset stuff and/or delete the current
-	// exposure
-	return false, false
+func (e *printMode) PressCancel(touchPointIndex uint8) (bool, bool) {
+	switch touchPointIndex {
+	case 0:
+		// Quick press of cancel on the base time set resets the basetime
+		// to whatever the calculated value for the current dsiplayed
+		// baseTime and adjustment would be
+		e.state.exposureSet.baseTime = expUnitToS(
+			e.state.exposureSet.baseTime,
+			e.state.exposureSet.exposures[e.activeExposure].expUnit,
+			e.state.exposureSet.exposures[e.activeExposure].colVals[0],
+		)
+		e.state.exposureSet.exposures[e.activeExposure].colVals[0] = 0
+
+		return true, false
+	case 1:
+		e.state.exposureSet.exposures[e.activeExposure].colVals[0] = 0
+		return true, false
+	default:
+		return false, false
+	}
+}
+
+func (e *printMode) PressLongCancel(touchPointIndex uint8) (bool, bool) {
+	e.state.exposureSet.baseTime = 7_00
+	e.state.exposureSet.exposures[e.activeExposure].colVals[0] = 0
+	return true, false
 }
 
 func (e *printMode) PressPlus(touchPointIndex uint8) (bool, bool) {

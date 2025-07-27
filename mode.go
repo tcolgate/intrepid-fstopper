@@ -9,11 +9,12 @@ type Mode struct {
 	Tick          func(passed int64) (updateDisplay bool, exit bool)
 	UpdateDisplay func(*[2][16]byte)
 
-	PressPlus      func(touchPointIndex uint8) (updateDisplay bool, exit bool)
-	PressLongPlus  func(touchPointIndex uint8) (updateDisplay bool, exit bool)
-	PressMinus     func(touchPointIndex uint8) (updateDisplay bool, exit bool)
-	PressLongMinus func(touchPointIndex uint8) (updateDisplay bool, exit bool)
-	PressCancel    func(touchPointIndex uint8) (updateDisplay bool, exit bool)
+	PressPlus       func(touchPointIndex uint8) (updateDisplay bool, exit bool)
+	PressLongPlus   func(touchPointIndex uint8) (updateDisplay bool, exit bool)
+	PressMinus      func(touchPointIndex uint8) (updateDisplay bool, exit bool)
+	PressLongMinus  func(touchPointIndex uint8) (updateDisplay bool, exit bool)
+	PressCancel     func(touchPointIndex uint8) (updateDisplay bool, exit bool)
+	PressLongCancel func(touchPointIndex uint8) (updateDisplay bool, exit bool)
 
 	PressRun       func() (updateDisplay bool, exit bool)
 	PressFocus     func() (updateDisplay bool, exit bool)

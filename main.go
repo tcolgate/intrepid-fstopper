@@ -153,6 +153,10 @@ func (s *stateData) ButtonLongPress(b button.Button) (bool, bool) {
 		if s.activeMode.PressLongFocus != nil {
 			return s.activeMode.PressLongFocus()
 		}
+	case button.Cancel:
+		if s.activeMode.PressLongCancel != nil {
+			return s.activeMode.PressLongCancel(s.activeTouchPointIndex)
+		}
 	}
 	return false, false
 }
@@ -248,7 +252,7 @@ var (
 		},
 	}
 	touchPoints = [][]touchPoint{
-		[]touchPoint{{0, 3}, {0, 7}, {0, 12}},
+		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}},
 		nil,
 	}
 

@@ -16,7 +16,7 @@ const (
 	Safelight
 	Mode
 
-	DoesLongPress = Focus | Mode
+	DoesLongPress = Focus | Mode | Cancel
 	DoesHold      = Plus | Minus
 
 	// not sure why, but these two are inverted
