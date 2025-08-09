@@ -98,8 +98,8 @@ func (e *testStripMode) PressMinus(touchPointIndex uint8) (bool, bool) {
 
 func (e *testStripMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
-	nextDisplay[0] = stringTable[4][0]
-	nextDisplay[1] = stringTable[4][1]
+	nextDisplay[0] = stringTable[5]
+	nextDisplay[1] = stringTable[0]
 
 	num.Out(nb, num.Num(e.state.exposureSet.baseTime))
 	copy(nextDisplay[0][0:4], nb[0:4])

@@ -58,6 +58,6 @@ func (e *focusMode) PressCancel(touchPoint uint8) (bool, bool) {
 }
 
 func (e *focusMode) UpdateDisplay(nextDisplay *[2][16]byte) {
-	nextDisplay[0] = stringTable[1][0]
-	nextDisplay[1] = stringTable[1][1]
+	nextDisplay[0] = stringTable[3]
+	nextDisplay[1] = stringTable[0]
 }

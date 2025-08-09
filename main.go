@@ -239,27 +239,13 @@ var (
 		Height: 2,
 	}
 
-	stringTable = [][2][16]byte{
-		{
-			[16]byte([]byte("    s           ")),
-			[16]byte([]byte("           E: / ")),
-		},
-		{
-			[16]byte([]byte("---  Focus   ---")),
-			[16]byte([]byte("                ")),
-		},
-		{
-			[16]byte([]byte("- Exposure  /  -")),
-			[16]byte([]byte("                ")),
-		},
-		{
-			[16]byte([]byte("                ")),
-			[16]byte([]byte("                ")),
-		},
-		{
-			[16]byte([]byte("-- Test Strip --")),
-			[16]byte([]byte("                ")),
-		},
+	stringTable = [][16]byte{
+		[16]byte([]byte("                ")),
+		[16]byte([]byte("    s           ")),
+		[16]byte([]byte("           E: / ")),
+		[16]byte([]byte("---  Focus   ---")),
+		[16]byte([]byte("- Exposure  /  -")),
+		[16]byte([]byte("-- Test Strip --")),
 	}
 	touchPoints = [][]touchPoint{
 		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}},
@@ -282,8 +268,14 @@ var (
 	}
 
 	state = stateData{
-		display1: stringTable[3],
-		display2: stringTable[3],
+		display1: [2][16]byte{
+			stringTable[0],
+			stringTable[0],
+		},
+		display2: [2][16]byte{
+			stringTable[0],
+			stringTable[0],
+		},
 	}
 
 	bwM       = newBWMode(&state)

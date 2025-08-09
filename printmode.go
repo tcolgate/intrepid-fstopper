@@ -171,8 +171,8 @@ func (e *printMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
 
 func (e *printMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
-	nextDisplay[0] = stringTable[0][0]
-	nextDisplay[1] = stringTable[0][1]
+	nextDisplay[0] = stringTable[1]
+	nextDisplay[1] = stringTable[2]
 
 	num.Out(nb, num.Num(e.state.exposureSet.baseTime))
 	copy(nextDisplay[0][0:4], nb[0:4])
