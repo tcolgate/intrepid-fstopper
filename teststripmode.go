@@ -212,38 +212,24 @@ func (e *testStripMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 
 	// update method
 	copy(nextDisplay[1][12:16], testMethodStrs[e.state.exposureSet.testStrip.method])
-	/*
-		currExpIndex := 0
-		nextDisplay[1][13] = byte('1' + currExpIndex)
-		nextDisplay[1][15] = byte('0' + maxExposures)
 
-		currExp := e.state.exposureSet.exposures[currExpIndex]
-		switch currExp.expUnit {
-		case expUnitOff, expUnitFreeHand:
-			nextDisplay[0][6] = byte(' ')
-			copy(nextDisplay[1][2:6], []byte(`    `))
-		default:
-			if currExp.colVals[0] < 0 {
-				nextDisplay[0][6] = signMinus
-			} else {
-				nextDisplay[0][6] = signPlus
-			}
+	currExp := e.state.exposureSet.testStrip.exposure
 
-			absExpFact := currExp.colVals[0]
-			if absExpFact < 0 {
-				absExpFact = absExpFact * -1
-			}
-			switch currExp.expUnit {
-			case expUnitAbsolute:
-				num.OutLeft(nb, num.Num(absExpFact))
-			default:
-				num.IntOutLeft(nb, num.Num(absExpFact))
-			}
-			copy(nextDisplay[0][7:11], nb[0:4])
-		}
+	absExpFact := currExp.colVals[0]
+	if absExpFact < 0 {
+		absExpFact = absExpFact * -1
+	}
 
-		copy(nextDisplay[0][12:16], expUnitNames[currExp.expUnit][0:4])
-	*/
+	switch currExp.expUnit {
+	case expUnitAbsolute:
+		num.OutLeft(nb, num.Num(absExpFact))
+	default:
+		num.IntOutLeft(nb, num.Num(absExpFact))
+	}
+
+	copy(nextDisplay[0][7:11], nb[0:4])
+
+	copy(nextDisplay[0][12:16], expUnitNames[currExp.expUnit][0:4])
 }
 
 func (e *testStripMode) PressMode() (bool, bool) {
