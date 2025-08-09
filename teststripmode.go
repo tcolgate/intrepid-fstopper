@@ -26,6 +26,8 @@ func newTestStripMode(s *stateData) *Mode {
 		PressLongFocus:  m.PressLongFocus,
 		PressCancel:     m.PressCancel,
 		PressLongCancel: m.PressLongCancel,
+		PressMode:       m.PressMode,
+		PressLongMode:   m.PressLongMode,
 	}
 }
 
@@ -96,46 +98,49 @@ func (e *testStripMode) PressMinus(touchPointIndex uint8) (bool, bool) {
 
 func (e *testStripMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
-	nextDisplay[0] = stringTable[0][0]
-	nextDisplay[1] = stringTable[0][1]
+	nextDisplay[0] = stringTable[4][0]
+	nextDisplay[1] = stringTable[4][1]
 
 	num.Out(nb, num.Num(e.state.exposureSet.baseTime))
 	copy(nextDisplay[0][0:4], nb[0:4])
 
-	currExpIndex := 0
-	nextDisplay[1][13] = byte('1' + currExpIndex)
-	nextDisplay[1][15] = byte('0' + maxExposures)
+	/*
+		currExpIndex := 0
+		nextDisplay[1][13] = byte('1' + currExpIndex)
+		nextDisplay[1][15] = byte('0' + maxExposures)
 
-	currExp := e.state.exposureSet.exposures[currExpIndex]
-	switch currExp.expUnit {
-	case expUnitOff, expUnitFreeHand:
-		nextDisplay[0][6] = byte(' ')
-		copy(nextDisplay[1][2:6], []byte(`    `))
-	default:
-		if currExp.colVals[0] < 0 {
-			nextDisplay[0][6] = signMinus
-		} else {
-			nextDisplay[0][6] = signPlus
-		}
-
-		absExpFact := currExp.colVals[0]
-		if absExpFact < 0 {
-			absExpFact = absExpFact * -1
-		}
+		currExp := e.state.exposureSet.exposures[currExpIndex]
 		switch currExp.expUnit {
-		case expUnitAbsolute:
-			num.OutLeft(nb, num.Num(absExpFact))
+		case expUnitOff, expUnitFreeHand:
+			nextDisplay[0][6] = byte(' ')
+			copy(nextDisplay[1][2:6], []byte(`    `))
 		default:
-			num.IntOutLeft(nb, num.Num(absExpFact))
-		}
-		copy(nextDisplay[0][7:11], nb[0:4])
-	}
+			if currExp.colVals[0] < 0 {
+				nextDisplay[0][6] = signMinus
+			} else {
+				nextDisplay[0][6] = signPlus
+			}
 
-	copy(nextDisplay[0][12:16], expUnitNames[currExp.expUnit][0:4])
+			absExpFact := currExp.colVals[0]
+			if absExpFact < 0 {
+				absExpFact = absExpFact * -1
+			}
+			switch currExp.expUnit {
+			case expUnitAbsolute:
+				num.OutLeft(nb, num.Num(absExpFact))
+			default:
+				num.IntOutLeft(nb, num.Num(absExpFact))
+			}
+			copy(nextDisplay[0][7:11], nb[0:4])
+		}
+
+		copy(nextDisplay[0][12:16], expUnitNames[currExp.expUnit][0:4])
+	*/
 }
 
 func (e *testStripMode) PressMode() (bool, bool) {
-	return false, false
+	e.nextMode = e.state.printMode
+	return true, true
 }
 
 func (e *testStripMode) PressLongMode() (bool, bool) {

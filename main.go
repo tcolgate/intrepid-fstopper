@@ -92,7 +92,7 @@ type stateData struct {
 
 	exposureMode *Mode
 	focusMode    *Mode
-	bwMode       *Mode
+	printMode    *Mode
 	tsMode       *Mode
 	activeMode   *Mode
 
@@ -144,6 +144,11 @@ func (s *stateData) ButtonPress(b button.Button) (bool, bool) {
 		if state.activeMode.PressFocus != nil {
 			return s.activeMode.PressFocus()
 		}
+
+	case button.Mode:
+		if state.activeMode.PressMode != nil {
+			return s.activeMode.PressMode()
+		}
 	}
 	return false, false
 }
@@ -157,6 +162,10 @@ func (s *stateData) ButtonLongPress(b button.Button) (bool, bool) {
 	case button.Cancel:
 		if s.activeMode.PressLongCancel != nil {
 			return s.activeMode.PressLongCancel(s.activeTouchPointIndex)
+		}
+	case button.Mode:
+		if s.activeMode.PressLongMode != nil {
+			return s.activeMode.PressLongMode()
 		}
 	}
 	return false, false
@@ -379,10 +388,10 @@ func main() {
 
 	state.exposureMode = exposureM
 	state.focusMode = focusM
-	state.bwMode = bwM
+	state.printMode = bwM
 	state.tsMode = tsM
 
-	nextMode := state.bwMode
+	nextMode := state.printMode
 
 	for {
 		exitMode := false

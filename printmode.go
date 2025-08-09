@@ -210,9 +210,11 @@ func (e *printMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 }
 
 func (e *printMode) PressMode() (bool, bool) {
-	return false, false
+	e.nextMode = e.state.tsMode
+	return true, true
 }
 
 func (e *printMode) PressLongMode() (bool, bool) {
+	// This should toggle between BW, Tri_color and RGB
 	return false, false
 }
