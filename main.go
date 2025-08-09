@@ -243,13 +243,14 @@ var (
 		[16]byte([]byte("                ")),
 		[16]byte([]byte("    s           ")),
 		[16]byte([]byte("           E: / ")),
-		[16]byte([]byte("---  Focus   ---")),
-		[16]byte([]byte("- Exposure  /  -")),
-		[16]byte([]byte("-- Test Strip --")),
+		[16]byte([]byte("     Focus      ")),
+		[16]byte([]byte("  Exposure  /   ")),
+		[16]byte([]byte("    s           ")),
+		[16]byte([]byte("   |            ")),
 	}
 	touchPoints = [][]touchPoint{
 		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}},
-		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}},
+		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 3}, {1, 13}},
 		nil,
 	}
 

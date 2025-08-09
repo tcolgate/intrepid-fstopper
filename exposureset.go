@@ -5,15 +5,21 @@ import "intrepidfstopper/num"
 type testStripMethod uint8
 
 const (
-	testStripMethodAbs     testStripMethod = iota // each strip is the same
-	testStripMethodCover                          // each step covers previous
+	testStripMethodCover   testStripMethod = iota // each step covers ppaper
 	testStripMethodUncover                        // each step uncovers paper
+	testStripMethodAbs                            // each strip is the same
 )
 
+var testMethodStrs = [3][]byte{
+	[]byte(`cov`),
+	[]byte(`unc`),
+	[]byte(`abs`),
+}
+
 type testStrip struct {
-	method testStripMethod
-	steps  uint8
-	// we can take exposure settings for exposureSet exposures[0]
+	method   testStripMethod
+	steps    uint8
+	exposure exposure
 }
 
 type exposureSet struct {
@@ -235,7 +241,12 @@ func expUnitToS(b uint16, u expUnit, v int16) uint16 {
 }
 
 func (es *exposureSet) cycleExpUnit(exp uint8, up bool) bool {
-	og := es.exposures[exp].expUnit
+	expP := &es.exposures[exp]
+	if es.isTest {
+		expP = &es.testStrip.exposure
+	}
+
+	og := expP.expUnit
 
 	curr := int(og)
 	if up {
@@ -255,25 +266,37 @@ func (es *exposureSet) cycleExpUnit(exp uint8, up bool) bool {
 		curr = 0
 	}
 
-	es.exposures[exp].expUnit = expUnit(curr)
-	es.exposures[exp].colVals = [3]int16{0, 0, 0}
+	if es.isTest && curr == int(expUnitFreeHand) {
+		if up {
+			curr = 0
+		} else {
+			curr -= 1
+		}
+	}
+
+	expP.expUnit = expUnit(curr)
+	expP.colVals = [3]int16{0, 0, 0}
 
 	return true
 }
 
 func (es *exposureSet) adjustExposureTime(exp uint8, col uint8, delta int16) bool {
 	// TODO: cap these values
+	expP := &es.exposures[exp]
+	if es.isTest {
+		expP = &es.testStrip.exposure
+	}
 
-	switch es.exposures[exp].expUnit {
+	switch expP.expUnit {
 	case expUnitOff, expUnitFreeHand:
 		return false
 	case expUnitAbsolute, expUnitPercent:
-		es.exposures[exp].colVals[col] += delta
+		expP.colVals[col] += delta
 	default:
 		if delta > 0 {
-			es.exposures[exp].colVals[col] += 1
+			expP.colVals[col] += 1
 		} else {
-			es.exposures[exp].colVals[col] -= 1
+			expP.colVals[col] -= 1
 		}
 	}
 

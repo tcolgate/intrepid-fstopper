@@ -38,6 +38,7 @@ func newBWMode(s *stateData) *Mode {
 
 func (e *printMode) SwitchTo(prev *Mode) {
 	e.prevMode = prev
+	e.state.exposureSet.isTest = false
 }
 
 func (e *printMode) SwitchAway() *Mode {
