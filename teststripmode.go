@@ -222,12 +222,12 @@ func (e *testStripMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 
 	switch currExp.expUnit {
 	case expUnitAbsolute:
-		num.OutLeft(nb, num.Num(absExpFact))
+		num.Out(nb, num.Num(absExpFact))
 	default:
-		num.IntOutLeft(nb, num.Num(absExpFact))
+		num.IntOut(nb, num.Num(absExpFact))
 	}
 
-	copy(nextDisplay[0][7:11], nb[0:4])
+	copy(nextDisplay[0][8:12], nb[0:4])
 
 	copy(nextDisplay[0][12:16], expUnitNames[currExp.expUnit][0:4])
 }

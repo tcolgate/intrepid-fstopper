@@ -35,6 +35,18 @@ var (
 
 	signMinus = []byte(`-`)[0]
 	signPlus  = []byte(`+`)[0]
+
+	charPlusMinus = []byte{
+		0b_01000,
+		0b_11100,
+		0b_01001,
+		0b_00010,
+		0b_00100,
+		0b_01000,
+		0b_10000,
+		0b_00111,
+	}
+	charPlusMinusAddr = uint8(0)
 )
 
 type mode uint8
@@ -245,12 +257,12 @@ var (
 		[16]byte([]byte("           E: / ")),
 		[16]byte([]byte("     Focus      ")),
 		[16]byte([]byte("  Exposure  /   ")),
-		[16]byte([]byte("    s           ")),
+		[16]byte([]byte("    s \000         ")),
 		[16]byte([]byte("   |            ")),
 	}
 	touchPoints = [][]touchPoint{
 		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}},
-		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 3}, {1, 13}},
+		[]touchPoint{{0, 3}, {0, 9}, {0, 12}, {1, 3}, {1, 13}},
 		nil,
 	}
 
@@ -337,6 +349,8 @@ func configureDevices() {
 
 	i2c.Configure(i2cConfig)
 	lcd.Configure(lcdConfig)
+
+	lcd.CreateCharacter(charPlusMinusAddr, charPlusMinus)
 
 	ledPin.Configure(ledPinConfig)
 
