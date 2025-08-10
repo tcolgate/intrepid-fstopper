@@ -98,14 +98,8 @@ func (e *exposureMode) PressCancel(touchPoint uint8) (bool, bool) {
 
 func (e *exposureMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 	nb := num.NumBuf{}
-	if !e.state.exposureSet.isTest {
-		nextDisplay[0] = stringTable[4]
-		nextDisplay[1] = stringTable[0]
-
-	} else {
-		nextDisplay[0] = stringTable[4]
-		nextDisplay[1] = stringTable[0]
-	}
+	nextDisplay[0] = stringTable[4]
+	nextDisplay[1] = stringTable[0]
 
 	nextDisplay[0][11] = byte('1' + e.activeExp)
 	nextDisplay[0][13] = byte('1' + e.totalExps)

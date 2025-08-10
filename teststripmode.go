@@ -92,103 +92,19 @@ func (e *testStripMode) PressLongCancel(touchPointIndex uint8) (bool, bool) {
 }
 
 func (e *testStripMode) PressPlus(touchPointIndex uint8) (bool, bool) {
-	switch touchPointIndex {
-	case 0:
-		e.state.exposureSet.adjustBaseTime(10)
-	case 1:
-		e.state.exposureSet.adjustExposureTime(0, 0, 10)
-	case 2:
-		e.state.exposureSet.cycleExpUnit(0, true)
-	case 3:
-		if e.state.exposureSet.testStrip.steps == 2 {
-			return false, false
-		}
-		e.state.exposureSet.testStrip.steps++
-	case 4:
-		if e.state.exposureSet.testStrip.method == 2 {
-			e.state.exposureSet.testStrip.method = 0
-		} else {
-			e.state.exposureSet.testStrip.method++
-		}
-	default:
-		return false, false
-	}
-	return true, false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, 0, false, false), false
 }
 
 func (e *testStripMode) PressLongPlus(touchPointIndex uint8) (bool, bool) {
-	switch touchPointIndex {
-	case 0:
-		e.state.exposureSet.adjustBaseTime(100)
-	case 1:
-		e.state.exposureSet.adjustExposureTime(0, 0, 100)
-	case 2:
-		e.state.exposureSet.cycleExpUnit(0, true)
-	case 3:
-		if e.state.exposureSet.testStrip.steps == 2 {
-			return false, false
-		}
-		e.state.exposureSet.testStrip.steps++
-	case 4:
-		if e.state.exposureSet.testStrip.method == 2 {
-			e.state.exposureSet.testStrip.method = 0
-		} else {
-			e.state.exposureSet.testStrip.method++
-		}
-	default:
-		return false, false
-	}
-	return true, false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, 0, true, false), false
 }
 
 func (e *testStripMode) PressMinus(touchPointIndex uint8) (bool, bool) {
-	switch touchPointIndex {
-	case 0:
-		e.state.exposureSet.adjustBaseTime(-10)
-	case 1:
-		e.state.exposureSet.adjustExposureTime(0, 0, -10)
-	case 2:
-		e.state.exposureSet.cycleExpUnit(0, false)
-	case 3:
-		if e.state.exposureSet.testStrip.steps == 0 {
-			return false, false
-		}
-		e.state.exposureSet.testStrip.steps--
-	case 4:
-		if e.state.exposureSet.testStrip.method == 0 {
-			e.state.exposureSet.testStrip.method = 2
-		} else {
-			e.state.exposureSet.testStrip.method--
-		}
-	default:
-		return false, false
-	}
-	return true, false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, 0, false, true), false
 }
 
 func (e *testStripMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
-	switch touchPointIndex {
-	case 0:
-		e.state.exposureSet.adjustBaseTime(-100)
-	case 1:
-		e.state.exposureSet.adjustExposureTime(0, 0, -100)
-	case 2:
-		e.state.exposureSet.cycleExpUnit(0, false)
-	case 3:
-		if e.state.exposureSet.testStrip.steps == 0 {
-			return false, false
-		}
-		e.state.exposureSet.testStrip.steps--
-	case 4:
-		if e.state.exposureSet.testStrip.method == 0 {
-			e.state.exposureSet.testStrip.method = 2
-		} else {
-			e.state.exposureSet.testStrip.method--
-		}
-	default:
-		return false, false
-	}
-	return true, false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, 0, true, true), false
 }
 
 func (e *testStripMode) UpdateDisplay(nextDisplay *[2][16]byte) {

@@ -115,59 +115,19 @@ func (e *printMode) PressLongCancel(touchPointIndex uint8) (bool, bool) {
 }
 
 func (e *printMode) PressPlus(touchPointIndex uint8) (bool, bool) {
-	switch touchPointIndex {
-	case 0:
-		e.state.exposureSet.adjustBaseTime(10)
-	case 1:
-		e.state.exposureSet.adjustExposureTime(e.activeExposure, 0, 10)
-	case 2:
-		e.state.exposureSet.cycleExpUnit(e.activeExposure, true)
-	default:
-		return false, false
-	}
-	return true, false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, 0, false, false), false
 }
 
 func (e *printMode) PressLongPlus(touchPointIndex uint8) (bool, bool) {
-	switch touchPointIndex {
-	case 0:
-		e.state.exposureSet.adjustBaseTime(100)
-	case 1:
-		e.state.exposureSet.adjustExposureTime(e.activeExposure, 0, 100)
-	case 2:
-		e.state.exposureSet.cycleExpUnit(e.activeExposure, true)
-	default:
-		return false, false
-	}
-	return true, false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, 0, true, false), false
 }
 
 func (e *printMode) PressMinus(touchPointIndex uint8) (bool, bool) {
-	switch touchPointIndex {
-	case 0:
-		e.state.exposureSet.adjustBaseTime(-10)
-	case 1:
-		e.state.exposureSet.adjustExposureTime(e.activeExposure, 0, -10)
-	case 2:
-		e.state.exposureSet.cycleExpUnit(e.activeExposure, false)
-	default:
-		return false, false
-	}
-	return true, false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, 0, false, true), false
 }
 
 func (e *printMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
-	switch touchPointIndex {
-	case 0:
-		e.state.exposureSet.adjustBaseTime(-100)
-	case 1:
-		e.state.exposureSet.adjustExposureTime(e.activeExposure, 0, -100)
-	case 2:
-		e.state.exposureSet.cycleExpUnit(e.activeExposure, false)
-	default:
-		return false, false
-	}
-	return true, false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, 0, true, true), false
 }
 
 func (e *printMode) UpdateDisplay(nextDisplay *[2][16]byte) {

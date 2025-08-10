@@ -38,7 +38,15 @@ type exposure struct {
 	colTime [3]uint16
 }
 
-func (es *exposureSet) adjustBaseTime(delta int16) bool {
+func (es *exposureSet) adjustBaseTime(long, neg bool) bool {
+	delta := int16(10)
+	if long {
+		delta = 100
+	}
+	if neg {
+		delta *= -1
+	}
+
 	switch {
 	case delta > 0:
 		es.baseTime += uint16(delta)
@@ -280,7 +288,15 @@ func (es *exposureSet) cycleExpUnit(exp uint8, up bool) bool {
 	return true
 }
 
-func (es *exposureSet) adjustExposureTime(exp uint8, col uint8, delta int16) bool {
+func (es *exposureSet) adjustExposureTime(exp uint8, col uint8, long, neg bool) bool {
+	delta := int16(10)
+	if long {
+		delta = 100
+	}
+	if neg {
+		delta *= -1
+	}
+
 	// TODO: cap these values
 	expP := &es.exposures[exp]
 	if es.isTest {
@@ -301,4 +317,45 @@ func (es *exposureSet) adjustExposureTime(exp uint8, col uint8, delta int16) boo
 	}
 
 	return true
+}
+
+func (es *exposureSet) tpAdjustExposureSet(touchPointIndex uint8, exp, col uint8, long, neg bool) bool {
+	switch touchPointIndex {
+	case 0: // baseTime
+		return es.adjustBaseTime(long, neg)
+	case 1: // exposure adjustment
+		return es.adjustExposureTime(exp, col, long, neg)
+	case 2: // adjustment unit
+		return es.cycleExpUnit(exp, true)
+	case 3: // test strip step count
+		if !neg {
+			if es.testStrip.steps == 2 {
+				return false
+			}
+			es.testStrip.steps++
+		} else {
+			if es.testStrip.steps == 0 {
+				return false
+			}
+			es.testStrip.steps--
+		}
+		return true
+	case 4: // test strip step count
+		if !neg {
+			if es.testStrip.method == 2 {
+				es.testStrip.method = 0
+			} else {
+				es.testStrip.method++
+			}
+		} else {
+			if es.testStrip.method == 0 {
+				es.testStrip.method = 2
+			} else {
+				es.testStrip.method--
+			}
+		}
+		return true
+	default:
+		return false
+	}
 }
