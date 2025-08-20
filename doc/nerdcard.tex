@@ -35,6 +35,14 @@
 \addlegendentry{\(90mm\)}
 
 \addplot [
+    domain=105:450,
+    samples=100,
+    color=orange,
+]
+{log10((x / 105)^2) / log10(2)};
+\addlegendentry{\(105mm\)}
+
+\addplot [
     domain=135:450,
     samples=100,
     color=blue,
