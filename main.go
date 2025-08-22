@@ -482,6 +482,7 @@ func main() {
 		// this can be a more subtle calculation
 		state.prevTick = nowNS
 		state.nextTick = int64(tick)
-		time.Until(now.Add(time.Duration(state.nextTick)))
+
+		time.Sleep(time.Duration(state.nextTick))
 	}
 }

@@ -14,6 +14,8 @@ type exposureMode struct {
 	remainingTime int64
 	activeExp     uint8
 	totalExps     uint8
+
+	displayUpdated bool
 }
 
 func newExpMode(s *stateData) *Mode {
@@ -45,8 +47,8 @@ func (e *exposureMode) SwitchTo(prev *Mode) {
 		expCnt++
 	}
 
-	e.running = true
-	e.state.SetLEDPanel(ledWhite)
+	e.running = false
+	e.displayUpdated = false
 }
 
 func (e *exposureMode) SwitchAway() *Mode {
@@ -60,6 +62,19 @@ func (e *exposureMode) Tick(passed int64) (bool, bool) {
 		return false, false
 	}
 
+	// For very short exposures the display update can impact the
+	// timing
+	if !e.displayUpdated {
+		e.displayUpdated = true
+		return true, false
+	}
+
+	if !e.running {
+		e.running = true
+		e.state.SetLEDPanel(ledWhite)
+		return false, false
+	}
+
 	e.remainingTime -= passed
 	if e.remainingTime <= 0 {
 		// exposure finished
@@ -70,6 +85,10 @@ func (e *exposureMode) Tick(passed int64) (bool, bool) {
 		return true, true
 	}
 
+	// TODO: it would be better to do the update of the
+	// time here to reduce rather than leaving it to
+	// a full call to UpdateDisplay, since we don't
+	// need to re-render the entire display.
 	return true, false
 }
 
@@ -97,9 +116,9 @@ func (e *exposureMode) PressCancel(touchPoint uint8) (bool, bool) {
 }
 
 func (e *exposureMode) UpdateDisplay(nextDisplay *[2][16]byte) {
-	nb := num.NumBuf{}
 	nextDisplay[0] = stringTable[4]
 	nextDisplay[1] = stringTable[0]
+	nb := num.NumBuf{}
 
 	nextDisplay[0][11] = byte('1' + e.activeExp)
 	nextDisplay[0][13] = byte('1' + e.totalExps)

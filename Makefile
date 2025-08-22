@@ -21,9 +21,9 @@ build:
 		-gc leaking \
 		-size full \
 		-print-allocs . \
-		-no-debug \
 		-o intrep-ftimer.hex
 	#	-o intrep-ftimer.elf
+	#	-no-debug \
 	du -h intrep-ftimer.hex
 
 build-elf:
