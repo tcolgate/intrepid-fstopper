@@ -55,21 +55,6 @@ func (e *printMode) PressRun() (bool, bool) {
 	// - type (e.g. regular vs freehand)
 	// - things about the LED (e.g. brightness)
 
-	for i := range e.state.exposureSet.exposures {
-		switch e.state.exposureSet.exposures[i].expUnit {
-		case expUnitOff:
-		case expUnitFreeHand:
-		default:
-			for j := range e.state.exposureSet.exposures[i].colVals {
-				e.state.exposureSet.exposures[i].colTime[j] = expUnitToS(
-					e.state.exposureSet.baseTime,
-					e.state.exposureSet.exposures[i].expUnit,
-					e.state.exposureSet.exposures[i].colVals[j],
-				)
-			}
-		}
-	}
-
 	e.nextMode = e.state.exposureMode
 	return true, true
 }

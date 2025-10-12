@@ -5,14 +5,12 @@ import "intrepidfstopper/num"
 type testStripMethod uint8
 
 const (
-	testStripMethodCover   testStripMethod = iota // each step covers ppaper
-	testStripMethodUncover                        // each step uncovers paper
-	testStripMethodAbs                            // each strip is the same
+	testStripMethodCover testStripMethod = iota // each step covers ppaper
+	testStripMethodAbs                          // each strip is the same
 )
 
 var testMethodStrs = [3][]byte{
 	[]byte(`cov`),
-	[]byte(`unc`),
 	[]byte(`abs`),
 }
 
@@ -355,22 +353,69 @@ func (es *exposureSet) tpAdjustExposureSet(touchPointIndex uint8, exp, col uint8
 			es.testStrip.steps--
 		}
 		return true
-	case 4: // test strip step count
-		if !neg {
-			if es.testStrip.method == 2 {
-				es.testStrip.method = 0
-			} else {
-				es.testStrip.method++
-			}
+	case 4: // test strip step method
+		if es.testStrip.method == 1 {
+			es.testStrip.method = 0
 		} else {
-			if es.testStrip.method == 0 {
-				es.testStrip.method = 2
-			} else {
-				es.testStrip.method--
-			}
+			es.testStrip.method = 1
 		}
 		return true
 	default:
 		return false
 	}
+}
+
+func (es *exposureSet) calcTestInto(out *[maxExposures]int64) uint8 {
+	allsteps := 1 + (es.testStrip.steps+1)*2
+
+	v := (-1 * es.testStrip.exposure.colVals[0] * (int16(es.testStrip.steps + 1)))
+
+	for i := uint8(0); i < allsteps; i++ {
+		out[i] = (int64)(expUnitToS(
+			es.baseTime,
+			es.testStrip.exposure.expUnit,
+			v,
+		)) * int64(tick)
+
+		v += es.testStrip.exposure.colVals[0]
+	}
+
+	switch es.testStrip.method {
+	case testStripMethodCover:
+		run := out[0]
+		for i := uint8(1); i < allsteps; i++ {
+			out[i] -= run
+			run += out[i]
+		}
+	default:
+		// testStripMethodAbs
+	}
+
+	return allsteps
+}
+
+func (es *exposureSet) calcInto(out *[maxExposures]int64) uint8 {
+	if es.isTest {
+		return es.calcTestInto(out)
+	}
+
+	expCnt := uint8(0)
+expCnt:
+	for i := range es.exposures {
+		switch es.exposures[i].expUnit {
+		case expUnitOff:
+			break expCnt
+		case expUnitFreeHand:
+		default:
+			for j := range es.exposures[i].colVals {
+				out[i] = (int64)(expUnitToS(
+					es.baseTime,
+					es.exposures[i].expUnit,
+					es.exposures[i].colVals[j],
+				)) * int64(tick)
+			}
+		}
+		expCnt++
+	}
+	return expCnt
 }

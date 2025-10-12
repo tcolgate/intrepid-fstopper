@@ -16,6 +16,8 @@ type exposureMode struct {
 	totalExps     uint8
 
 	displayUpdated bool
+
+	exposures [maxExposures]int64
 }
 
 func newExpMode(s *stateData) *Mode {
@@ -32,19 +34,29 @@ func newExpMode(s *stateData) *Mode {
 	}
 }
 
+func (e *exposureMode) nextTime() bool {
+	if e.activeExp == e.totalExps {
+		return false
+	}
+
+	e.activeExp += 1
+	e.remainingTime = e.exposures[e.activeExp-1]
+
+	return true
+}
+
 func (e *exposureMode) SwitchTo(prev *Mode) {
 	// need to get the exposure details in here
 	// from the calling mode
 	e.prevMode = prev
+	e.activeExp = 0
 
-	e.remainingTime = int64(e.state.exposureSet.exposures[0].colTime[0]) * int64(tick)
+	e.totalExps = e.state.exposureSet.calcInto(&e.exposures)
 
-	expCnt := uint8(0)
-	for i := range e.state.exposureSet.exposures {
-		if e.state.exposureSet.exposures[i].expUnit == expUnitOff {
-			break
-		}
-		expCnt++
+	e.nextTime()
+
+	if e.totalExps > 1 {
+		e.paused = true
 	}
 
 	e.running = false
@@ -77,12 +89,20 @@ func (e *exposureMode) Tick(passed int64) (bool, bool) {
 
 	e.remainingTime -= passed
 	if e.remainingTime <= 0 {
+		e.remainingTime = 0
+
 		// exposure finished
 		e.paused = false
 		e.running = false
-		e.remainingTime = 0
 		e.state.SetLEDPanel(ledOff)
-		return true, true
+
+		if !e.nextTime() {
+			return true, true
+		}
+
+		e.paused = true
+
+		return true, false
 	}
 
 	// TODO: it would be better to do the update of the
@@ -120,8 +140,8 @@ func (e *exposureMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 	nextDisplay[1] = stringTable[0]
 	nb := num.NumBuf{}
 
-	nextDisplay[0][11] = byte('1' + e.activeExp)
-	nextDisplay[0][13] = byte('1' + e.totalExps)
+	nextDisplay[0][11] = byte('1' + e.activeExp - 1)
+	nextDisplay[0][13] = byte('1' + e.totalExps - 1)
 
 	num.Out(&nb, num.Num(e.remainingTime/int64((10*time.Millisecond))))
 	copy(nextDisplay[1][12:16], nb[0:4])
