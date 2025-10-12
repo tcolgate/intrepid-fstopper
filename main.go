@@ -259,6 +259,7 @@ var (
 		[16]byte([]byte("  Exposure  /   ")),
 		[16]byte([]byte("    s \000         ")),
 		[16]byte([]byte("   |            ")),
+		[16]byte([]byte("Test Patch  /   ")),
 	}
 	touchPoints = [][]touchPoint{
 		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}},
