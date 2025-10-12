@@ -289,25 +289,40 @@ func (es *exposureSet) cycleExpUnit(exp uint8, up bool) bool {
 }
 
 func (es *exposureSet) adjustExposureTime(exp uint8, col uint8, long, neg bool) bool {
-	delta := int16(10)
-	if long {
-		delta = 100
-	}
-	if neg {
-		delta *= -1
-	}
-
 	// TODO: cap these values
 	expP := &es.exposures[exp]
 	if es.isTest {
 		expP = &es.testStrip.exposure
 	}
 
+	var delta int16
+	switch expP.expUnit {
+	case expUnitPercent:
+		delta = int16(5)
+		if long {
+			delta = 10
+		}
+	default:
+		delta = int16(10)
+		if long {
+			delta = 100
+		}
+	}
+
+	if neg {
+		delta *= -1
+	}
+
 	switch expP.expUnit {
 	case expUnitOff, expUnitFreeHand:
 		return false
-	case expUnitAbsolute, expUnitPercent:
+	case expUnitAbsolute:
 		expP.colVals[col] += delta
+	case expUnitPercent:
+		expP.colVals[col] += delta
+		if expP.colVals[col] < -95 {
+			expP.colVals[col] = -95
+		}
 	default:
 		if delta > 0 {
 			expP.colVals[col] += 1
