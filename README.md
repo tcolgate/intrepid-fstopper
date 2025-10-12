@@ -25,6 +25,12 @@ and work out the internal API
   - Long press Focus for white light
   - Long press Focus during focus switches red/white
   - Single press Focus or Cancel during focus mode exits to previous mode
+- F-Stop timing for printing
+  - adjust by 1/2,1/3,1/10 stops
+  - Percentage from base time, rather than stops
+- F-Stop timing for test strips
+  - 7,5 or 3 strip patch test strips
+  - gradual covering or fully exposing of each test patch
 
 Controls and Display are not great at the moment, but there are lots of ways
 to improve things.
@@ -33,16 +39,11 @@ to improve things.
 
 The intention is to provide:
 
-- F-Stop timing for printing and test strips
-  - covering,uncovering or fully exposing on each section of a test strip
-  - adjust by 1/2,1/3 or 1/10 stops
-  - 9,7,5 or 3 strip  test strips (could be arbitrary, but that's not that useful)
 - Multi-exposure
 - Freehand exposure
 - Tri-colour printing (with f-stop timing)
 
 Possible additions
-- Percentage from base time, rather than stops
 - Pulse a burst of red every second during freehand exposure to
   help counting time (these would not contribute to exposure time,
   and is intended to be an alternate to an audible blip (in colour
