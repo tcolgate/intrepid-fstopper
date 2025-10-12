@@ -10,25 +10,38 @@ firmware, I am not aware of resultant dead kittens in my area.
 
 ## Achievments
 
-Not many so far, mostly just trying to implement the needed button behaviour
-and work out the internal API
+A first pass of the basic single exposure B&W functionality is now working.
 
 - Only supporing the P variant right now (I have two timers, one old, one new,
   both are P. B may be easy to support, may just need a separate build)
-- Basic control of the light, with asingle exposure
-  - +/- set the time, you can tap, or long press
-  - Run starts exposure
-  - During exposure Run pauses exposure, Run restarts
-  - Cancel stop the exposure
-- Focus mode:
+- Focus mode, works differently from the intrepid timer. This is intended to
+  be safer during B&W printing, making it harder to accidentally engage the white
+  light:
   - Single press Focus for red light
   - Long press Focus for white light
   - Long press Focus during focus switches red/white
   - Single press Focus or Cancel during focus mode exits to previous mode
-- F-Stop timing for printing
-  - adjust by 1/2,1/3,1/10 stops
-  - Percentage from base time, rather than stops
-- F-Stop timing for test strips
+- Basic control of the light, with a single exposure
+  - use the grey wheel to steer the cursor (`_`)
+  - +/- changes the settings
+  - Run starts exposure
+  - Holding cancel resets all the settings
+  - Press Cancel with the cursor on the exposure time updates the time with
+    the currently set exposure adjustment (and resets the exposure adjustment)
+    e.g.:
+      - base time is 20s set to +2 * 1/2 stops
+      - place the cursor on the 20s time and press cancel
+      - The time will updates to 40s +0 /2stops
+    This behaviour is useful but the UX may change in future
+  - During exposure
+    - Run pauses exposure, Run again restarts
+    - Cancel stop the exposure
+  - F-Stop timing for printing
+    - adjust by 1/2,1/3,1/10 stops
+    - Percentage from base time, rather than stops
+- F-Stop timing for test strips:
+  - Press the "Mode" button to switch from regular printing mode to
+    test strip mode.
   - 7,5 or 3 strip patch test strips
   - gradual covering or fully exposing of each test patch
 
@@ -70,7 +83,8 @@ atmega chips, only a strict subset of Go's functionality can be used.
 
 - Channels are OK, occasionally useful (essentially a pre-existing, generic
   ring buffer.
-- Slices are fine
+- Limited use of slices. Most slice functions blow out hte firmware. Basic
+  use of `[]byte` is fine, a couple of library functions require slices
 - I have avoided maps (avoided the need for any of the key hashing logic)
 - No interfaces, raw storage is fine, but the runtime required to use them
   blows the image size.
