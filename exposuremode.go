@@ -89,7 +89,7 @@ func (e *exposureMode) Tick(passed int64) (bool, bool) {
 	// time here to reduce rather than leaving it to
 	// a full call to UpdateDisplay, since we don't
 	// need to re-render the entire display.
-	return true, false
+	return false, false
 }
 
 func (e *exposureMode) PressRun() (bool, bool) {
