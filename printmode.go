@@ -131,7 +131,7 @@ func (e *printMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 	switch currExp.expUnit {
 	case expUnitOff, expUnitFreeHand:
 		nextDisplay[0][6] = byte(' ')
-		copy(nextDisplay[1][2:6], []byte(`    `))
+		copy(nextDisplay[1][0:7], []byte(`        `))
 	default:
 		if currExp.colVals[0] < 0 {
 			nextDisplay[0][6] = signMinus
@@ -150,6 +150,14 @@ func (e *printMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 			num.IntOutLeft(nb, num.Num(absExpFact))
 		}
 		copy(nextDisplay[0][7:11], nb[0:4])
+
+		currTime := expUnitToS(
+			e.state.exposureSet.baseTime,
+			e.state.exposureSet.exposures[e.activeExposure].expUnit,
+			e.state.exposureSet.exposures[e.activeExposure].colVals[0],
+		)
+		num.OutLeft(nb, num.Num(currTime))
+		copy(nextDisplay[1][2:6], nb[0:4])
 	}
 
 	copy(nextDisplay[0][12:16], expUnitNames[currExp.expUnit][0:4])

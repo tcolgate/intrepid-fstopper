@@ -254,7 +254,7 @@ var (
 	stringTable = [][16]byte{
 		[16]byte([]byte("                ")),
 		[16]byte([]byte("    s           ")),
-		[16]byte([]byte("           E: / ")),
+		[16]byte([]byte("(=    s)   E: / ")),
 		[16]byte([]byte("     Focus      ")),
 		[16]byte([]byte("  Exposure  /   ")),
 		[16]byte([]byte("    s \000         ")),
