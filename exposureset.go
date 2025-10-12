@@ -118,7 +118,7 @@ func halfStops(b uint16, v int16) uint16 {
 			return 600_00
 		}
 	} else {
-		adj = int32(num.Mul(num.Num(adj), halfStop))
+		adj = int32(num.Mul(num.Num(adj), negHalfStop))
 		if adj < 0 {
 			return 0
 		}
