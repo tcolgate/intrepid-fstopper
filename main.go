@@ -204,7 +204,7 @@ func (s *stateData) UpdateDisplay() {
 	}
 	s.activeDisplay = !s.activeDisplay
 
-	s.activeMode.UpdateDisplay(nextDisplay)
+	s.activeMode.UpdateDisplay(s.activeTouchPointIndex, nextDisplay)
 
 	for i := uint8(0); i < 2; i++ {
 		if lastDisplay[i] != nextDisplay[i] {

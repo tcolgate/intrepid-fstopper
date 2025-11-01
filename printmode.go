@@ -180,7 +180,7 @@ func (e *printMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
 	}
 }
 
-func (e *printMode) UpdateDisplay(nextDisplay *[2][16]byte) {
+func (e *printMode) UpdateDisplay(_ uint8, nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
 	nextDisplay[0] = stringTable[1]
 	nextDisplay[1] = stringTable[2]
