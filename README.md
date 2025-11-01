@@ -10,7 +10,7 @@ firmware, I am not aware of resultant dead kittens in my area.
 
 ## Achievments
 
-A first pass of the basic single exposure B&W functionality is now working.
+The following is the working feature set:
 
 - Only supporing the P variant right now (I have two timers, one old, one new,
   both are P. B may be easy to support, may just need a separate build)
@@ -44,17 +44,26 @@ A first pass of the basic single exposure B&W functionality is now working.
     test strip mode.
   - 7,5 or 3 strip patch test strips
   - gradual covering or fully exposing of each test patch
+- Multiple exposures
+  - Up to 9 exposures are supported, this is sufficient for tri-color printing
+    with 3 exposures per colour
+  - select exposure using +/- on the E: option
+  - change the exposure unit from "off" to enable an exposure
+  - press cancel on the exposure unit or exposure number to disable toggle an exposure,
+    (exposure 1 cannot be disabled)
+  - When multiple exposures are active hitting Run will start the exposure in "paused" state, you
+    must press Run again to start the first exposure.
 
 Controls and Display are not great at the moment, but there are lots of ways
 to improve things.
 
 ## Goals
 
-The intention is to provide:
+Additional features planned:
 
-- Multi-exposure
 - Freehand exposure
-- Tri-colour printing (with f-stop timing)
+- better percentage support
+- per-exposure RGB value
 
 Possible additions
 - Pulse a burst of red every second during freehand exposure to
@@ -63,6 +72,7 @@ Possible additions
   mode that would be turning the lamp off.
 - During BW print, when exposure is paused, the panel could switch
   to red light
+- In print mode it should be clear when multiple exposures are active
 
 ## Non-Goals
 
@@ -74,7 +84,9 @@ Possible additions
 - I may be lying about the previous point. An RGB exposure mode
   and while it may not be accurate, it will be more "honest" than
   the existing CMY mode. It would be interesting to compare to
-  the tri-colour nad filtered options.
+  the tri-colour nad filtered options. Pure RGB control will also
+  allow us to control the brightness of the LED which is useful for
+  sensitometry.
 
 ## Programming Style
 
@@ -82,8 +94,8 @@ The firmware is implemented using TinyGo, but due to the constraints of the
 atmega chips, only a strict subset of Go's functionality can be used.
 
 - Channels are OK, occasionally useful (essentially a pre-existing, generic
-  ring buffer.
-- Limited use of slices. Most slice functions blow out hte firmware. Basic
+  ring buffer. (may switch to a ring buffer though)
+- Limited use of slices. Most slice functions blow out the firmware. Basic
   use of `[]byte` is fine, a couple of library functions require slices
 - I have avoided maps (avoided the need for any of the key hashing logic)
 - No interfaces, raw storage is fine, but the runtime required to use them
