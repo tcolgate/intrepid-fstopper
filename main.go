@@ -86,7 +86,6 @@ const (
 	expUnitTenthStop
 	expUnitPercent
 	expUnitFreeHand
-	expUnitOff
 	expUnitLast
 )
 
@@ -402,9 +401,9 @@ func main() {
 	for i := range state.exposureSet.exposures {
 		if i == 0 {
 			state.exposureSet.exposures[i].expUnit = expUnitAbsolute
+			state.exposureSet.exposures[i].enabled = true
 			continue
 		}
-		state.exposureSet.exposures[i].expUnit = expUnitOff
 	}
 
 	state.exposureMode = exposureM
