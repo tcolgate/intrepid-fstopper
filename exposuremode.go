@@ -53,6 +53,7 @@ func (e *exposureMode) nextTime() bool {
 	}
 
 	e.activeExp += 1
+
 	e.remainingTime = e.exposures[e.activeExp-1]
 
 	return true
@@ -62,8 +63,8 @@ func (e *exposureMode) SwitchTo(prev *Mode) {
 	// need to get the exposure details in here
 	// from the calling mode
 	e.prevMode = prev
-	e.activeExp = 0
 
+	e.activeExp = 0
 	e.totalExps = e.state.exposureSet.calcInto(&e.exposures)
 
 	e.nextTime()

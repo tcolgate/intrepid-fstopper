@@ -429,15 +429,15 @@ func (es *exposureSet) calcInto(out *[maxExposures]int64) uint8 {
 	}
 
 	expCnt := uint8(0)
-expCnt:
 	for i := range es.exposures {
 		if !es.exposures[i].enabled {
-			break expCnt
+			continue
 		}
 		switch es.exposures[i].expUnit {
 		case expUnitFreeHand:
+			out[expCnt] = 0 // flags it as freehand?
 		default:
-			out[i] = (int64)(expUnitToS(
+			out[expCnt] = (int64)(expUnitToS(
 				es.baseTime,
 				es.exposures[i].expUnit,
 				es.exposures[i].colVal,
