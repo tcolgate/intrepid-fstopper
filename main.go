@@ -38,7 +38,7 @@ const (
 
 	tick = uint32(10 * time.Millisecond)
 
-	maxExposures = 7
+	maxExposures = 9
 )
 
 var (

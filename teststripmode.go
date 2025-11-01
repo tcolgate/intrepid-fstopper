@@ -85,19 +85,19 @@ func (e *testStripMode) PressLongCancel(touchPointIndex uint8) (bool, bool) {
 }
 
 func (e *testStripMode) PressPlus(touchPointIndex uint8) (bool, bool) {
-	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, 0, false, false), false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, false, false), false
 }
 
 func (e *testStripMode) PressLongPlus(touchPointIndex uint8) (bool, bool) {
-	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, 0, true, false), false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, true, false), false
 }
 
 func (e *testStripMode) PressMinus(touchPointIndex uint8) (bool, bool) {
-	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, 0, false, true), false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, false, true), false
 }
 
 func (e *testStripMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
-	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, 0, true, true), false
+	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, true, true), false
 }
 
 func (e *testStripMode) UpdateDisplay(nextDisplay *[2][16]byte) {
@@ -124,7 +124,7 @@ func (e *testStripMode) UpdateDisplay(nextDisplay *[2][16]byte) {
 
 	currExp := e.state.exposureSet.testStrip.exposure
 
-	absExpFact := currExp.colVals[0]
+	absExpFact := currExp.colVal
 	if absExpFact < 0 {
 		absExpFact = absExpFact * -1
 	}

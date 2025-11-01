@@ -43,10 +43,10 @@ type exposureSet struct {
 type exposure struct {
 	// These are set by the user in printMode
 	expUnit expUnit // What's the setting for this exposure
-	colVals [3]int16
+	colVal  int16
+	rgb     [3]uint8
 
-	// These are read by exposureMode
-	colTime [3]uint16
+	time uint16
 }
 
 func (es *exposureSet) adjustBaseTime(long, neg bool) bool {
@@ -294,12 +294,12 @@ func (es *exposureSet) cycleExpUnit(exp uint8, up bool) bool {
 	}
 
 	expP.expUnit = expUnit(curr)
-	expP.colVals = [3]int16{0, 0, 0}
+	expP.colVal = 0
 
 	return true
 }
 
-func (es *exposureSet) adjustExposureTime(exp uint8, col uint8, long, neg bool) bool {
+func (es *exposureSet) adjustExposureTime(exp uint8, long, neg bool) bool {
 	// TODO: cap these values
 	expP := &es.exposures[exp]
 	if es.isTest {
@@ -328,29 +328,29 @@ func (es *exposureSet) adjustExposureTime(exp uint8, col uint8, long, neg bool) 
 	case expUnitOff, expUnitFreeHand:
 		return false
 	case expUnitAbsolute:
-		expP.colVals[col] += delta
+		expP.colVal += delta
 	case expUnitPercent:
-		expP.colVals[col] += delta
-		if expP.colVals[col] < -95 {
-			expP.colVals[col] = -95
+		expP.colVal += delta
+		if expP.colVal < -95 {
+			expP.colVal = -95
 		}
 	default:
 		if delta > 0 {
-			expP.colVals[col] += 1
+			expP.colVal += 1
 		} else {
-			expP.colVals[col] -= 1
+			expP.colVal -= 1
 		}
 	}
 
 	return true
 }
 
-func (es *exposureSet) tpAdjustExposureSet(touchPointIndex uint8, exp, col uint8, long, neg bool) bool {
+func (es *exposureSet) tpAdjustExposureSet(touchPointIndex uint8, exp uint8, long, neg bool) bool {
 	switch touchPointIndex {
 	case 0: // baseTime
 		return es.adjustBaseTime(long, neg)
 	case 1: // exposure adjustment
-		return es.adjustExposureTime(exp, col, long, neg)
+		return es.adjustExposureTime(exp, long, neg)
 	case 2: // adjustment unit
 		return es.cycleExpUnit(exp, true)
 	case 3: // test strip step count
@@ -381,7 +381,7 @@ func (es *exposureSet) tpAdjustExposureSet(touchPointIndex uint8, exp, col uint8
 func (es *exposureSet) calcTestInto(out *[maxExposures]int64) uint8 {
 	allsteps := 1 + (es.testStrip.steps+1)*2
 
-	v := (-1 * es.testStrip.exposure.colVals[0] * (int16(es.testStrip.steps + 1)))
+	v := (-1 * es.testStrip.exposure.colVal * (int16(es.testStrip.steps + 1)))
 
 	for i := uint8(0); i < allsteps; i++ {
 		out[i] = (int64)(expUnitToS(
@@ -390,7 +390,7 @@ func (es *exposureSet) calcTestInto(out *[maxExposures]int64) uint8 {
 			v,
 		)) * int64(tick)
 
-		v += es.testStrip.exposure.colVals[0]
+		v += es.testStrip.exposure.colVal
 	}
 
 	switch es.testStrip.method {
@@ -420,13 +420,11 @@ expCnt:
 			break expCnt
 		case expUnitFreeHand:
 		default:
-			for j := range es.exposures[i].colVals {
-				out[i] = (int64)(expUnitToS(
-					es.baseTime,
-					es.exposures[i].expUnit,
-					es.exposures[i].colVals[j],
-				)) * int64(tick)
-			}
+			out[i] = (int64)(expUnitToS(
+				es.baseTime,
+				es.exposures[i].expUnit,
+				es.exposures[i].colVal,
+			)) * int64(tick)
 		}
 		expCnt++
 	}
