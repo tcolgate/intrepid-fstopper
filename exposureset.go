@@ -44,7 +44,7 @@ type exposure struct {
 	// These are set by the user in printMode
 	expUnit expUnit // What's the setting for this exposure
 	colVal  int16
-	rgb     [3]uint8
+	rgb     [4]uint8
 	enabled bool
 
 	time uint16
@@ -305,6 +305,37 @@ func (es *exposureSet) cycleExpUnit(exp uint8, up bool) bool {
 	return true
 }
 
+func (es *exposureSet) adjustExposureColour(exp uint8, long, neg bool) bool {
+	// TODO: cap these values
+	expP := &es.exposures[exp]
+	if es.isTest {
+		expP = &es.testStrip.exposure
+	}
+
+	var delta int16
+
+	delta = int16(1)
+	if long {
+		delta = 10
+	}
+
+	if neg {
+		delta *= -1
+	}
+
+	next := int16(expP.rgb[3]) + delta
+	switch {
+	case next < 0:
+		expP.rgb[3] = 0
+	case next > 255:
+		expP.rgb[3] = 255
+	default:
+		expP.rgb[3] = uint8(next)
+	}
+
+	return true
+}
+
 func (es *exposureSet) adjustExposureTime(exp uint8, long, neg bool) bool {
 	// TODO: cap these values
 	expP := &es.exposures[exp]
@@ -352,6 +383,8 @@ func (es *exposureSet) adjustExposureTime(exp uint8, long, neg bool) bool {
 }
 
 func (es *exposureSet) tpAdjustExposureSet(touchPointIndex uint8, exp uint8, long, neg bool) bool {
+	// TODO: using the touchpoint Index here is super annoying and fragile, need to normalise this
+	// to directly state what is being adjusted
 	switch touchPointIndex {
 	case 0: // baseTime
 		return es.adjustBaseTime(long, neg)
@@ -377,7 +410,7 @@ func (es *exposureSet) tpAdjustExposureSet(touchPointIndex uint8, exp uint8, lon
 			return false
 		}
 		return true
-	case 4: // test strip step method
+	case 4: // test strip step method, or LED colour
 		switch es.isTest {
 		case true:
 			if es.testStrip.method == 1 {
@@ -386,7 +419,7 @@ func (es *exposureSet) tpAdjustExposureSet(touchPointIndex uint8, exp uint8, lon
 				es.testStrip.method = 1
 			}
 		case false:
-			return false
+			return es.adjustExposureColour(exp, long, neg)
 		}
 		return true
 	default:
@@ -423,7 +456,7 @@ func (es *exposureSet) calcTestInto(out *[maxExposures]int64) uint8 {
 	return allsteps
 }
 
-func (es *exposureSet) calcInto(out *[maxExposures]int64) uint8 {
+func (es *exposureSet) calcInto(out *[maxExposures]int64, outCol *[maxExposures][4]uint8) uint8 {
 	if es.isTest {
 		return es.calcTestInto(out)
 	}
@@ -432,6 +465,9 @@ func (es *exposureSet) calcInto(out *[maxExposures]int64) uint8 {
 	for i := range es.exposures {
 		if !es.exposures[i].enabled {
 			continue
+		}
+		if outCol != nil {
+			outCol[expCnt] = es.exposures[i].rgb
 		}
 		switch es.exposures[i].expUnit {
 		case expUnitFreeHand:

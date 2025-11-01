@@ -146,7 +146,7 @@ func (e *printMode) adjustActiveExposure(inc bool) (bool, bool) {
 
 func (e *printMode) PressPlus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
-	case 3:
+	case 3, 5:
 		return e.adjustActiveExposure(true)
 	default:
 		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, false, false), false
@@ -155,7 +155,7 @@ func (e *printMode) PressPlus(touchPointIndex uint8) (bool, bool) {
 
 func (e *printMode) PressLongPlus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
-	case 3:
+	case 3, 5:
 		return e.adjustActiveExposure(true)
 	default:
 		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, true, false), false
@@ -164,7 +164,7 @@ func (e *printMode) PressLongPlus(touchPointIndex uint8) (bool, bool) {
 
 func (e *printMode) PressMinus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
-	case 3:
+	case 3, 5:
 		return e.adjustActiveExposure(false)
 	default:
 		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, false, true), false
@@ -173,29 +173,39 @@ func (e *printMode) PressMinus(touchPointIndex uint8) (bool, bool) {
 
 func (e *printMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
 	switch touchPointIndex {
-	case 3:
+	case 3, 5:
 		return e.adjustActiveExposure(false)
 	default:
 		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, true, true), false
 	}
 }
 
-func (e *printMode) UpdateDisplay(_ uint8, nextDisplay *[2][16]byte) {
+func (e *printMode) UpdateDisplay(tp uint8, nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
+
 	nextDisplay[0] = stringTable[1]
 	nextDisplay[1] = stringTable[2]
 
-	num.Out(nb, num.Num(e.state.exposureSet.baseTime))
-	copy(nextDisplay[0][0:4], nb[0:4])
-
 	nextDisplay[1][13] = byte('1' + e.activeExposure)
 	nextDisplay[1][15] = byte('0' + maxExposures)
+
+	if tp >= 4 {
+		// or the RGB line
+		nextDisplay[0] = stringTable[8]
+		num.IntOut(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[3]))
+		copy(nextDisplay[1][0:8], []byte(`         `))
+		copy(nextDisplay[0][12:16], nb[0:4])
+		return
+	}
+
+	num.Out(nb, num.Num(e.state.exposureSet.baseTime))
+	copy(nextDisplay[0][0:4], nb[0:4])
 
 	currExp := e.state.exposureSet.exposures[e.activeExposure]
 	switch {
 	case !currExp.enabled || currExp.expUnit == expUnitFreeHand:
 		nextDisplay[0][6] = byte(' ')
-		copy(nextDisplay[1][0:7], []byte(`        `))
+		copy(nextDisplay[1][0:8], []byte(`         `))
 	default:
 		if currExp.colVal < 0 {
 			nextDisplay[0][6] = signMinus

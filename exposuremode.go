@@ -30,7 +30,8 @@ type exposureMode struct {
 
 	displayUpdated bool
 
-	exposures [maxExposures]int64
+	exposureRGBs [maxExposures][4]uint8
+	exposures    [maxExposures]int64
 }
 
 func newExpMode(s *stateData) *Mode {
@@ -65,7 +66,7 @@ func (e *exposureMode) SwitchTo(prev *Mode) {
 	e.prevMode = prev
 
 	e.activeExp = 0
-	e.totalExps = e.state.exposureSet.calcInto(&e.exposures)
+	e.totalExps = e.state.exposureSet.calcInto(&e.exposures, &e.exposureRGBs)
 
 	e.nextTime()
 
@@ -97,7 +98,7 @@ func (e *exposureMode) Tick(passed int64) (bool, bool) {
 
 	if !e.running {
 		e.running = true
-		e.state.SetLEDPanel(ledWhite)
+		e.state.SetLEDPanel(e.exposureRGBs[e.activeExp-1])
 		return false, false
 	}
 
@@ -133,7 +134,7 @@ func (e *exposureMode) PressRun() (bool, bool) {
 		// or, maybe optionally ledRed?
 		e.state.SetLEDPanel(ledOff)
 	} else {
-		e.state.SetLEDPanel(ledWhite)
+		e.state.SetLEDPanel(e.exposureRGBs[e.activeExp])
 	}
 
 	return true, false

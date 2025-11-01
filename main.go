@@ -272,11 +272,15 @@ var (
 		[16]byte([]byte("    s \000         ")),
 		[16]byte([]byte("   |            ")),
 		[16]byte([]byte("Test Patch  /   ")),
+		[16]byte([]byte("Brightness:     ")),
+		[16]byte([]byte("R:      G:      ")),
+		[16]byte([]byte("B:         E: / ")),
 	}
 	touchPoints = [][]touchPoint{
-		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}},
-		[]touchPoint{{0, 3}, {0, 9}, {0, 12}, {1, 3}, {1, 13}},
-		nil,
+		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}, {0, 15}, {1, 13}}, // Print mode - brightness
+		[]touchPoint{{0, 3}, {0, 9}, {0, 12}, {1, 3}, {1, 13}, {0, 3}},   // Test strip mode - brightness
+		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}},                   // Print mode - rgb
+		[]touchPoint{{0, 3}, {0, 9}, {0, 12}, {1, 3}, {1, 13}},           // Test strip mode - rgb
 	}
 
 	// Application state
@@ -399,6 +403,7 @@ func main() {
 
 	state.exposureSet.baseTime = 7_00
 	for i := range state.exposureSet.exposures {
+		state.exposureSet.exposures[i].rgb = [4]uint8{0, 0, 0, 255}
 		if i == 0 {
 			state.exposureSet.exposures[i].expUnit = expUnitAbsolute
 			state.exposureSet.exposures[i].enabled = true
