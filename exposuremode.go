@@ -140,7 +140,7 @@ func (e *exposureMode) PressRun() (bool, bool) {
 	return true, false
 }
 
-func (e *exposureMode) PressCancel(touchPoint uint8) (bool, bool) {
+func (e *exposureMode) PressCancel(touchPoint tpAction) (bool, bool) {
 	// cancel running exposure, reset
 	e.paused = false
 	e.running = false
@@ -150,7 +150,7 @@ func (e *exposureMode) PressCancel(touchPoint uint8) (bool, bool) {
 	return true, true
 }
 
-func (e *exposureMode) UpdateDisplay(_ uint8, nextDisplay *[2][16]byte) {
+func (e *exposureMode) UpdateDisplay(_ tpAction, nextDisplay *[2][16]byte) {
 	nextDisplay[0] = stringTable[4]
 	if e.state.exposureSet.isTest {
 		nextDisplay[0] = stringTable[7]

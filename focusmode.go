@@ -66,11 +66,11 @@ func (e *focusMode) PressLongFocus() (bool, bool) {
 	return false, false
 }
 
-func (e *focusMode) PressCancel(touchPoint uint8) (bool, bool) {
+func (e *focusMode) PressCancel(_ tpAction) (bool, bool) {
 	return true, true
 }
 
-func (e *focusMode) UpdateDisplay(_ uint8, nextDisplay *[2][16]byte) {
+func (e *focusMode) UpdateDisplay(_ tpAction, nextDisplay *[2][16]byte) {
 	nextDisplay[0] = stringTable[3]
 	nextDisplay[1] = stringTable[0]
 }
