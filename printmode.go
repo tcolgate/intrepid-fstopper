@@ -201,11 +201,7 @@ func (e *printMode) updateDisplayPage2(tp tpAction, nextDisplay *[2][16]byte, nb
 		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].grbw[1]))
 		copy(nextDisplay[0][3:7], nb[0:4])
 
-<<<<<<< HEAD
-		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[1]))
-=======
 		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].grbw[0]))
->>>>>>> broken
 		copy(nextDisplay[0][12:16], nb[0:4])
 
 		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].grbw[2]))

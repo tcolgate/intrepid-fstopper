@@ -326,16 +326,6 @@ func (es *exposureSet) adjustExposureColour(exp uint8, tp tpAction, long, neg bo
 
 	colIndx := uint8(tp) - uint8(tpRGBR)
 
-<<<<<<< HEAD
-	next := int16(expP.rgb[colIndx]) + delta
-	switch {
-	case next < 0:
-		expP.rgb[colIndx] = 0
-	case next > 255:
-		expP.rgb[colIndx] = 255
-	default:
-		expP.rgb[colIndx] = uint8(next)
-=======
 	next := int16(expP.grbw[colIndx]) + delta
 	switch {
 	case next < 0:
@@ -344,7 +334,6 @@ func (es *exposureSet) adjustExposureColour(exp uint8, tp tpAction, long, neg bo
 		expP.grbw[colIndx] = 255
 	default:
 		expP.grbw[colIndx] = uint8(next)
->>>>>>> broken
 	}
 
 	return true
@@ -443,7 +432,7 @@ func (es *exposureSet) tpAdjustExposureSet(touchPointIndex tpAction, exp uint8, 
 	}
 }
 
-func (es *exposureSet) calcTestInto(out *[maxExposures]int64) uint8 {
+func (es *exposureSet) calcTestInto(out *[maxExposures]int64, outCol *[maxExposures][4]uint8) uint8 {
 	allsteps := 1 + (es.testStrip.steps+1)*2
 
 	v := (-1 * es.testStrip.exposure.colVal * (int16(es.testStrip.steps + 1)))
@@ -456,6 +445,7 @@ func (es *exposureSet) calcTestInto(out *[maxExposures]int64) uint8 {
 		)) * int64(tick)
 
 		v += es.testStrip.exposure.colVal
+		outCol[i] = ledWhite
 	}
 
 	switch es.testStrip.method {
@@ -474,7 +464,7 @@ func (es *exposureSet) calcTestInto(out *[maxExposures]int64) uint8 {
 
 func (es *exposureSet) calcInto(out *[maxExposures]int64, outCol *[maxExposures][4]uint8) uint8 {
 	if es.isTest {
-		return es.calcTestInto(out)
+		return es.calcTestInto(out, outCol)
 	}
 
 	expCnt := uint8(0)
@@ -483,11 +473,7 @@ func (es *exposureSet) calcInto(out *[maxExposures]int64, outCol *[maxExposures]
 			continue
 		}
 		if outCol != nil {
-<<<<<<< HEAD
-			outCol[expCnt] = es.exposures[i].rgb
-=======
 			outCol[expCnt] = es.exposures[i].grbw
->>>>>>> broken
 			if es.ledMode == modeBW {
 				outCol[expCnt][0] = 0
 				outCol[expCnt][1] = 0
