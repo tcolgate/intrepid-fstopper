@@ -134,7 +134,7 @@ func (e *exposureMode) PressRun() (bool, bool) {
 		// or, maybe optionally ledRed?
 		e.state.SetLEDPanel(ledOff)
 	} else {
-		e.state.SetLEDPanel(e.exposureRGBs[e.activeExp])
+		e.state.SetLEDPanel(e.exposureRGBs[e.activeExp-1])
 	}
 
 	return true, false

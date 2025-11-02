@@ -501,6 +501,8 @@ func main() {
 		state.prevTick = nowNS
 		state.nextTick = int64(tick)
 
+		// Rather than sleep here we may just be able to tight loop and
+		// use a one of the hardware counters to track passage of ticks.
 		time.Sleep(time.Duration(state.nextTick))
 	}
 }
