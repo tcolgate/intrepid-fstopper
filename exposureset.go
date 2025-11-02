@@ -306,7 +306,7 @@ func (es *exposureSet) cycleExpUnit(exp uint8, up bool) bool {
 	return true
 }
 
-func (es *exposureSet) adjustExposureColour(exp uint8, long, neg bool) bool {
+func (es *exposureSet) adjustExposureColour(exp uint8, tp tpAction, long, neg bool) bool {
 	// TODO: cap these values
 	expP := &es.exposures[exp]
 	if es.isTest {
@@ -324,14 +324,16 @@ func (es *exposureSet) adjustExposureColour(exp uint8, long, neg bool) bool {
 		delta *= -1
 	}
 
-	next := int16(expP.rgb[3]) + delta
+	colIndx := uint8(tp) - uint8(tpRGBR)
+
+	next := int16(expP.rgb[colIndx]) + delta
 	switch {
 	case next < 0:
-		expP.rgb[3] = 0
+		expP.rgb[colIndx] = 0
 	case next > 255:
-		expP.rgb[3] = 255
+		expP.rgb[colIndx] = 255
 	default:
-		expP.rgb[3] = uint8(next)
+		expP.rgb[colIndx] = uint8(next)
 	}
 
 	return true
@@ -383,17 +385,17 @@ func (es *exposureSet) adjustExposureTime(exp uint8, long, neg bool) bool {
 	return true
 }
 
-func (es *exposureSet) tpAdjustExposureSet(touchPointIndex uint8, exp uint8, long, neg bool) bool {
+func (es *exposureSet) tpAdjustExposureSet(touchPointIndex tpAction, exp uint8, long, neg bool) bool {
 	// TODO: using the touchpoint Index here is super annoying and fragile, need to normalise this
 	// to directly state what is being adjusted
 	switch touchPointIndex {
-	case 0: // baseTime
+	case tpBaseTime: // baseTime
 		return es.adjustBaseTime(long, neg)
-	case 1: // exposure adjustment
+	case tpExpVal: // exposure adjustment
 		return es.adjustExposureTime(exp, long, neg)
-	case 2: // adjustment unit
-		return es.cycleExpUnit(exp, true)
-	case 3: // test strip step count
+	case tpExpUnit: // adjustment unit
+		return es.cycleExpUnit(exp, !neg)
+	case tpTSStrips: // test strip step count
 		switch es.isTest {
 		case true:
 			if !neg {
@@ -411,7 +413,7 @@ func (es *exposureSet) tpAdjustExposureSet(touchPointIndex uint8, exp uint8, lon
 			return false
 		}
 		return true
-	case 4: // test strip step method, or LED colour
+	case tpTSMode: // test strip step count
 		switch es.isTest {
 		case true:
 			if es.testStrip.method == 1 {
@@ -420,9 +422,11 @@ func (es *exposureSet) tpAdjustExposureSet(touchPointIndex uint8, exp uint8, lon
 				es.testStrip.method = 1
 			}
 		case false:
-			return es.adjustExposureColour(exp, long, neg)
+			return false
 		}
 		return true
+	case tpRGBR, tpRGBG, tpRGBB, tpRGBW: // test strip step count
+		return es.adjustExposureColour(exp, touchPointIndex, long, neg)
 	default:
 		return false
 	}
@@ -469,6 +473,13 @@ func (es *exposureSet) calcInto(out *[maxExposures]int64, outCol *[maxExposures]
 		}
 		if outCol != nil {
 			outCol[expCnt] = es.exposures[i].rgb
+			if es.ledMode == modeBW {
+				outCol[expCnt][0] = 0
+				outCol[expCnt][1] = 0
+				outCol[expCnt][2] = 0
+			} else {
+				outCol[expCnt][3] = 0
+			}
 		}
 		switch es.exposures[i].expUnit {
 		case expUnitFreeHand:
@@ -482,6 +493,7 @@ func (es *exposureSet) calcInto(out *[maxExposures]int64, outCol *[maxExposures]
 		}
 		expCnt++
 	}
+
 	return expCnt
 }
 

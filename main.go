@@ -133,11 +133,11 @@ func (s *stateData) ButtonHoldRepeat(b button.Button) (bool, bool) {
 	switch b {
 	case button.Plus:
 		if state.activeMode.PressLongPlus != nil {
-			return s.activeMode.PressLongPlus(s.activeTouchPointIndex)
+			return s.activeMode.PressLongPlus(s.activeTouchPoints[s.activeTouchPointIndex].action)
 		}
 	case button.Minus:
 		if state.activeMode.PressLongMinus != nil {
-			return s.activeMode.PressLongMinus(s.activeTouchPointIndex)
+			return s.activeMode.PressLongMinus(s.activeTouchPoints[s.activeTouchPointIndex].action)
 		}
 	}
 	return false, false
@@ -147,11 +147,11 @@ func (s *stateData) ButtonPress(b button.Button) (bool, bool) {
 	switch b {
 	case button.Plus:
 		if state.activeMode.PressPlus != nil {
-			return s.activeMode.PressPlus(s.activeTouchPointIndex)
+			return s.activeMode.PressPlus(s.activeTouchPoints[s.activeTouchPointIndex].action)
 		}
 	case button.Minus:
 		if state.activeMode.PressMinus != nil {
-			return s.activeMode.PressMinus(s.activeTouchPointIndex)
+			return s.activeMode.PressMinus(s.activeTouchPoints[s.activeTouchPointIndex].action)
 		}
 	case button.Run:
 		if state.activeMode.PressRun != nil {
@@ -160,7 +160,7 @@ func (s *stateData) ButtonPress(b button.Button) (bool, bool) {
 
 	case button.Cancel:
 		if state.activeMode.PressCancel != nil {
-			return s.activeMode.PressCancel(s.activeTouchPointIndex)
+			return s.activeMode.PressCancel(s.activeTouchPoints[s.activeTouchPointIndex].action)
 		}
 
 	case button.Focus:
@@ -184,7 +184,7 @@ func (s *stateData) ButtonLongPress(b button.Button) (bool, bool) {
 		}
 	case button.Cancel:
 		if s.activeMode.PressLongCancel != nil {
-			return s.activeMode.PressLongCancel(s.activeTouchPointIndex)
+			return s.activeMode.PressLongCancel(s.activeTouchPoints[s.activeTouchPointIndex].action)
 		}
 	case button.Mode:
 		if s.activeMode.PressLongMode != nil {
@@ -203,7 +203,7 @@ func (s *stateData) UpdateDisplay() {
 	}
 	s.activeDisplay = !s.activeDisplay
 
-	s.activeMode.UpdateDisplay(s.activeTouchPointIndex, nextDisplay)
+	s.activeMode.UpdateDisplay(s.activeTouchPoints[s.activeTouchPointIndex].action, nextDisplay)
 
 	for i := uint8(0); i < 2; i++ {
 		if lastDisplay[i] != nextDisplay[i] {
@@ -215,14 +215,32 @@ func (s *stateData) UpdateDisplay() {
 
 	if len(s.activeTouchPoints) > 0 {
 		tp := s.activeTouchPoints[s.activeTouchPointIndex]
-		lcd.SetCursor(tp[1], tp[0])
+		lcd.SetCursor(tp.x, tp.y)
 		lcd.CursorOn(true)
 	} else {
 		lcd.CursorOn(false)
 	}
 }
 
-type touchPoint [2]uint8
+type tpAction uint8
+type touchPoint struct {
+	y      uint8
+	x      uint8
+	action tpAction
+}
+
+const (
+	tpBaseTime tpAction = iota
+	tpExpVal
+	tpExpUnit
+	tpExposure
+	tpRGBR
+	tpRGBG
+	tpRGBB
+	tpRGBW
+	tpTSStrips
+	tpTSMode
+)
 
 var (
 	// hardware setup
@@ -276,9 +294,31 @@ var (
 		[16]byte([]byte("B:         E: / ")),
 	}
 	touchPoints = [][]touchPoint{
-		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}, {0, 12}, {1, 13}},                 // Print mode - ledBW
-		[]touchPoint{{0, 3}, {0, 9}, {0, 12}, {1, 3}, {1, 13}, {0, 3}},                   // Test strip mode - brightness
-		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}, {0, 3}, {0, 11}, {1, 3}, {1, 13}}, // Print mode - ledRGB
+		[]touchPoint{
+			{0, 3, tpBaseTime},
+			{0, 7, tpExpVal},
+			{0, 12, tpExpUnit},
+			{1, 13, tpExposure},
+			{0, 12, tpRGBW},
+			{1, 13, tpExposure},
+		}, // Print mode - ledBW
+		[]touchPoint{
+			{0, 3, tpBaseTime},
+			{0, 9, tpExpVal},
+			{0, 12, tpExpUnit},
+			{1, 3, tpTSStrips},
+			{1, 12, tpTSMode},
+		}, // Test strip mode - brightness
+		[]touchPoint{
+			{0, 3, tpBaseTime},
+			{0, 7, tpExpVal},
+			{0, 12, tpExpUnit},
+			{1, 13, tpExposure},
+			{0, 3, tpRGBR},
+			{0, 11, tpRGBG},
+			{1, 3, tpRGBB},
+			{1, 13, tpExposure},
+		}, // Print mode - ledRGB
 	}
 
 	// Application state
@@ -387,20 +427,6 @@ func configureDevices() {
 	}
 }
 
-func refreshTouchPoints() {
-	state.activeTouchPoints = nil
-	if state.activeMode.TouchPoints != nil {
-		state.activeTouchPoints = state.activeMode.TouchPoints()
-	}
-
-	if len(state.activeTouchPoints) == 0 {
-		potManager.SetDisabled(0, true)
-	} else {
-		potManager.SetDisabled(0, false)
-		potManager.SetPotQuant(0, uint16(len(state.activeTouchPoints)))
-	}
-}
-
 func main() {
 	time.Sleep(1 * time.Second)
 	configureDevices()
@@ -415,7 +441,7 @@ func main() {
 
 	state.exposureSet.baseTime = 7_00
 	for i := range state.exposureSet.exposures {
-		state.exposureSet.exposures[i].rgb = [4]uint8{0, 0, 0, 255}
+		state.exposureSet.exposures[i].rgb = [4]uint8{255, 255, 255, 255}
 		if i == 0 {
 			state.exposureSet.exposures[i].expUnit = expUnitAbsolute
 			state.exposureSet.exposures[i].enabled = true
@@ -433,7 +459,6 @@ func main() {
 	for {
 		exitMode := false
 		updateDisplay := false
-		updateToucbPoints := false
 		if state.prevTick == 0 {
 			state.prevTick = time.Now().UnixNano()
 			updateDisplay = true
@@ -445,7 +470,17 @@ func main() {
 			nextMode.SwitchTo(state.activeMode)
 			state.activeMode = nextMode
 
-			refreshTouchPoints()
+			state.activeTouchPoints = nil
+			if state.activeMode.TouchPoints != nil {
+				state.activeTouchPoints = state.activeMode.TouchPoints()
+			}
+
+			if len(state.activeTouchPoints) == 0 {
+				potManager.SetDisabled(0, true)
+			} else {
+				potManager.SetDisabled(0, false)
+				potManager.SetPotQuant(0, uint16(len(state.activeTouchPoints)))
+			}
 
 			updateDisplay = true
 		}
@@ -474,9 +509,6 @@ func main() {
 					ud, em = state.ButtonPress(ev.Button)
 				case button.EventLongPress:
 					ud, em = state.ButtonLongPress(ev.Button)
-					if ud && ev.Button == button.Mode {
-						updateToucbPoints = true
-					}
 				case button.EventHoldRepeat:
 					ud, em = state.ButtonHoldRepeat(ev.Button)
 				}
@@ -498,10 +530,6 @@ func main() {
 
 		if updateDisplay {
 			state.UpdateDisplay()
-		}
-
-		if updateToucbPoints {
-			refreshTouchPoints()
 		}
 
 		if exitMode {

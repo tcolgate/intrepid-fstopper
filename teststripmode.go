@@ -76,31 +76,31 @@ func (e *testStripMode) PressLongFocus() (bool, bool) {
 	return true, true
 }
 
-func (e *testStripMode) PressCancel(touchPointIndex uint8) (bool, bool) {
+func (e *testStripMode) PressCancel(touchPointIndex tpAction) (bool, bool) {
 	return false, false
 }
 
-func (e *testStripMode) PressLongCancel(touchPointIndex uint8) (bool, bool) {
+func (e *testStripMode) PressLongCancel(touchPointIndex tpAction) (bool, bool) {
 	return false, false
 }
 
-func (e *testStripMode) PressPlus(touchPointIndex uint8) (bool, bool) {
+func (e *testStripMode) PressPlus(touchPointIndex tpAction) (bool, bool) {
 	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, false, false), false
 }
 
-func (e *testStripMode) PressLongPlus(touchPointIndex uint8) (bool, bool) {
+func (e *testStripMode) PressLongPlus(touchPointIndex tpAction) (bool, bool) {
 	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, true, false), false
 }
 
-func (e *testStripMode) PressMinus(touchPointIndex uint8) (bool, bool) {
+func (e *testStripMode) PressMinus(touchPointIndex tpAction) (bool, bool) {
 	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, false, true), false
 }
 
-func (e *testStripMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
+func (e *testStripMode) PressLongMinus(touchPointIndex tpAction) (bool, bool) {
 	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, true, true), false
 }
 
-func (e *testStripMode) UpdateDisplay(_ uint8, nextDisplay *[2][16]byte) {
+func (e *testStripMode) UpdateDisplay(_ tpAction, nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
 	nextDisplay[0] = stringTable[5]
 	nextDisplay[1] = stringTable[6]

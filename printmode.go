@@ -89,9 +89,9 @@ func (e *printMode) PressLongFocus() (bool, bool) {
 	return true, true
 }
 
-func (e *printMode) PressCancel(touchPointIndex uint8) (bool, bool) {
+func (e *printMode) PressCancel(touchPointIndex tpAction) (bool, bool) {
 	switch touchPointIndex {
-	case 0:
+	case tpBaseTime:
 		// Quick press of cancel on the base time set resets the basetime
 		// to whatever the calculated value for the current dsiplayed
 		// baseTime and adjustment would be
@@ -103,10 +103,10 @@ func (e *printMode) PressCancel(touchPointIndex uint8) (bool, bool) {
 		e.state.exposureSet.exposures[e.activeExposure].colVal = 0
 
 		return true, false
-	case 1:
+	case tpExpVal:
 		e.state.exposureSet.exposures[e.activeExposure].colVal = 0
 		return true, false
-	case 2, 3:
+	case tpExpUnit, tpExposure:
 		if e.activeExposure == 0 {
 			// Not allowed to disable exposure 0
 			return false, false
@@ -118,7 +118,7 @@ func (e *printMode) PressCancel(touchPointIndex uint8) (bool, bool) {
 	}
 }
 
-func (e *printMode) PressLongCancel(touchPointIndex uint8) (bool, bool) {
+func (e *printMode) PressLongCancel(touchPointIndex tpAction) (bool, bool) {
 	e.state.exposureSet.baseTime = 7_00
 	e.state.exposureSet.exposures[e.activeExposure].colVal = 0
 	return true, false
@@ -149,43 +149,43 @@ func (e *printMode) adjustActiveExposure(inc bool) (bool, bool) {
 	return false, false
 }
 
-func (e *printMode) PressPlus(touchPointIndex uint8) (bool, bool) {
+func (e *printMode) PressPlus(touchPointIndex tpAction) (bool, bool) {
 	switch touchPointIndex {
-	case 3, 5:
+	case tpExposure:
 		return e.adjustActiveExposure(true)
 	default:
 		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, false, false), false
 	}
 }
 
-func (e *printMode) PressLongPlus(touchPointIndex uint8) (bool, bool) {
+func (e *printMode) PressLongPlus(touchPointIndex tpAction) (bool, bool) {
 	switch touchPointIndex {
-	case 3, 5:
+	case tpExposure:
 		return e.adjustActiveExposure(true)
 	default:
 		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, true, false), false
 	}
 }
 
-func (e *printMode) PressMinus(touchPointIndex uint8) (bool, bool) {
+func (e *printMode) PressMinus(touchPointIndex tpAction) (bool, bool) {
 	switch touchPointIndex {
-	case 3, 5:
+	case tpExposure:
 		return e.adjustActiveExposure(false)
 	default:
 		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, false, true), false
 	}
 }
 
-func (e *printMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
+func (e *printMode) PressLongMinus(touchPointIndex tpAction) (bool, bool) {
 	switch touchPointIndex {
-	case 3, 5:
+	case tpExposure:
 		return e.adjustActiveExposure(false)
 	default:
 		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, true, true), false
 	}
 }
 
-func (e *printMode) updateDisplayPage2(tp uint8, nextDisplay *[2][16]byte, nb *num.NumBuf) {
+func (e *printMode) updateDisplayPage2(tp tpAction, nextDisplay *[2][16]byte, nb *num.NumBuf) {
 	// or the RGB line
 	switch e.state.exposureSet.ledMode {
 	case modeBW:
@@ -202,14 +202,14 @@ func (e *printMode) updateDisplayPage2(tp uint8, nextDisplay *[2][16]byte, nb *n
 		copy(nextDisplay[0][3:7], nb[0:4])
 
 		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[1]))
-		copy(nextDisplay[0][11:15], nb[0:4])
+		copy(nextDisplay[0][12:16], nb[0:4])
 
 		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[2]))
 		copy(nextDisplay[1][3:7], nb[0:4])
 	}
 }
 
-func (e *printMode) UpdateDisplay(tp uint8, nextDisplay *[2][16]byte) {
+func (e *printMode) UpdateDisplay(tp tpAction, nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
 
 	nextDisplay[0] = stringTable[1]
