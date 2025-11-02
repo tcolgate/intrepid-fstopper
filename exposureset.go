@@ -45,7 +45,7 @@ type exposure struct {
 	// These are set by the user in printMode
 	expUnit expUnit // What's the setting for this exposure
 	colVal  int16
-	rgb     [4]uint8
+	grbw    [4]uint8
 	enabled bool
 
 	time uint16
@@ -326,14 +326,14 @@ func (es *exposureSet) adjustExposureColour(exp uint8, tp tpAction, long, neg bo
 
 	colIndx := uint8(tp) - uint8(tpRGBR)
 
-	next := int16(expP.rgb[colIndx]) + delta
+	next := int16(expP.grbw[colIndx]) + delta
 	switch {
 	case next < 0:
-		expP.rgb[colIndx] = 0
+		expP.grbw[colIndx] = 0
 	case next > 255:
-		expP.rgb[colIndx] = 255
+		expP.grbw[colIndx] = 255
 	default:
-		expP.rgb[colIndx] = uint8(next)
+		expP.grbw[colIndx] = uint8(next)
 	}
 
 	return true
@@ -472,7 +472,7 @@ func (es *exposureSet) calcInto(out *[maxExposures]int64, outCol *[maxExposures]
 			continue
 		}
 		if outCol != nil {
-			outCol[expCnt] = es.exposures[i].rgb
+			outCol[expCnt] = es.exposures[i].grbw
 			if es.ledMode == modeBW {
 				outCol[expCnt][0] = 0
 				outCol[expCnt][1] = 0

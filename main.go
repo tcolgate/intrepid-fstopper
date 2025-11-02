@@ -160,7 +160,11 @@ func (s *stateData) ButtonPress(b button.Button) (bool, bool) {
 
 	case button.Cancel:
 		if state.activeMode.PressCancel != nil {
-			return s.activeMode.PressCancel(s.activeTouchPoints[s.activeTouchPointIndex].action)
+			tpa := tpExposure
+			if s.activeTouchPoints != nil {
+				tpa = s.activeTouchPoints[s.activeTouchPointIndex].action
+			}
+			return s.activeMode.PressCancel(tpa)
 		}
 
 	case button.Focus:
@@ -184,7 +188,11 @@ func (s *stateData) ButtonLongPress(b button.Button) (bool, bool) {
 		}
 	case button.Cancel:
 		if s.activeMode.PressLongCancel != nil {
-			return s.activeMode.PressLongCancel(s.activeTouchPoints[s.activeTouchPointIndex].action)
+			tpa := tpExposure
+			if s.activeTouchPoints != nil {
+				tpa = s.activeTouchPoints[s.activeTouchPointIndex].action
+			}
+			return s.activeMode.PressLongCancel(tpa)
 		}
 	case button.Mode:
 		if s.activeMode.PressLongMode != nil {
@@ -203,7 +211,12 @@ func (s *stateData) UpdateDisplay() {
 	}
 	s.activeDisplay = !s.activeDisplay
 
-	s.activeMode.UpdateDisplay(s.activeTouchPoints[s.activeTouchPointIndex].action, nextDisplay)
+	if len(s.activeTouchPoints) > 0 {
+		s.activeMode.UpdateDisplay(s.activeTouchPoints[s.activeTouchPointIndex].action, nextDisplay)
+	} else {
+		// problematic
+		s.activeMode.UpdateDisplay(tpExposure, nextDisplay)
+	}
 
 	for i := uint8(0); i < 2; i++ {
 		if lastDisplay[i] != nextDisplay[i] {
@@ -234,8 +247,8 @@ const (
 	tpExpVal
 	tpExpUnit
 	tpExposure
-	tpRGBR
 	tpRGBG
+	tpRGBR
 	tpRGBB
 	tpRGBW
 	tpTSStrips
@@ -455,7 +468,7 @@ func main() {
 
 	state.exposureSet.baseTime = 7_00
 	for i := range state.exposureSet.exposures {
-		state.exposureSet.exposures[i].rgb = [4]uint8{255, 255, 255, 255}
+		state.exposureSet.exposures[i].grbw = [4]uint8{255, 255, 255, 255}
 		if i == 0 {
 			state.exposureSet.exposures[i].expUnit = expUnitAbsolute
 			state.exposureSet.exposures[i].enabled = true

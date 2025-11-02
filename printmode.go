@@ -192,19 +192,19 @@ func (e *printMode) updateDisplayPage2(tp tpAction, nextDisplay *[2][16]byte, nb
 		nextDisplay[0] = stringTable[8]
 		copy(nextDisplay[1][0:8], []byte(`         `))
 
-		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[3]))
+		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].grbw[3]))
 		copy(nextDisplay[0][12:16], nb[0:4])
 	case modeRGB:
 		nextDisplay[0] = stringTable[9]
 		copy(nextDisplay[1][0:8], []byte(`B:       `))
 
-		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[0]))
+		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].grbw[1]))
 		copy(nextDisplay[0][3:7], nb[0:4])
 
-		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[1]))
+		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].grbw[0]))
 		copy(nextDisplay[0][12:16], nb[0:4])
 
-		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[2]))
+		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].grbw[2]))
 		copy(nextDisplay[1][3:7], nb[0:4])
 	}
 }
