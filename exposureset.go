@@ -324,7 +324,7 @@ func (es *exposureSet) adjustExposureColour(exp uint8, tp tpAction, long, neg bo
 		delta *= -1
 	}
 
-	colIndx := uint8(tp) - uint8(tpRGBR)
+	colIndx := uint8(tp) - uint8(tpRGBG)
 
 	next := int16(expP.grbw[colIndx]) + delta
 	switch {

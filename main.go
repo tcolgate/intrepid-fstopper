@@ -334,10 +334,6 @@ var (
 		}, // Print mode - ledRGB
 	}
 
-	// Application state
-	activeMode ledMode
-	lastMode   ledMode
-
 	potUpdateChan   = make(chan potUpdate, 8)
 	butIntEventChan = make(chan button.IntEvent, 8)
 	butEventChan    = make(chan button.Event, 8)
