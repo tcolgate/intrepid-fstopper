@@ -35,6 +35,7 @@ type testStrip struct {
 
 type exposureSet struct {
 	baseTime  uint16 // Only one base time is ever configured
+	ledMode   ledMode
 	isTest    bool
 	testStrip testStrip
 	exposures [maxExposures]exposure
@@ -482,4 +483,12 @@ func (es *exposureSet) calcInto(out *[maxExposures]int64, outCol *[maxExposures]
 		expCnt++
 	}
 	return expCnt
+}
+
+func (es *exposureSet) cycleLEDMode() {
+	if es.ledMode == modeBW {
+		es.ledMode = modeRGB
+	} else {
+		es.ledMode = modeBW
+	}
 }

@@ -62,12 +62,11 @@ var (
 	charPlusMinusAddr = uint8(0)
 )
 
-type mode uint8
+type ledMode uint8
 
 const (
-	modeBW = iota
+	modeBW ledMode = iota
 	modeRGB
-	modeFocus
 )
 
 type subMode uint8
@@ -273,19 +272,18 @@ var (
 		[16]byte([]byte("   |            ")),
 		[16]byte([]byte("Test Patch  /   ")),
 		[16]byte([]byte("Brightness:     ")),
-		[16]byte([]byte("R:      G:      ")),
+		[16]byte([]byte("R:       G:     ")),
 		[16]byte([]byte("B:         E: / ")),
 	}
 	touchPoints = [][]touchPoint{
-		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}, {0, 15}, {1, 13}}, // Print mode - brightness
-		[]touchPoint{{0, 3}, {0, 9}, {0, 12}, {1, 3}, {1, 13}, {0, 3}},   // Test strip mode - brightness
-		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}},                   // Print mode - rgb
-		[]touchPoint{{0, 3}, {0, 9}, {0, 12}, {1, 3}, {1, 13}},           // Test strip mode - rgb
+		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}, {0, 12}, {1, 13}},                 // Print mode - ledBW
+		[]touchPoint{{0, 3}, {0, 9}, {0, 12}, {1, 3}, {1, 13}, {0, 3}},                   // Test strip mode - brightness
+		[]touchPoint{{0, 3}, {0, 7}, {0, 12}, {1, 13}, {0, 3}, {0, 11}, {1, 3}, {1, 13}}, // Print mode - ledRGB
 	}
 
 	// Application state
-	activeMode mode
-	lastMode   mode
+	activeMode ledMode
+	lastMode   ledMode
 
 	potUpdateChan   = make(chan potUpdate, 8)
 	butIntEventChan = make(chan button.IntEvent, 8)
@@ -389,6 +387,20 @@ func configureDevices() {
 	}
 }
 
+func refreshTouchPoints() {
+	state.activeTouchPoints = nil
+	if state.activeMode.TouchPoints != nil {
+		state.activeTouchPoints = state.activeMode.TouchPoints()
+	}
+
+	if len(state.activeTouchPoints) == 0 {
+		potManager.SetDisabled(0, true)
+	} else {
+		potManager.SetDisabled(0, false)
+		potManager.SetPotQuant(0, uint16(len(state.activeTouchPoints)))
+	}
+}
+
 func main() {
 	time.Sleep(1 * time.Second)
 	configureDevices()
@@ -421,6 +433,7 @@ func main() {
 	for {
 		exitMode := false
 		updateDisplay := false
+		updateToucbPoints := false
 		if state.prevTick == 0 {
 			state.prevTick = time.Now().UnixNano()
 			updateDisplay = true
@@ -431,17 +444,8 @@ func main() {
 		if state.activeMode != nextMode {
 			nextMode.SwitchTo(state.activeMode)
 			state.activeMode = nextMode
-			state.activeTouchPoints = nil
-			if state.activeMode.TouchPoints != nil {
-				state.activeTouchPoints = state.activeMode.TouchPoints()
-			}
 
-			if len(state.activeTouchPoints) == 0 {
-				potManager.SetDisabled(0, true)
-			} else {
-				potManager.SetDisabled(0, false)
-				potManager.SetPotQuant(0, uint16(len(state.activeTouchPoints)))
-			}
+			refreshTouchPoints()
 
 			updateDisplay = true
 		}
@@ -470,6 +474,9 @@ func main() {
 					ud, em = state.ButtonPress(ev.Button)
 				case button.EventLongPress:
 					ud, em = state.ButtonLongPress(ev.Button)
+					if ud && ev.Button == button.Mode {
+						updateToucbPoints = true
+					}
 				case button.EventHoldRepeat:
 					ud, em = state.ButtonHoldRepeat(ev.Button)
 				}
@@ -491,6 +498,10 @@ func main() {
 
 		if updateDisplay {
 			state.UpdateDisplay()
+		}
+
+		if updateToucbPoints {
+			refreshTouchPoints()
 		}
 
 		if exitMode {

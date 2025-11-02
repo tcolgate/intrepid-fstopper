@@ -59,7 +59,12 @@ func (e *printMode) SwitchAway() *Mode {
 }
 
 func (e *printMode) TouchPoints() []touchPoint {
-	return touchPoints[0]
+	switch e.state.exposureSet.ledMode {
+	case modeRGB:
+		return touchPoints[2]
+	default: // modeBW
+		return touchPoints[0]
+	}
 }
 
 func (e *printMode) PressRun() (bool, bool) {
@@ -180,6 +185,30 @@ func (e *printMode) PressLongMinus(touchPointIndex uint8) (bool, bool) {
 	}
 }
 
+func (e *printMode) updateDisplayPage2(tp uint8, nextDisplay *[2][16]byte, nb *num.NumBuf) {
+	// or the RGB line
+	switch e.state.exposureSet.ledMode {
+	case modeBW:
+		nextDisplay[0] = stringTable[8]
+		copy(nextDisplay[1][0:8], []byte(`         `))
+
+		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[3]))
+		copy(nextDisplay[0][12:16], nb[0:4])
+	case modeRGB:
+		nextDisplay[0] = stringTable[9]
+		copy(nextDisplay[1][0:8], []byte(`B:       `))
+
+		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[0]))
+		copy(nextDisplay[0][3:7], nb[0:4])
+
+		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[1]))
+		copy(nextDisplay[0][11:15], nb[0:4])
+
+		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[2]))
+		copy(nextDisplay[1][3:7], nb[0:4])
+	}
+}
+
 func (e *printMode) UpdateDisplay(tp uint8, nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
 
@@ -190,11 +219,7 @@ func (e *printMode) UpdateDisplay(tp uint8, nextDisplay *[2][16]byte) {
 	nextDisplay[1][15] = byte('0' + maxExposures)
 
 	if tp >= 4 {
-		// or the RGB line
-		nextDisplay[0] = stringTable[8]
-		num.IntOut(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].rgb[3]))
-		copy(nextDisplay[1][0:8], []byte(`         `))
-		copy(nextDisplay[0][12:16], nb[0:4])
+		e.updateDisplayPage2(tp, nextDisplay, nb)
 		return
 	}
 
@@ -247,6 +272,7 @@ func (e *printMode) PressMode() (bool, bool) {
 }
 
 func (e *printMode) PressLongMode() (bool, bool) {
-	// This should toggle between BW, Tri_color and RGB
-	return false, false
+	e.state.exposureSet.cycleLEDMode()
+
+	return true, false
 }
