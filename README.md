@@ -53,6 +53,11 @@ The following is the working feature set:
     (exposure 1 cannot be disabled)
   - When multiple exposures are active hitting Run will start the exposure in "paused" state, you
     must press Run again to start the first exposure.
+- WIP light control
+  - The LED can be controlled via pure white brightness, or specific RGB values. Holding
+    down the Mode button switches between the two. All exposures use the same mode, but
+    different values can be set. There are UI issues with this at the moment.
+  - setting RGB in test strip mode is not yet supported
 
 Controls and Display are not great at the moment, but there are lots of ways
 to improve things.
@@ -63,7 +68,6 @@ Additional features planned:
 
 - Freehand exposure
 - better percentage support
-- per-exposure RGB value
 
 Possible additions
 - Pulse a burst of red every second during freehand exposure to
@@ -73,20 +77,19 @@ Possible additions
 - During BW print, when exposure is paused, the panel could switch
   to red light
 - In print mode it should be clear when multiple exposures are active
+- In print & ts modes it should be clear when rgb/bw is in use
 
 ## Non-Goals
 
-- Colour or multi-grade LEDs. Intrepid put lots of effort in to
+- CMY or multi-grade LEDs. Intrepid put lots of effort in to
   calibrating the multigrade and colour LEDs. The LEDs themselves
   have quite broad spectral ranges which makes accurate colour
-  calibration difficult, if not really possible. As such I am
-  focused on white light usage only.
-- I may be lying about the previous point. An RGB exposure mode
-  and while it may not be accurate, it will be more "honest" than
-  the existing CMY mode. It would be interesting to compare to
-  the tri-colour nad filtered options. Pure RGB control will also
-  allow us to control the brightness of the LED which is useful for
-  sensitometry.
+  calibration difficult, if not really possible.
+    As an alternative, raw RGB value selection is allowed. The Blue
+  and Green LEDs have a wider spectrum than is desirable, but colour
+  printing is perfectly achievable. I will attempt to provide documentation
+  for starting values and mode of adjustment for printing using the RGB
+  values.
 
 ## Programming Style
 
