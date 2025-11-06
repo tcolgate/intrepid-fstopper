@@ -1,12 +1,13 @@
 % Preamble: \pgfplotsset{width=140mm,height=90mm,compat=1.18}
-\documentclass[a5paper]{article}
+\documentclass{article}
+\usepackage[paperwidth=100mm,paperheight=148mm]{geometry}
 \usepackage{pgfplots}
 \usepackage{pdflscape}
 \usepackage[extreme]{savetrees}
 \usepackage{xstring}
-\usepackage[paperwidth=100mm,paperheight=148mm]{geometry}
 \pgfplotsset{compat=1.18}
 \begin{document}
+
 \thispagestyle{empty}
 \begin{landscape}
 \begin{tikzpicture}
@@ -24,7 +25,12 @@
     grid style={line width=.1pt, draw=gray!10},
     major grid style={line width=.2pt,draw=gray!50},
     legend pos=north west,
+    legend style={font=\tiny},
 ]
+
+\addlegendimage{empty legend}
+\addlegendentry{\hspace{-.6cm}\textbf{Bellows Adjustment}}
+
 \addplot [
     domain=90:450,
     samples=100,
