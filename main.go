@@ -133,11 +133,11 @@ func (s *stateData) ButtonHoldRepeat(b button.Button) (bool, bool) {
 	switch b {
 	case button.Plus:
 		if state.activeMode.PressLongPlus != nil {
-			return s.activeMode.PressLongPlus(s.activeTouchPoints[s.activeTouchPointIndex].action)
+			return s.activeMode.PressLongPlus(s.activeTouchPoints[s.activeTouchPointIndex].action % tpPage2)
 		}
 	case button.Minus:
 		if state.activeMode.PressLongMinus != nil {
-			return s.activeMode.PressLongMinus(s.activeTouchPoints[s.activeTouchPointIndex].action)
+			return s.activeMode.PressLongMinus(s.activeTouchPoints[s.activeTouchPointIndex].action % tpPage2)
 		}
 	}
 	return false, false
@@ -147,11 +147,11 @@ func (s *stateData) ButtonPress(b button.Button) (bool, bool) {
 	switch b {
 	case button.Plus:
 		if state.activeMode.PressPlus != nil {
-			return s.activeMode.PressPlus(s.activeTouchPoints[s.activeTouchPointIndex].action)
+			return s.activeMode.PressPlus(s.activeTouchPoints[s.activeTouchPointIndex].action % tpPage2)
 		}
 	case button.Minus:
 		if state.activeMode.PressMinus != nil {
-			return s.activeMode.PressMinus(s.activeTouchPoints[s.activeTouchPointIndex].action)
+			return s.activeMode.PressMinus(s.activeTouchPoints[s.activeTouchPointIndex].action % tpPage2)
 		}
 	case button.Run:
 		if state.activeMode.PressRun != nil {
@@ -162,7 +162,7 @@ func (s *stateData) ButtonPress(b button.Button) (bool, bool) {
 		if state.activeMode.PressCancel != nil {
 			tpa := tpExposure
 			if s.activeTouchPoints != nil {
-				tpa = s.activeTouchPoints[s.activeTouchPointIndex].action
+				tpa = s.activeTouchPoints[s.activeTouchPointIndex].action % tpPage2
 			}
 			return s.activeMode.PressCancel(tpa)
 		}
@@ -190,7 +190,7 @@ func (s *stateData) ButtonLongPress(b button.Button) (bool, bool) {
 		if s.activeMode.PressLongCancel != nil {
 			tpa := tpExposure
 			if s.activeTouchPoints != nil {
-				tpa = s.activeTouchPoints[s.activeTouchPointIndex].action
+				tpa = s.activeTouchPoints[s.activeTouchPointIndex].action % tpPage2
 			}
 			return s.activeMode.PressLongCancel(tpa)
 		}
@@ -212,10 +212,9 @@ func (s *stateData) UpdateDisplay() {
 	s.activeDisplay = !s.activeDisplay
 
 	if len(s.activeTouchPoints) > 0 {
-		s.activeMode.UpdateDisplay(s.activeTouchPoints[s.activeTouchPointIndex].action, nextDisplay)
+		s.activeMode.UpdateDisplay(uint8(s.activeTouchPoints[s.activeTouchPointIndex].action)/uint8(tpPage2), nextDisplay)
 	} else {
-		// problematic
-		s.activeMode.UpdateDisplay(tpExposure, nextDisplay)
+		s.activeMode.UpdateDisplay(0, nextDisplay)
 	}
 
 	for i := uint8(0); i < 2; i++ {
@@ -253,6 +252,8 @@ const (
 	tpRGBW
 	tpTSStrips
 	tpTSMode
+
+	tpPage2 tpAction = 64
 )
 
 var (
@@ -312,8 +313,8 @@ var (
 			{0, 7, tpExpVal},
 			{0, 12, tpExpUnit},
 			{1, 13, tpExposure},
-			{0, 12, tpRGBW},
-			{1, 13, tpExposure},
+			{0, 12, tpRGBW + tpPage2},
+			{1, 13, tpExposure + tpPage2},
 		}, // Print mode - ledBW
 		[]touchPoint{
 			{0, 3, tpBaseTime},
@@ -327,10 +328,10 @@ var (
 			{0, 7, tpExpVal},
 			{0, 12, tpExpUnit},
 			{1, 13, tpExposure},
-			{0, 3, tpRGBR},
-			{0, 11, tpRGBG},
-			{1, 3, tpRGBB},
-			{1, 13, tpExposure},
+			{0, 3, tpRGBR + tpPage2},
+			{0, 11, tpRGBG + tpPage2},
+			{1, 3, tpRGBB + tpPage2},
+			{1, 13, tpExposure + tpPage2},
 		}, // Print mode - ledRGB
 	}
 

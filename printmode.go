@@ -185,7 +185,7 @@ func (e *printMode) PressLongMinus(touchPointIndex tpAction) (bool, bool) {
 	}
 }
 
-func (e *printMode) updateDisplayPage2(tp tpAction, nextDisplay *[2][16]byte, nb *num.NumBuf) {
+func (e *printMode) updateDisplayPage2(_ uint8, nextDisplay *[2][16]byte, nb *num.NumBuf) {
 	// or the RGB line
 	switch e.state.exposureSet.ledMode {
 	case modeBW:
@@ -209,7 +209,7 @@ func (e *printMode) updateDisplayPage2(tp tpAction, nextDisplay *[2][16]byte, nb
 	}
 }
 
-func (e *printMode) UpdateDisplay(tp tpAction, nextDisplay *[2][16]byte) {
+func (e *printMode) UpdateDisplay(p uint8, nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
 
 	nextDisplay[0] = stringTable[1]
@@ -218,8 +218,8 @@ func (e *printMode) UpdateDisplay(tp tpAction, nextDisplay *[2][16]byte) {
 	nextDisplay[1][13] = byte('1' + e.activeExposure)
 	nextDisplay[1][15] = byte('0' + maxExposures)
 
-	if tp >= 4 {
-		e.updateDisplayPage2(tp, nextDisplay, nb)
+	if p >= 1 {
+		e.updateDisplayPage2(p, nextDisplay, nb)
 		return
 	}
 

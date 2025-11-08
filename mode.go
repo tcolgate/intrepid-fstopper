@@ -20,7 +20,7 @@ type Mode struct {
 	SwitchAway func() *Mode // exit a mode, returns the next mode we should enter
 
 	Tick          func(passed int64) (updateDisplay bool, exit bool)
-	UpdateDisplay func(touchPointAction tpAction, nextDisplay *[2][16]byte)
+	UpdateDisplay func(page uint8, nextDisplay *[2][16]byte)
 
 	PressPlus       func(touchPointAction tpAction) (updateDisplay bool, exit bool)
 	PressLongPlus   func(touchPointAction tpAction) (updateDisplay bool, exit bool)

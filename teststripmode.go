@@ -100,7 +100,7 @@ func (e *testStripMode) PressLongMinus(touchPointIndex tpAction) (bool, bool) {
 	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, true, true), false
 }
 
-func (e *testStripMode) UpdateDisplay(_ tpAction, nextDisplay *[2][16]byte) {
+func (e *testStripMode) UpdateDisplay(_ uint8, nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
 	nextDisplay[0] = stringTable[5]
 	nextDisplay[1] = stringTable[6]

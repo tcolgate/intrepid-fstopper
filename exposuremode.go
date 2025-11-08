@@ -150,7 +150,7 @@ func (e *exposureMode) PressCancel(touchPoint tpAction) (bool, bool) {
 	return true, true
 }
 
-func (e *exposureMode) UpdateDisplay(_ tpAction, nextDisplay *[2][16]byte) {
+func (e *exposureMode) UpdateDisplay(_ uint8, nextDisplay *[2][16]byte) {
 	nextDisplay[0] = stringTable[4]
 	if e.state.exposureSet.isTest {
 		nextDisplay[0] = stringTable[7]
