@@ -185,26 +185,26 @@ func (e *printMode) PressLongMinus(touchPointIndex tpAction) (bool, bool) {
 	}
 }
 
-func (e *printMode) updateDisplayPage2(_ uint8, nextDisplay *[2][16]byte, nb *num.NumBuf) {
+func updateDisplayPage2(m ledMode, expP *exposure, nextDisplay *[2][16]byte, nb *num.NumBuf) {
 	// or the RGB line
-	switch e.state.exposureSet.ledMode {
+	switch m {
 	case modeBW:
 		nextDisplay[0] = stringTable[8]
 		copy(nextDisplay[1][0:8], []byte(`         `))
 
-		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].grbw[3]))
+		num.IntOutLeft(nb, num.Num(expP.grbw[3]))
 		copy(nextDisplay[0][12:16], nb[0:4])
 	case modeRGB:
 		nextDisplay[0] = stringTable[9]
 		copy(nextDisplay[1][0:8], []byte(`B:       `))
 
-		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].grbw[1]))
+		num.IntOutLeft(nb, num.Num(expP.grbw[1]))
 		copy(nextDisplay[0][3:7], nb[0:4])
 
-		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].grbw[0]))
+		num.IntOutLeft(nb, num.Num(expP.grbw[0]))
 		copy(nextDisplay[0][12:16], nb[0:4])
 
-		num.IntOutLeft(nb, num.Num(e.state.exposureSet.exposures[e.activeExposure].grbw[2]))
+		num.IntOutLeft(nb, num.Num(expP.grbw[2]))
 		copy(nextDisplay[1][3:7], nb[0:4])
 	}
 }
@@ -228,15 +228,16 @@ func (e *printMode) UpdateDisplay(p uint8, a tpAction, nextDisplay *[2][16]byte)
 		nextDisplay[1][10] = byte('C')
 	}
 
+	currExp := e.state.exposureSet.exposures[e.activeExposure]
+
 	if p >= 1 {
-		e.updateDisplayPage2(p, nextDisplay, nb)
+		updateDisplayPage2(e.state.exposureSet.ledMode, &currExp, nextDisplay, nb)
 		return
 	}
 
 	num.Out(nb, num.Num(e.state.exposureSet.baseTime))
 	copy(nextDisplay[0][0:4], nb[0:4])
 
-	currExp := e.state.exposureSet.exposures[e.activeExposure]
 	switch {
 	case !currExp.enabled || currExp.expUnit == expUnitFreeHand:
 		nextDisplay[0][6] = byte(' ')
