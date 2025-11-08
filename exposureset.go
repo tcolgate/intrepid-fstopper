@@ -445,7 +445,14 @@ func (es *exposureSet) calcTestInto(out *[maxExposures]int64, outCol *[maxExposu
 		)) * int64(tick)
 
 		v += es.testStrip.exposure.colVal
-		outCol[i] = ledWhite
+		outCol[i] = es.testStrip.exposure.grbw
+		if es.ledMode == modeBW {
+			outCol[i][0] = 0
+			outCol[i][1] = 0
+			outCol[i][2] = 0
+		} else {
+			outCol[i][3] = 0
+		}
 	}
 
 	switch es.testStrip.method {

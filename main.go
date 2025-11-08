@@ -488,6 +488,8 @@ func main() {
 		}
 	}
 
+	state.exposureSet.testStrip.exposure.grbw = [4]uint8{255, 255, 255, 255}
+
 	state.exposureMode = exposureM
 	state.focusMode = focusM
 	state.printMode = bwM
