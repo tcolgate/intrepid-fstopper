@@ -505,3 +505,13 @@ func (es *exposureSet) cycleLEDMode() {
 		es.ledMode = modeBW
 	}
 }
+
+func (es *exposureSet) activeExposures() uint8 {
+	var c uint8 = 1
+	for i := 1; i < maxExposures; i++ {
+		if es.exposures[i].enabled {
+			c += 1
+		}
+	}
+	return c
+}

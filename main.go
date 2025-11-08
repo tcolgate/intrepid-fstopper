@@ -212,9 +212,13 @@ func (s *stateData) UpdateDisplay() {
 	s.activeDisplay = !s.activeDisplay
 
 	if len(s.activeTouchPoints) > 0 {
-		s.activeMode.UpdateDisplay(uint8(s.activeTouchPoints[s.activeTouchPointIndex].action)/uint8(tpPage2), nextDisplay)
+		tpa := s.activeTouchPoints[s.activeTouchPointIndex].action
+		s.activeMode.UpdateDisplay(
+			uint8(tpa)/uint8(tpPage2),
+			tpa%tpPage2,
+			nextDisplay)
 	} else {
-		s.activeMode.UpdateDisplay(0, nextDisplay)
+		s.activeMode.UpdateDisplay(0, 0, nextDisplay)
 	}
 
 	for i := uint8(0); i < 2; i++ {

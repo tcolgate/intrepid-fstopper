@@ -209,7 +209,7 @@ func (e *printMode) updateDisplayPage2(_ uint8, nextDisplay *[2][16]byte, nb *nu
 	}
 }
 
-func (e *printMode) UpdateDisplay(p uint8, nextDisplay *[2][16]byte) {
+func (e *printMode) UpdateDisplay(p uint8, a tpAction, nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
 
 	nextDisplay[0] = stringTable[1]
@@ -217,6 +217,16 @@ func (e *printMode) UpdateDisplay(p uint8, nextDisplay *[2][16]byte) {
 
 	nextDisplay[1][13] = byte('1' + e.activeExposure)
 	nextDisplay[1][15] = byte('0' + maxExposures)
+
+	if a != tpExposure {
+		nextDisplay[1][15] = byte('0' + e.state.exposureSet.activeExposures())
+	}
+
+	if e.state.exposureSet.ledMode == 0 {
+		nextDisplay[1][10] = byte('W')
+	} else {
+		nextDisplay[1][10] = byte('C')
+	}
 
 	if p >= 1 {
 		e.updateDisplayPage2(p, nextDisplay, nb)
