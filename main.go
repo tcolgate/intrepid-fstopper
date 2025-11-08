@@ -319,14 +319,15 @@ var (
 			{1, 13, tpExposure},
 			{0, 12, tpRGBW + tpPage2},
 			{1, 13, tpExposure + tpPage2},
-		}, // Print mode - ledBW
+		}, // Print mode - White
 		[]touchPoint{
 			{0, 3, tpBaseTime},
 			{0, 9, tpExpVal},
 			{0, 12, tpExpUnit},
 			{1, 3, tpTSStrips},
 			{1, 12, tpTSMode},
-		}, // Test strip mode - brightness
+			{0, 12, tpRGBW + tpPage2},
+		}, // Test strip mode - White
 		[]touchPoint{
 			{0, 3, tpBaseTime},
 			{0, 7, tpExpVal},
@@ -336,7 +337,17 @@ var (
 			{0, 11, tpRGBG + tpPage2},
 			{1, 3, tpRGBB + tpPage2},
 			{1, 13, tpExposure + tpPage2},
-		}, // Print mode - ledRGB
+		}, // Print mode - RGB
+		[]touchPoint{
+			{0, 3, tpBaseTime},
+			{0, 9, tpExpVal},
+			{0, 12, tpExpUnit},
+			{1, 3, tpTSStrips},
+			{1, 12, tpTSMode},
+			{0, 3, tpRGBR + tpPage2},
+			{0, 11, tpRGBG + tpPage2},
+			{1, 3, tpRGBB + tpPage2},
+		}, // Test strip mode - RGB
 	}
 
 	potUpdateChan   = make(chan potUpdate, 8)

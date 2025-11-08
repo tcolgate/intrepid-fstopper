@@ -56,7 +56,12 @@ func (e *testStripMode) SwitchAway() *Mode {
 }
 
 func (e *testStripMode) TouchPoints() []touchPoint {
-	return touchPoints[1]
+	switch e.state.exposureSet.ledMode {
+	case modeRGB:
+		return touchPoints[3]
+	default: // modeBW
+		return touchPoints[1]
+	}
 }
 
 func (e *testStripMode) PressRun() (bool, bool) {
@@ -100,10 +105,17 @@ func (e *testStripMode) PressLongMinus(touchPointIndex tpAction) (bool, bool) {
 	return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, 0, true, true), false
 }
 
-func (e *testStripMode) UpdateDisplay(_ uint8, _ tpAction, nextDisplay *[2][16]byte) {
+func (e *testStripMode) UpdateDisplay(p uint8, _ tpAction, nextDisplay *[2][16]byte) {
 	nb := &num.NumBuf{}
 	nextDisplay[0] = stringTable[5]
 	nextDisplay[1] = stringTable[6]
+
+	currExp := e.state.exposureSet.testStrip.exposure
+
+	if p >= 1 {
+		updateDisplayPage2(e.state.exposureSet.ledMode, &currExp, nextDisplay, nb)
+		return
+	}
 
 	num.Out(nb, num.Num(e.state.exposureSet.baseTime))
 	copy(nextDisplay[0][0:4], nb[0:4])
@@ -121,8 +133,6 @@ func (e *testStripMode) UpdateDisplay(_ uint8, _ tpAction, nextDisplay *[2][16]b
 
 	// update method
 	copy(nextDisplay[1][12:16], testMethodStrs[e.state.exposureSet.testStrip.method])
-
-	currExp := e.state.exposureSet.testStrip.exposure
 
 	absExpFact := currExp.colVal
 	if absExpFact < 0 {
