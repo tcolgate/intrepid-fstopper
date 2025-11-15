@@ -385,10 +385,8 @@ func (es *exposureSet) adjustExposureTime(exp uint8, long, neg bool) bool {
 	return true
 }
 
-func (es *exposureSet) tpAdjustExposureSet(touchPointIndex tpAction, exp uint8, long, neg bool) bool {
-	// TODO: using the touchpoint Index here is super annoying and fragile, need to normalise this
-	// to directly state what is being adjusted
-	switch touchPointIndex {
+func (es *exposureSet) tpAdjustExposureSet(touchPointAction tpAction, exp uint8, long, neg bool) bool {
+	switch touchPointAction {
 	case tpBaseTime: // baseTime
 		return es.adjustBaseTime(long, neg)
 	case tpExpVal: // exposure adjustment
@@ -426,7 +424,7 @@ func (es *exposureSet) tpAdjustExposureSet(touchPointIndex tpAction, exp uint8, 
 		}
 		return true
 	case tpRGBR, tpRGBG, tpRGBB, tpRGBW: // test strip step count
-		return es.adjustExposureColour(exp, touchPointIndex, long, neg)
+		return es.adjustExposureColour(exp, touchPointAction, long, neg)
 	default:
 		return false
 	}

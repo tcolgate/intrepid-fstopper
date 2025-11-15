@@ -89,8 +89,8 @@ func (e *printMode) PressLongFocus() (bool, bool) {
 	return true, true
 }
 
-func (e *printMode) PressCancel(touchPointIndex tpAction) (bool, bool) {
-	switch touchPointIndex {
+func (e *printMode) PressCancel(touchPointAction tpAction) (bool, bool) {
+	switch touchPointAction {
 	case tpBaseTime:
 		// Quick press of cancel on the base time set resets the basetime
 		// to whatever the calculated value for the current dsiplayed
@@ -118,7 +118,7 @@ func (e *printMode) PressCancel(touchPointIndex tpAction) (bool, bool) {
 	}
 }
 
-func (e *printMode) PressLongCancel(touchPointIndex tpAction) (bool, bool) {
+func (e *printMode) PressLongCancel(touchPointAction tpAction) (bool, bool) {
 	e.state.exposureSet.baseTime = 7_00
 	e.state.exposureSet.exposures[e.activeExposure].colVal = 0
 	return true, false
@@ -149,39 +149,39 @@ func (e *printMode) adjustActiveExposure(inc bool) (bool, bool) {
 	return false, false
 }
 
-func (e *printMode) PressPlus(touchPointIndex tpAction) (bool, bool) {
-	switch touchPointIndex {
+func (e *printMode) PressPlus(touchPointAction tpAction) (bool, bool) {
+	switch touchPointAction {
 	case tpExposure:
 		return e.adjustActiveExposure(true)
 	default:
-		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, false, false), false
+		return e.state.exposureSet.tpAdjustExposureSet(touchPointAction, e.activeExposure, false, false), false
 	}
 }
 
-func (e *printMode) PressLongPlus(touchPointIndex tpAction) (bool, bool) {
-	switch touchPointIndex {
+func (e *printMode) PressLongPlus(touchPointAction tpAction) (bool, bool) {
+	switch touchPointAction {
 	case tpExposure:
 		return e.adjustActiveExposure(true)
 	default:
-		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, true, false), false
+		return e.state.exposureSet.tpAdjustExposureSet(touchPointAction, e.activeExposure, true, false), false
 	}
 }
 
-func (e *printMode) PressMinus(touchPointIndex tpAction) (bool, bool) {
-	switch touchPointIndex {
+func (e *printMode) PressMinus(touchPointAction tpAction) (bool, bool) {
+	switch touchPointAction {
 	case tpExposure:
 		return e.adjustActiveExposure(false)
 	default:
-		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, false, true), false
+		return e.state.exposureSet.tpAdjustExposureSet(touchPointAction, e.activeExposure, false, true), false
 	}
 }
 
-func (e *printMode) PressLongMinus(touchPointIndex tpAction) (bool, bool) {
-	switch touchPointIndex {
+func (e *printMode) PressLongMinus(touchPointAction tpAction) (bool, bool) {
+	switch touchPointAction {
 	case tpExposure:
 		return e.adjustActiveExposure(false)
 	default:
-		return e.state.exposureSet.tpAdjustExposureSet(touchPointIndex, e.activeExposure, true, true), false
+		return e.state.exposureSet.tpAdjustExposureSet(touchPointAction, e.activeExposure, true, true), false
 	}
 }
 
