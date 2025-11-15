@@ -348,8 +348,10 @@ func (es *exposureSet) adjustExposureTime(exp uint8, long, neg bool) bool {
 
 	var delta int16
 	switch expP.expUnit {
+	case expUnitFreeHand:
+		return false
 	case expUnitPercent:
-		delta = int16(5)
+		delta = int16(1)
 		if long {
 			delta = 10
 		}
@@ -365,14 +367,12 @@ func (es *exposureSet) adjustExposureTime(exp uint8, long, neg bool) bool {
 	}
 
 	switch expP.expUnit {
-	case expUnitFreeHand:
-		return false
 	case expUnitAbsolute:
 		expP.colVal += delta
 	case expUnitPercent:
 		expP.colVal += delta
-		if expP.colVal < -95 {
-			expP.colVal = -95
+		if expP.colVal < -99 {
+			expP.colVal = -99
 		}
 	default:
 		if delta > 0 {
