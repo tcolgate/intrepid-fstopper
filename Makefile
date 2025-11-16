@@ -22,8 +22,8 @@ build:
 		-size full \
 		-print-allocs . \
 	 	-no-debug \
-		-o intrepip-fstopper-$(shell git describe).hex
-	du -h intrepip-fstopper-$(shell git describe).hex
+		-o intrepid-fstopper-$(shell git describe).hex
+	du -h intrepid-fstopper-$(shell git describe).hex
 
 build-elf:
 	tinygo build \
@@ -33,8 +33,8 @@ build-elf:
 		-gc leaking \
 		-size full \
 		-print-allocs . \
-		-o intrepip-fstopper-$(shell git describe).elf
-	du -h intrepip-fstopper-$(shell git describe).elf
+		-o intrepid-fstopper-$(shell git describe).elf
+	du -h intrepid-fstopper-$(shell git describe).elf
 
 monitor:
 	tinygo monitor -baudrate 9600
