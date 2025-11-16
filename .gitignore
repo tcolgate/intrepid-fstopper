@@ -4,3 +4,4 @@ intrep-ftimer.hex
 intrep-ftimer.elf
 intrep-ftimer.S
 og-fw/
+*.hex
