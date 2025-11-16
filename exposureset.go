@@ -467,7 +467,7 @@ func (es *exposureSet) calcTestInto(out *[maxExposures]int64, outCol *[maxExposu
 	return allsteps
 }
 
-func (es *exposureSet) calcInto(out *[maxExposures]int64, outCol *[maxExposures][4]uint8) uint8 {
+func (es *exposureSet) calcInto(out *[maxExposures]int64, outCol *[maxExposures][4]uint8, outFree *[maxExposures]bool) uint8 {
 	if es.isTest {
 		return es.calcTestInto(out, outCol)
 	}
@@ -489,13 +489,20 @@ func (es *exposureSet) calcInto(out *[maxExposures]int64, outCol *[maxExposures]
 		}
 		switch es.exposures[i].expUnit {
 		case expUnitFreeHand:
-			out[expCnt] = 0 // flags it as freehand?
+			// We set the exposure time here to 1 tick
+			// so that we can still using remainingTime == 0
+			// to signal the end of the exposure when the user
+			// presses cancel.
+			out[expCnt] = 1
 		default:
 			out[expCnt] = (int64)(expUnitToS(
 				es.baseTime,
 				es.exposures[i].expUnit,
 				es.exposures[i].colVal,
 			)) * int64(tick)
+		}
+		if outFree != nil {
+			outFree[expCnt] = es.exposures[i].expUnit == expUnitFreeHand
 		}
 		expCnt++
 	}

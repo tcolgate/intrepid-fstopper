@@ -30,8 +30,9 @@ type exposureMode struct {
 
 	displayUpdated bool
 
-	exposureRGBs [maxExposures][4]uint8
-	exposures    [maxExposures]int64
+	exposureRGBs        [maxExposures][4]uint8
+	exposures           [maxExposures]int64
+	exposuresIsFreeHand [maxExposures]bool
 }
 
 func newExpMode(s *stateData) *Mode {
@@ -66,7 +67,7 @@ func (e *exposureMode) SwitchTo(prev *Mode) {
 	e.prevMode = prev
 
 	e.activeExp = 0
-	e.totalExps = e.state.exposureSet.calcInto(&e.exposures, &e.exposureRGBs)
+	e.totalExps = e.state.exposureSet.calcInto(&e.exposures, &e.exposureRGBs, &e.exposuresIsFreeHand)
 
 	e.nextTime()
 
@@ -98,11 +99,16 @@ func (e *exposureMode) Tick(passed int64) (bool, bool) {
 
 	if !e.running {
 		e.running = true
-		e.state.SetLEDPanel(e.exposureRGBs[e.activeExp-1])
+		if e.remainingTime > 0 {
+			e.state.SetLEDPanel(e.exposureRGBs[e.activeExp-1])
+		}
 		return false, false
 	}
 
-	e.remainingTime -= passed
+	if !e.exposuresIsFreeHand[e.activeExp-1] {
+		e.remainingTime -= passed
+	}
+
 	if e.remainingTime <= 0 {
 		e.remainingTime = 0
 
@@ -134,7 +140,9 @@ func (e *exposureMode) PressRun() (bool, bool) {
 		// or, maybe optionally ledRed?
 		e.state.SetLEDPanel(ledOff)
 	} else {
-		e.state.SetLEDPanel(e.exposureRGBs[e.activeExp-1])
+		if e.remainingTime > 0 {
+			e.state.SetLEDPanel(e.exposureRGBs[e.activeExp-1])
+		}
 	}
 
 	return true, false
@@ -143,10 +151,15 @@ func (e *exposureMode) PressRun() (bool, bool) {
 func (e *exposureMode) PressCancel(touchPoint tpAction) (bool, bool) {
 	// cancel running exposure, reset
 	e.paused = false
-	e.running = false
 	e.remainingTime = 0
 	e.state.SetLEDPanel(ledOff)
 
+	if e.exposuresIsFreeHand[e.activeExp-1] {
+		e.remainingTime = 0
+		return true, false
+	}
+
+	e.running = false
 	return true, true
 }
 
