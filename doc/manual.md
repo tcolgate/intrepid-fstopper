@@ -1,22 +1,36 @@
 # User Manual
 
+The main features of this firmware are:
+
+- Multiple exposures: You can set up to 9 exposures for a print, each with
+  separate duration controlled relative to a fixed base time. Each exposure
+  can have a different brightness or colour.
+- Test strips can be created with the exposure varied by a fixed amount of
+  seconds, stops or percentages.
+- A safer Focus light than the original, making it harder to accidentally turn
+  on the white light, and easier to turn it on when you want it.
+
 ## What is F-Stop printing?
 
-The process of f-stop printing can be thought of as introducing the same f/stop
-control of time during printing that we are used to in shutter speeds on our
-cameras. It was pioneered by [Gene
+The process of f-stop printing can be thought of as allowing us to treat our timer
+more like the "shutter speed" dial of our camera, and talk about our paper
+exposure more in terms of the Exposure Triangle we are used to with film. It
+was pioneered by [Gene
 Nocon](https://www.youtube.com/watch?v=xoAiBNSpg6Y&pp=ygUPZi1zdG9wIHByaW50aW5n)
 and is implemented in many commercially available darkroom enlarger timers.
 
-F-Stop printing can be achieved with regular darkroom timers by manually adjusting
-the timer for individual steps, but this process is time consuming and requires a fair
-bit of maths and/or referencing large tables of times.
+F-Stop printing can be achieved with regular darkroom timers by manually calculating
+the times for individual steps, but this process is time consuming and requires
+a fair bit of maths and/or referencing large tables of times. It's particularly
+fiddly with the Intrepid timer as we have to `+/-` our timer settings.
 
 F-Stop timing is particularly useful for producing test strips. A traditional
-test strip uses linear time spaces between each step. Since density tends to
-build exponentially over time, rather than linearly, this means that one end
+test strip uses linear time spaces between each step. Since we typically think
+of print density exponentially, rather than linearly, one end
 of the test strip will have much bigger steps in density than the other. With
-an f-stop test strip we can get more efficient test strips.
+an f-stop test strip we can get can a spread of densities more like a range
+of zones. This can make it easier to quickly establish a more accurate
+highlight exposure.
 
 Additional advantages of f-stop printing include:
 - easier contrast grading. A 1/3rd stop of exposure time is approximately
@@ -32,21 +46,22 @@ Additional advantages of f-stop printing include:
   burns (since they are relative to the base time). This makes it easier to
   translate a test print at a smaller size into any other print size.
 
-In short, f-stop printing lets us more easily establish our print time, and
-understand the contrast in a print. It can also let us think about our local
-contrast control steps in a way that is agnostic of the size of the print.
+In short, f-stop printing lets us more easily establish our print time,
+and understand the global contrast. It can also let us think about our local
+contrast control steps in a way that is agnostic of the size of the print. For instance
+you can state to burn in for "60% of the base time", rather than "10s for an 8x10".
 
 ## Usage
 
-The Intrepid Enlarger Timer was not design with f-stop timing in mind. The result
-is more fiddly than the native timer controls which takes a bit of getting used to.
+The physical Intrepid Enlarger Timer was not designed with f-stop timing in
+mind. Adding features results in more fiddly control than the original firmware
+and will take a bit of getting used to.
 
-### Basic Controls
-
-- *Contrast dial*: The Grey "contrast" control is the main means of navigating
-  the UI. As you turn it a cursor will move between the various settings. Note
-  that there are two pages of settings, the first controls exposure timing, the
-  second controls the settings for the LED.
+The controls are as follow
+- *Contrast dial*: The Grey "contrast" control dial is the main means of
+  navigating the UI. As you turn it a cursor will move between the various
+  settings. Note that there are two pages of settings, the first controls
+  exposure timing, the second controls the settings for the LED.
 - *+/-*: These controls will variously increas/descrease values, or cycle
   between settings. Holding the button will change settings faster
 - *Cancel*: The cancel button is context dependent.
