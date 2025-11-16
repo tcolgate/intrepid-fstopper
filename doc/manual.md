@@ -1,8 +1,171 @@
 # User Manual
 
+## What is F-Stop printing?
+
+The process of f-stop printing can be thought of as introducing the same f/stop
+control of time during printing that we are used to in shutter speeds on our
+cameras. It was pioneered by [Gene
+Nocon](https://www.youtube.com/watch?v=xoAiBNSpg6Y&pp=ygUPZi1zdG9wIHByaW50aW5n)
+and is implemented in many commercially available darkroom enlarger timers.
+
+F-Stop printing can be achieved with regular darkroom timers by manually adjusting
+the timer for individual steps, but this process is time consuming and requires a fair
+bit of maths and/or referencing large tables of times.
+
+F-Stop timing is particularly useful for producing test strips. A traditional
+test strip uses linear time spaces between each step. Since density tends to
+build exponentially over time, rather than linearly, this means that one end
+of the test strip will have much bigger steps in density than the other. With
+an f-stop test strip we can get more efficient test strips.
+
+Additional advantages of f-stop printing include:
+- easier contrast grading. A 1/3rd stop of exposure time is approximately
+  equivalent to a 1/2 filter grade on the Ilford filter kit. When looking
+  at an 1/3 step f-stop test strip we can estimate that if our highlights
+  are good at 1 step over the base time, and the shadows look good at
+  2 steps under, we have 3 * 1/3rd stop difference which we can translate
+  to a 1.5 difference in filter grade (3 x 0.5).
+- Easier print resizing. If you need to dodge and burn areas of your print
+  you can time those in terms of stops or percentages relative to your
+  base exposure time. When resizing a print you can calculate your new base
+  exposure time, and then use the same percentage, or stops for dodges and
+  burns (since they are relative to the base time). This makes it easier to
+  translate a test print at a smaller size into any other print size.
+
+In short, f-stop printing lets us more easily establish our print time, and
+understand the contrast in a print. It can also let us think about our local
+contrast control steps in a way that is agnostic of the size of the print.
+
+## Usage
+
+The Intrepid Enlarger Timer was not design with f-stop timing in mind. The result
+is more fiddly than the native timer controls which takes a bit of getting used to.
+
+### Basic Controls
+
+- *Contrast dial*: The Grey "contrast" control is the main means of navigating
+  the UI. As you turn it a cursor will move between the various settings. Note
+  that there are two pages of settings, the first controls exposure timing, the
+  second controls the settings for the LED.
+- *+/-*: These controls will variously increas/descrease values, or cycle
+  between settings. Holding the button will change settings faster
+- *Cancel*: The cancel button is context dependent.
+- *Mode*: The Mode button has two functions. A quick press alternates between
+  Print Exposure mode and Test Strip mode. A long press changes between the
+  White light and RGB LED modes.
+- *Run*: Is used to start or continue an exposure. It can also pause/unpause a
+  running exposure.
+- The Focus button behaves slightly differently to the default Intrepid timer.
+
+### Print Exposure settings
+
+When you first power on the unit you will be dropped into the Print Exposure
+mode. This is the main mode used for exposing prints.
+
+There are three main settings for controlling a print.
+- *Base Time*: This setting is shared between every exposure of a
+  multi-exposure print and shared with the Base Time setting of the Test Strip
+  mode.
+- *Exposure Unit*: This controls how each individual exposure time will be
+  calculated from the Base Time.
+- *Exposure Value*: This controls the quantity of the exposure unit that will
+  be applied to the base time to calculate the final time for an exposure.
+
+| Unit | Interpretation of Exposure Value   |
+| ---- | ---------------------------------- |
+| s    | Fixed additional amount of seconds |
+| /2º  | Number of half stops               |
+| /3º  | Number of third stops              |
+| /10º | Number of tenth stops              |
+| %    | Percentage of base time            |
+| Free | A free-hand exposure               |
+
+
+### Focusing light
+
+When on either the Print or Test Strip screens you can press the Focus button to
+switch on the focus light for focusing your print. A short press of the button
+will turn on the Red light. A long press will instead turn on the White light.
+If you have the red light on you can long hold Focus to switch between white and
+red light.
+
+A short press of either Focus or Cancel while the focus light will turn off the
+light and return you to whichever mode were first in.
+
+### Test Strip Screen
+
+A quick press of the Mode button switches from Print exposure mode to the Test
+Strip exposure mode. There are four controls on the Test Strip screen.
+
+- *Base Time*: this setting is shared with the Print Exposure settings. If you
+  change it here, it updates the Base Time of the Print Exposure too.
+- *Exposure Unit*: This is the unit by which we will adjust the test strip steps
+- *Exposure Value*: This is the number of Exposure Units that should be added
+  and subtracted per-step
+- *Step Count*: This is a visual representation of the number of steps. It can
+  be +/- 1, 2 or 3 steps (respectively 3, 5 or 7 steps in total). The Central
+  step will always be exposed at the base time.
+
+### Light colour control
+
+On the Print screen the letter to the left of the *E:* for exposure indicates
+which of the two colour modes you are in. *W* for white and *C* for colour.
+
+On power on the unit will use white light at full brightness.
+
+To control the light settings can use the grey control dial to scroll onto the
+second page of controls. In White Light mode this will show a *Brightness*
+setting that can be set between 1 and 255.
+
+By long pressing the Mode button you can toggle between White light and RGB
+controls. The second page of setting on the Print and Test Strip screens will
+switch to offering settings for individual R, G and B channels, settable from 0
+to 255.
+
+The same method of light control will apply to all exposures in a multi-exposure
+print.
+
+### White Light
+
+In white mode each exposure can set a different brightness for each exposure in a
+multi-exposure print.
+
+For the default white light mode you must use filters for contrast and colour
+control. For contrast control you can use regular contrast control filters.
+Since the white LED output is not the same as a traditional tungsten bulb,
+results will vary slightly from the traditional usage (this is also true of the
+standard firmware). You can also use traditional CMY filters for traditional
+RA4 printing, or use RGB filters and try Tri-Colour printing for RA4.
+
+The brightness control of the white light can be useful to act as a form of ND
+filter to increase exposure times without external NDs or needing to change
+aperture. If can also be used as a brightness control if you are using the
+light for sensitometry.
+
+### RGB Light
+
+In RGB mode you can set exact R,G & B values for each exposure in a
+multi-exposure print.
+
+The LEDs in the enlarger do not have particularly "narrow" R,G and B spectra.
+The G and B are quite broad. The blue in particular leans a little greener than
+is really desirable for RA4 printing.
+
+In Intrepid's original firmware they present a traditional CMY filtration
+interface to the user. This translates CMY values into RGB for the light. That
+translation combines with the inherent inaccuracy of the LEDs to make finer
+grained colour control trickier than it might be.
+
+Rather than attempt to provide a convenient CMY (or contrast graded) filter
+interface, I have opted to instead just provide direct control of the RGB
+channels. In time I hope to provide a guide to contrast grading and RA4 printing
+directly with the RGB light values.
+
+*NOTE*: it is a quirk of the hardware that *R=255 G=255 B=255* is not a white
+light as you might expect.
+
 ## Installation
 
-In order to flash the device you will need a 
 *WARNING*: Obviously I cannot provide any guarantees of safety of the processes
 here. I have personally flashed both my Intrepid Compact and 4x5 enlarger
 timers with this process literally hundred of times with no impact.
@@ -41,69 +204,3 @@ avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -U intrepid-fstopper.hex
 ```
 avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -U download-intrepid-firmware.hex
 ```
-## Usage
-
-### Basic Controls
-
-- *Contrast dial*: The Grey "contrast" control is the main means of navigating
-  the UI. As you turn it a cursor will move between the various settings. If
-  you are in the Print Exposure screem, or Test Strip screen there are two
-  pages of settings. The second page control exposure brightness or colour.
-  These settings will be discussed later. The three C/M/Y control wheel
-  are currently unused. You can turn them if that kind of thing gives you a
-  kick.
-- *+/-*: These controls will variously increas/descrease values, or cycle
-  between settings. In some contexts a long press will increase/decrease values
-  faster.
-- *Cancel*: The cancel button is context dependent.
-  - In most context it will reset the value under the cursor
-  - If the cursor is on the Exposure Unit setting or the Expsure Number
-    setting, Cancel will turn the currently selected exposure on/off
-  - During an exposure or focus Cancel will stop everything and return you to
-    the relevant Print or Test mode.
-- *Mode*: The Mode button has two functions. A quick press alternates between
-  Print Exposure mode and Test Strip mode. A long press changes between the
-  White light and RGB LED modes.
-- *Run*:
-  - In Print or Test Strip modes the Run button will begin an exposure
-  - When running an exposure the Run button will pause. This will turn off the
-    light. You can press again to restart the exposure. If you press it by accident
-    there is no need to panic, you can just press again and finish the exposure. The
-    LED warm up and cool down are fast enough that this will no adversely impact your
-    exposure
-- The Focus button can be pressed while on the Print or Test Strip screens. By
-  this will turn on the Red focus light. Pressing again returns you to the
-  previous mode. If you want a White light you can long hold the Focus button.
-  Long hold works from the Print, Test Strip and Focus screens.
-
-
-### Print Exposure settings
-
-When you first power on the unit you will be dropped into the Print Exposure
-mode. This is the main mode used for exposing prints.
-
-- *Base Time*
-- *Exposure Value*
-- *Exposure Unit*
-
-| Unit | Interpretation of Exposure Value   |
-| ---- | ---------------------------------- |
-| s    | Fixed additional amount of seconds |
-| /2º  | Number of half stops               |
-| /3º  | Number of third stops              |
-| /10º | Number of tenth stops              |
-| %    | Percentage of base time            |
-| Free | A free-hand exposure               |
-
-### Test Strip Screen
-
-A quick press of the Mode button switch from Print exposure mode to the Test
-Strip exposure mode.
-
-- *Base Time*
-- *Exposure Value*
-- *Exposure Unit*
-
-### Light colour control
-
-
