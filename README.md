@@ -220,7 +220,7 @@ timers with this process literally hundred of times with no impact.
  avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -U flash:r:"download-intrepid-firmware.hex":i
 ```
   This will write the existing firmware into a file called `download-intrepid-firmware.hex`. You should save this file for safe keeping.
-* Download the Fstopper firmware from the releases page
+* Download the latest Fstopper firmware from the [releases page](https://github.com/tcolgate/intrepid-fstopper/releases/latest)
 * Upload the new firmware
 ```
 avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -U intrepid-fstopper.hex
