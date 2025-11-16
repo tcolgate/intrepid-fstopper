@@ -21,10 +21,10 @@ build:
 		-gc leaking \
 		-size full \
 		-print-allocs . \
-		-o intrep-ftimer.hex
-	#	-o intrep-ftimer.elf
+		-o intrepip-fstopper.hex
+	#	-o intrepip-fstopper.elf
 	#	-no-debug \
-	du -h intrep-ftimer.hex
+	du -h intrepip-fstopper.hex
 
 build-elf:
 	tinygo build \
@@ -34,8 +34,8 @@ build-elf:
 		-gc leaking \
 		-size full \
 		-print-allocs . \
-		-o intrep-ftimer.elf
-	du -h intrep-ftimer.hex
+		-o intrepid-fstopper.elf
+	du -h intrepid-fstopper.hex
 
 monitor:
 	tinygo monitor -baudrate 9600
