@@ -1,0 +1,24 @@
+                      .------------ Base Time
+                      |     .------ Exposure Value
+                      |     |  .--- Exposure Unit
+                      |     |  |
+                      v     v  v
+                  .-----------------.
+                  |  7.0s +0.0 s    |
+                  | (=7.0 s) WE:1/1 |<-- Number of configured exposures (or max exposures
+                  '-----------------'    when switching active exposure) 
+                     ^       ^  ^
+                     |       |  |
+                     |       |  +--- The active exposure being editted
+Calculated exposure  |       +------ LED mode, W for White, C for Colour
+time for the active -+
+           exposure
+
+                         Page 2
+
+         White LED Mode            Colour LED Mode
+       .-----------------.       .-----------------.
+       | Brightness: 255 |       | R: 0     G: 255 |
+       |          WE:1/1 |       | B: 128   CE:1/1 |
+       '-----------------'       '-----------------'
+

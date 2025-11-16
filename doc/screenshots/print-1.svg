@@ -1,0 +1,354 @@
+<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='393' width='720' font-family='Menlo,Lucida Console,monospace'>
+<style type="text/css">
+svg {
+   color: #000000;
+}
+@media (prefers-color-scheme: dark) {
+   svg {
+      color-scheme: dark; /* ask the browser for a dark background */
+      color: #FFFFFF;
+   }
+}
+</style>
+<g transform='translate(8,16)'>
+<path d='M 176,0 L 272,0' fill='none' stroke='currentColor'></path>
+<path d='M 224,16 L 272,16' fill='none' stroke='currentColor'></path>
+<path d='M 248,32 L 272,32' fill='none' stroke='currentColor'></path>
+<path d='M 144,80 L 288,80' fill='none' stroke='currentColor'></path>
+<path d='M 296,112 L 312,112' fill='none' stroke='currentColor'></path>
+<path d='M 144,128 L 288,128' fill='none' stroke='currentColor'></path>
+<path d='M 256,176 L 280,176' fill='none' stroke='currentColor'></path>
+<path d='M 232,192 L 280,192' fill='none' stroke='currentColor'></path>
+<path d='M 160,208 L 168,208' fill='none' stroke='currentColor'></path>
+<path d='M 56,304 L 200,304' fill='none' stroke='currentColor'></path>
+<path d='M 264,304 L 408,304' fill='none' stroke='currentColor'></path>
+<path d='M 56,352 L 200,352' fill='none' stroke='currentColor'></path>
+<path d='M 264,352 L 408,352' fill='none' stroke='currentColor'></path>
+<path d='M 56,304 L 56,352' fill='none' stroke='currentColor'></path>
+<path d='M 144,80 L 144,128' fill='none' stroke='currentColor'></path>
+<path d='M 168,144 L 168,208' fill='none' stroke='currentColor'></path>
+<path d='M 176,0 L 176,64' fill='none' stroke='currentColor'></path>
+<path d='M 200,304 L 200,352' fill='none' stroke='currentColor'></path>
+<path d='M 224,16 L 224,64' fill='none' stroke='currentColor'></path>
+<path d='M 232,144 L 232,192' fill='none' stroke='currentColor'></path>
+<path d='M 248,32 L 248,64' fill='none' stroke='currentColor'></path>
+<path d='M 256,144 L 256,176' fill='none' stroke='currentColor'></path>
+<path d='M 264,304 L 264,352' fill='none' stroke='currentColor'></path>
+<path d='M 288,80 L 288,128' fill='none' stroke='currentColor'></path>
+<path d='M 408,304 L 408,352' fill='none' stroke='currentColor'></path>
+<path d='M 168,136 L 168,144' fill='none' stroke='currentColor'></path>
+<polygon points='184.000000,144.000000 172.000000,138.399994 172.000000,149.600006' fill='currentColor' transform='rotate(270.000000, 168.000000, 144.000000)'></polygon>
+<path d='M 176,64 L 176,72' fill='none' stroke='currentColor'></path>
+<polygon points='192.000000,64.000000 180.000000,58.400002 180.000000,69.599998' fill='currentColor' transform='rotate(90.000000, 176.000000, 64.000000)'></polygon>
+<path d='M 224,64 L 224,72' fill='none' stroke='currentColor'></path>
+<polygon points='240.000000,64.000000 228.000000,58.400002 228.000000,69.599998' fill='currentColor' transform='rotate(90.000000, 224.000000, 64.000000)'></polygon>
+<path d='M 232,136 L 232,144' fill='none' stroke='currentColor'></path>
+<polygon points='248.000000,144.000000 236.000000,138.399994 236.000000,149.600006' fill='currentColor' transform='rotate(270.000000, 232.000000, 144.000000)'></polygon>
+<path d='M 248,64 L 248,72' fill='none' stroke='currentColor'></path>
+<polygon points='264.000000,64.000000 252.000000,58.400002 252.000000,69.599998' fill='currentColor' transform='rotate(90.000000, 248.000000, 64.000000)'></polygon>
+<path d='M 256,136 L 256,144' fill='none' stroke='currentColor'></path>
+<polygon points='272.000000,144.000000 260.000000,138.399994 260.000000,149.600006' fill='currentColor' transform='rotate(270.000000, 256.000000, 144.000000)'></polygon>
+<polygon points='304.000000,112.000000 292.000000,106.400002 292.000000,117.599998' fill='currentColor' transform='rotate(180.000000, 296.000000, 112.000000)'></polygon>
+<style>
+  text {
+       text-anchor: middle;
+       font-family: "Menlo","Lucida Console","monospace";
+       fill: currentColor;
+       font-size: 1em;
+  }
+</style>
+<text x='288' y='4'>B</text>
+<text x='296' y='4'>a</text>
+<text x='304' y='4'>s</text>
+<text x='312' y='4'>e</text>
+<text x='328' y='4'>T</text>
+<text x='336' y='4'>i</text>
+<text x='344' y='4'>m</text>
+<text x='352' y='4'>e</text>
+<text x='288' y='20'>E</text>
+<text x='296' y='20'>x</text>
+<text x='304' y='20'>p</text>
+<text x='312' y='20'>o</text>
+<text x='320' y='20'>s</text>
+<text x='328' y='20'>u</text>
+<text x='336' y='20'>r</text>
+<text x='344' y='20'>e</text>
+<text x='360' y='20'>V</text>
+<text x='368' y='20'>a</text>
+<text x='376' y='20'>l</text>
+<text x='384' y='20'>u</text>
+<text x='392' y='20'>e</text>
+<text x='288' y='36'>E</text>
+<text x='296' y='36'>x</text>
+<text x='304' y='36'>p</text>
+<text x='312' y='36'>o</text>
+<text x='320' y='36'>s</text>
+<text x='328' y='36'>u</text>
+<text x='336' y='36'>r</text>
+<text x='344' y='36'>e</text>
+<text x='360' y='36'>U</text>
+<text x='368' y='36'>n</text>
+<text x='376' y='36'>i</text>
+<text x='384' y='36'>t</text>
+<text x='168' y='100'>7</text>
+<text x='176' y='100'>.</text>
+<text x='184' y='100'>0</text>
+<text x='192' y='100'>s</text>
+<text x='208' y='100'>+</text>
+<text x='216' y='100'>0</text>
+<text x='224' y='100'>.</text>
+<text x='232' y='100'>0</text>
+<text x='248' y='100'>s</text>
+<text x='160' y='116'>(</text>
+<text x='168' y='116'>=</text>
+<text x='176' y='116'>7</text>
+<text x='184' y='116'>.</text>
+<text x='192' y='116'>0</text>
+<text x='208' y='116'>s</text>
+<text x='216' y='116'>)</text>
+<text x='232' y='116'>W</text>
+<text x='240' y='116'>E</text>
+<text x='248' y='116'>:</text>
+<text x='256' y='116'>1</text>
+<text x='264' y='116'>/</text>
+<text x='272' y='116'>1</text>
+<text x='328' y='116'>N</text>
+<text x='336' y='116'>u</text>
+<text x='344' y='116'>m</text>
+<text x='352' y='116'>b</text>
+<text x='360' y='116'>e</text>
+<text x='368' y='116'>r</text>
+<text x='384' y='116'>o</text>
+<text x='392' y='116'>f</text>
+<text x='408' y='116'>c</text>
+<text x='416' y='116'>o</text>
+<text x='424' y='116'>n</text>
+<text x='432' y='116'>f</text>
+<text x='440' y='116'>i</text>
+<text x='448' y='116'>g</text>
+<text x='456' y='116'>u</text>
+<text x='464' y='116'>r</text>
+<text x='472' y='116'>e</text>
+<text x='480' y='116'>d</text>
+<text x='496' y='116'>e</text>
+<text x='504' y='116'>x</text>
+<text x='512' y='116'>p</text>
+<text x='520' y='116'>o</text>
+<text x='528' y='116'>s</text>
+<text x='536' y='116'>u</text>
+<text x='544' y='116'>r</text>
+<text x='552' y='116'>e</text>
+<text x='560' y='116'>s</text>
+<text x='576' y='116'>(</text>
+<text x='584' y='116'>o</text>
+<text x='592' y='116'>r</text>
+<text x='608' y='116'>m</text>
+<text x='616' y='116'>a</text>
+<text x='624' y='116'>x</text>
+<text x='640' y='116'>e</text>
+<text x='648' y='116'>x</text>
+<text x='656' y='116'>p</text>
+<text x='664' y='116'>o</text>
+<text x='672' y='116'>s</text>
+<text x='680' y='116'>u</text>
+<text x='688' y='116'>r</text>
+<text x='696' y='116'>e</text>
+<text x='704' y='116'>s</text>
+<text x='328' y='132'>w</text>
+<text x='336' y='132'>h</text>
+<text x='344' y='132'>e</text>
+<text x='352' y='132'>n</text>
+<text x='368' y='132'>s</text>
+<text x='376' y='132'>w</text>
+<text x='384' y='132'>i</text>
+<text x='392' y='132'>t</text>
+<text x='400' y='132'>c</text>
+<text x='408' y='132'>h</text>
+<text x='416' y='132'>i</text>
+<text x='424' y='132'>n</text>
+<text x='432' y='132'>g</text>
+<text x='448' y='132'>a</text>
+<text x='456' y='132'>c</text>
+<text x='464' y='132'>t</text>
+<text x='472' y='132'>i</text>
+<text x='480' y='132'>v</text>
+<text x='488' y='132'>e</text>
+<text x='504' y='132'>e</text>
+<text x='512' y='132'>x</text>
+<text x='520' y='132'>p</text>
+<text x='528' y='132'>o</text>
+<text x='536' y='132'>s</text>
+<text x='544' y='132'>u</text>
+<text x='552' y='132'>r</text>
+<text x='560' y='132'>e</text>
+<text x='568' y='132'>)</text>
+<text x='296' y='180'>T</text>
+<text x='304' y='180'>h</text>
+<text x='312' y='180'>e</text>
+<text x='328' y='180'>a</text>
+<text x='336' y='180'>c</text>
+<text x='344' y='180'>t</text>
+<text x='352' y='180'>i</text>
+<text x='360' y='180'>v</text>
+<text x='368' y='180'>e</text>
+<text x='384' y='180'>e</text>
+<text x='392' y='180'>x</text>
+<text x='400' y='180'>p</text>
+<text x='408' y='180'>o</text>
+<text x='416' y='180'>s</text>
+<text x='424' y='180'>u</text>
+<text x='432' y='180'>r</text>
+<text x='440' y='180'>e</text>
+<text x='456' y='180'>b</text>
+<text x='464' y='180'>e</text>
+<text x='472' y='180'>i</text>
+<text x='480' y='180'>n</text>
+<text x='488' y='180'>g</text>
+<text x='504' y='180'>e</text>
+<text x='512' y='180'>d</text>
+<text x='520' y='180'>i</text>
+<text x='528' y='180'>t</text>
+<text x='536' y='180'>t</text>
+<text x='544' y='180'>e</text>
+<text x='552' y='180'>d</text>
+<text x='0' y='196'>C</text>
+<text x='8' y='196'>a</text>
+<text x='16' y='196'>l</text>
+<text x='24' y='196'>c</text>
+<text x='32' y='196'>u</text>
+<text x='40' y='196'>l</text>
+<text x='48' y='196'>a</text>
+<text x='56' y='196'>t</text>
+<text x='64' y='196'>e</text>
+<text x='72' y='196'>d</text>
+<text x='88' y='196'>e</text>
+<text x='96' y='196'>x</text>
+<text x='104' y='196'>p</text>
+<text x='112' y='196'>o</text>
+<text x='120' y='196'>s</text>
+<text x='128' y='196'>u</text>
+<text x='136' y='196'>r</text>
+<text x='144' y='196'>e</text>
+<text x='296' y='196'>L</text>
+<text x='304' y='196'>E</text>
+<text x='312' y='196'>D</text>
+<text x='328' y='196'>m</text>
+<text x='336' y='196'>o</text>
+<text x='344' y='196'>d</text>
+<text x='352' y='196'>e</text>
+<text x='360' y='196'>,</text>
+<text x='376' y='196'>W</text>
+<text x='392' y='196'>f</text>
+<text x='400' y='196'>o</text>
+<text x='408' y='196'>r</text>
+<text x='424' y='196'>W</text>
+<text x='432' y='196'>h</text>
+<text x='440' y='196'>i</text>
+<text x='448' y='196'>t</text>
+<text x='456' y='196'>e</text>
+<text x='464' y='196'>,</text>
+<text x='480' y='196'>C</text>
+<text x='496' y='196'>f</text>
+<text x='504' y='196'>o</text>
+<text x='512' y='196'>r</text>
+<text x='528' y='196'>C</text>
+<text x='536' y='196'>o</text>
+<text x='544' y='196'>l</text>
+<text x='552' y='196'>o</text>
+<text x='560' y='196'>u</text>
+<text x='568' y='196'>r</text>
+<text x='0' y='212'>t</text>
+<text x='8' y='212'>i</text>
+<text x='16' y='212'>m</text>
+<text x='24' y='212'>e</text>
+<text x='40' y='212'>f</text>
+<text x='48' y='212'>o</text>
+<text x='56' y='212'>r</text>
+<text x='72' y='212'>t</text>
+<text x='80' y='212'>h</text>
+<text x='88' y='212'>e</text>
+<text x='104' y='212'>a</text>
+<text x='112' y='212'>c</text>
+<text x='120' y='212'>t</text>
+<text x='128' y='212'>i</text>
+<text x='136' y='212'>v</text>
+<text x='144' y='212'>e</text>
+<text x='88' y='228'>e</text>
+<text x='96' y='228'>x</text>
+<text x='104' y='228'>p</text>
+<text x='112' y='228'>o</text>
+<text x='120' y='228'>s</text>
+<text x='128' y='228'>u</text>
+<text x='136' y='228'>r</text>
+<text x='144' y='228'>e</text>
+<text x='200' y='260'>P</text>
+<text x='208' y='260'>a</text>
+<text x='216' y='260'>g</text>
+<text x='224' y='260'>e</text>
+<text x='240' y='260'>2</text>
+<text x='72' y='292'>W</text>
+<text x='80' y='292'>h</text>
+<text x='88' y='292'>i</text>
+<text x='96' y='292'>t</text>
+<text x='104' y='292'>e</text>
+<text x='120' y='292'>L</text>
+<text x='128' y='292'>E</text>
+<text x='136' y='292'>D</text>
+<text x='152' y='292'>M</text>
+<text x='160' y='292'>o</text>
+<text x='168' y='292'>d</text>
+<text x='176' y='292'>e</text>
+<text x='280' y='292'>C</text>
+<text x='288' y='292'>o</text>
+<text x='296' y='292'>l</text>
+<text x='304' y='292'>o</text>
+<text x='312' y='292'>u</text>
+<text x='320' y='292'>r</text>
+<text x='336' y='292'>L</text>
+<text x='344' y='292'>E</text>
+<text x='352' y='292'>D</text>
+<text x='368' y='292'>M</text>
+<text x='376' y='292'>o</text>
+<text x='384' y='292'>d</text>
+<text x='392' y='292'>e</text>
+<text x='72' y='324'>B</text>
+<text x='80' y='324'>r</text>
+<text x='88' y='324'>i</text>
+<text x='96' y='324'>g</text>
+<text x='104' y='324'>h</text>
+<text x='112' y='324'>t</text>
+<text x='120' y='324'>n</text>
+<text x='128' y='324'>e</text>
+<text x='136' y='324'>s</text>
+<text x='144' y='324'>s</text>
+<text x='152' y='324'>:</text>
+<text x='168' y='324'>2</text>
+<text x='176' y='324'>5</text>
+<text x='184' y='324'>5</text>
+<text x='280' y='324'>R</text>
+<text x='288' y='324'>:</text>
+<text x='304' y='324'>0</text>
+<text x='352' y='324'>G</text>
+<text x='360' y='324'>:</text>
+<text x='376' y='324'>2</text>
+<text x='384' y='324'>5</text>
+<text x='392' y='324'>5</text>
+<text x='144' y='340'>W</text>
+<text x='152' y='340'>E</text>
+<text x='160' y='340'>:</text>
+<text x='168' y='340'>1</text>
+<text x='176' y='340'>/</text>
+<text x='184' y='340'>1</text>
+<text x='280' y='340'>B</text>
+<text x='288' y='340'>:</text>
+<text x='304' y='340'>1</text>
+<text x='312' y='340'>2</text>
+<text x='320' y='340'>8</text>
+<text x='352' y='340'>C</text>
+<text x='360' y='340'>E</text>
+<text x='368' y='340'>:</text>
+<text x='376' y='340'>1</text>
+<text x='384' y='340'>/</text>
+<text x='392' y='340'>1</text>
+</g>
+</svg>

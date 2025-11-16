@@ -85,6 +85,8 @@ The controls are as follow
 When you first power on the unit you will be dropped into the Print Exposure
 mode. This is the main mode used for exposing prints.
 
+![The Print mode screens](/doc/screenshots/print-1.svg)
+
 There are three main settings for controlling a print.
 - *Base Time*: This setting is shared between every exposure of a
   multi-exposure print and shared with the Base Time setting of the Test Strip

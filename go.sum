@@ -1,3 +1,5 @@
+github.com/blampe/goat v0.0.0-20240731053613-177de93b192b h1:X/3BiXMUaChEn7xm+Drnl+aXJfEWjrrxDGSydVYxYv0=
+github.com/blampe/goat v0.0.0-20240731053613-177de93b192b/go.mod h1:pr0t4zPUijY6Mg/TP2J142SkovAA3zGneILfPfIsFdU=
 github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 h1:El6M4kTTCOh6aBiKaUGG7oYTSPP8MxqL4YI3kZKwcP4=
 github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510/go.mod h1:pupxD2MaaD3pAXIBCelhxNneeOaAeabZDe5s4K6zSpQ=
 tinygo.org/x/drivers v0.31.0 h1:Q2RpvTRMtdmjHD2Xyn4e8WXsJZKpIny3Lg4hzG1dLu4=
