@@ -1,0 +1,16 @@
+               .------------ Base Time
+               |       .------ Exposure Value
+               |       |  .--- Exposure Unit
+               |       |  |
+               v       v  v
+           .-------------------.
+           |  7.0s ±  0.0s     |
+           | ‑‑‑|‑‑‑       cov |
+           '-------------------'
+               ^          ^
+               |          |
+               |          +--- Test strip technique (cov or abs)
+               |
+ Strip count --+
+     control
+

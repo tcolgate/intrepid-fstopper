@@ -122,6 +122,8 @@ light and return you to whichever mode were first in.
 A quick press of the Mode button switches from Print exposure mode to the Test
 Strip exposure mode. There are four controls on the Test Strip screen.
 
+![The Test Strip  mode](/doc/screenshots/ts-1.svg)
+
 - *Base Time*: this setting is shared with the Print Exposure settings. If you
   change it here, it updates the Base Time of the Print Exposure too.
 - *Exposure Unit*: This is the unit by which we will adjust the test strip steps
