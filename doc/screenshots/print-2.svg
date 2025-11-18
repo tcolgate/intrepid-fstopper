@@ -1,0 +1,104 @@
+<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='73' width='496' font-family='Menlo,Lucida Console,monospace'>
+<style type="text/css">
+svg {
+   color: #000000;
+}
+@media (prefers-color-scheme: dark) {
+   svg {
+      color-scheme: dark; /* ask the browser for a dark background */
+      color: #FFFFFF;
+   }
+}
+</style>
+<g transform='translate(8,16)'>
+<path d='M 0,0 L 144,0' fill='none' stroke='currentColor'></path>
+<path d='M 168,0 L 312,0' fill='none' stroke='currentColor'></path>
+<path d='M 336,0 L 480,0' fill='none' stroke='currentColor'></path>
+<path d='M 0,48 L 144,48' fill='none' stroke='currentColor'></path>
+<path d='M 168,48 L 312,48' fill='none' stroke='currentColor'></path>
+<path d='M 336,48 L 480,48' fill='none' stroke='currentColor'></path>
+<path d='M 0,0 L 0,48' fill='none' stroke='currentColor'></path>
+<path d='M 144,0 L 144,48' fill='none' stroke='currentColor'></path>
+<path d='M 168,0 L 168,48' fill='none' stroke='currentColor'></path>
+<path d='M 312,0 L 312,48' fill='none' stroke='currentColor'></path>
+<path d='M 336,0 L 336,48' fill='none' stroke='currentColor'></path>
+<path d='M 480,0 L 480,48' fill='none' stroke='currentColor'></path>
+<style>
+  text {
+       text-anchor: middle;
+       font-family: "Menlo","Lucida Console","monospace";
+       fill: currentColor;
+       font-size: 1em;
+  }
+</style>
+<text x='16' y='20'>1</text>
+<text x='24' y='20'>0</text>
+<text x='32' y='20'>.</text>
+<text x='40' y='20'>0</text>
+<text x='48' y='20'>s</text>
+<text x='64' y='20'>+</text>
+<text x='72' y='20'>2</text>
+<text x='104' y='20'>/</text>
+<text x='112' y='20'>2</text>
+<text x='120' y='20'>º</text>
+<text x='184' y='20'>1</text>
+<text x='192' y='20'>0</text>
+<text x='200' y='20'>.</text>
+<text x='208' y='20'>0</text>
+<text x='216' y='20'>s</text>
+<text x='232' y='20'>-</text>
+<text x='240' y='20'>2</text>
+<text x='272' y='20'>/</text>
+<text x='280' y='20'>2</text>
+<text x='288' y='20'>º</text>
+<text x='352' y='20'>1</text>
+<text x='360' y='20'>0</text>
+<text x='368' y='20'>.</text>
+<text x='376' y='20'>0</text>
+<text x='384' y='20'>s</text>
+<text x='400' y='20'>-</text>
+<text x='408' y='20'>1</text>
+<text x='416' y='20'>0</text>
+<text x='440' y='20'>%!<(MISSING)/text>
+<text x='16' y='36'>(</text>
+<text x='24' y='36'>=</text>
+<text x='32' y='36'>2</text>
+<text x='40' y='36'>0</text>
+<text x='48' y='36'>.</text>
+<text x='56' y='36'>0</text>
+<text x='64' y='36'>s</text>
+<text x='72' y='36'>)</text>
+<text x='88' y='36'>W</text>
+<text x='96' y='36'>E</text>
+<text x='104' y='36'>:</text>
+<text x='112' y='36'>1</text>
+<text x='120' y='36'>/</text>
+<text x='128' y='36'>1</text>
+<text x='184' y='36'>(</text>
+<text x='192' y='36'>=</text>
+<text x='200' y='36'>5</text>
+<text x='208' y='36'>.</text>
+<text x='216' y='36'>0</text>
+<text x='232' y='36'>s</text>
+<text x='240' y='36'>)</text>
+<text x='256' y='36'>W</text>
+<text x='264' y='36'>E</text>
+<text x='272' y='36'>:</text>
+<text x='280' y='36'>1</text>
+<text x='288' y='36'>/</text>
+<text x='296' y='36'>1</text>
+<text x='352' y='36'>(</text>
+<text x='360' y='36'>=</text>
+<text x='368' y='36'>9</text>
+<text x='376' y='36'>.</text>
+<text x='384' y='36'>0</text>
+<text x='400' y='36'>s</text>
+<text x='408' y='36'>)</text>
+<text x='424' y='36'>W</text>
+<text x='432' y='36'>E</text>
+<text x='440' y='36'>:</text>
+<text x='448' y='36'>1</text>
+<text x='456' y='36'>/</text>
+<text x='464' y='36'>1</text>
+</g>
+</svg>

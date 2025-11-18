@@ -63,18 +63,30 @@ to improve things.
 
 ## Goals
 
+Known Bugs:
+- Some of the "touch points" remain selectable when the value is
+  not relevant to the current exposure. This does not harm but looks odd
+- During FreeHand exposures the display should show *Free* instead of 0.0
 Possible additions
+- In test strip mode it should be clear when rgb/bw is in use
+- The SafeLight button should turn the display backlight on/off
 - Pulse a burst of red every second during freehand exposure to
   help counting time (these would not contribute to exposure time,
   and is intended to be an alternate to an audible blip (in colour
   mode that would be turning the lamp off.
 - During BW print, when exposure is paused, the panel could switch
   to red light
-- In test strip mode it should be clear when rgb/bw is in use
-- The SafeLight button should turn the display backlight on/off
 - Might drop the explicit sleep and switch to a tight loop and counter
   read. This could improve exposure accuracy, and might save a bit of
   image size.
+- As of v0.1.0 the firmware is very close to the limit of memory available on
+  the atmega 328p, and is using about 70% of the available flash.  Adding any
+  significant new features will require some optimisation. Some possibilities:
+  - There are some functions with repeated code that could be refactored if stack
+    space permits.
+  - The method table that stands in for an interface could reduced or removed now
+    that there's a better understanding of what is needed
+  - Use of bools could be collapsed into bit fields.
 
 ## Non-Goals
 
@@ -90,8 +102,8 @@ Possible additions
 
 ## Programming Style
 
-The firmware is implemented using TinyGo, but due to the constraints of the
-atmega chips, only a strict subset of Go's functionality can be used.
+Due to the constraints of the atmega chips, only a strict subset of Go's
+functionality can be used.
 
 - Channels are OK, occasionally useful (essentially a pre-existing, generic
   ring buffer. (may switch to a ring buffer though)

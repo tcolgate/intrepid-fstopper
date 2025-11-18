@@ -80,33 +80,10 @@ The controls are as follow
   running exposure.
 - The Focus button behaves slightly differently to the default Intrepid timer.
 
-### Print Exposure settings
-
-When you first power on the unit you will be dropped into the Print Exposure
-mode. This is the main mode used for exposing prints.
-
-![The Print mode screens](/doc/screenshots/print-1.svg)
-
-There are three main settings for controlling a print.
-- *Base Time*: This setting is shared between every exposure of a
-  multi-exposure print and shared with the Base Time setting of the Test Strip
-  mode.
-- *Exposure Unit*: This controls how each individual exposure time will be
-  calculated from the Base Time.
-- *Exposure Value*: This controls the quantity of the exposure unit that will
-  be applied to the base time to calculate the final time for an exposure.
-
-| Unit | Interpretation of Exposure Value   |
-| ---- | ---------------------------------- |
-| s    | Fixed additional amount of seconds |
-| /2º  | Number of half stops               |
-| /3º  | Number of third stops              |
-| /10º | Number of tenth stops              |
-| %    | Percentage of base time            |
-| Free | A free-hand exposure               |
-
-
 ### Focusing light
+
+The Focus button works differently from the original Intrepid firmware. The behaviour
+is intended to make it easier, and safer to switch from Red to White light.
 
 When on either the Print or Test Strip screens you can press the Focus button to
 switch on the focus light for focusing your print. A short press of the button
@@ -114,15 +91,103 @@ will turn on the Red light. A long press will instead turn on the White light.
 If you have the red light on you can long hold Focus to switch between white and
 red light.
 
-A short press of either Focus or Cancel while the focus light will turn off the
-light and return you to whichever mode were first in.
+A short press of either Focus or Cancel while the focus light is on will turn
+off the light and return you to whichever mode were first in.
+
+### Print Exposure settings
+
+When you first power on the unit you will be dropped into the Print Setup
+screen. This is the main screen used for controlling prints.
+
+![The Print Setup screen](/doc/screenshots/print-1.svg)
+
+There are four main settings for controlling a print.
+
+- *Base Time*: This setting is shared between every exposure of a
+  multi-exposure print and shared with the Base Time setting of the Test Strip
+  mode.
+- *Exposure Value*: This controls the quantity of the exposure unit that will
+  be applied to the base time to calculate the final time for an exposure.
+- *Exposure Unit*: This controls how each individual exposure time will be
+  calculated from the Base Time and Exposure Value.
+   *s*: Fixed additional number of seconds
+   */2º*: Number of half stops
+   */3º*: Number of third stop
+   */10º*: Number of tenth stops
+   *%*: Percentage of base time
+   *Free*: A free-hand exposure
+- *Multi-exposure selection*: THe timer allows you to setup up to 9 exposures
+  for a print. The *+/-* buttons allow you to edit a different exposure. This
+  display will be explained further in elsewhere.
+
+The default Exposure Unit of *s* treats the timer as a traditional timer. When you
+turn the unit on you can just set the base time, hit *Run* and the light will
+come on for the set amount of time. Changing the exposure value will add or subtract
+a fixed amount of time from the *Base Time*.
+
+Changing to the  */2º* Exposure Unit is where more interesting things happen. If we set
+our Base time to 10s, our Exposure Value to 2, and our Exposure Unit to */2º* we will see
+the following display.
+
+![Examples of different exposure unit adjustments](/doc/screenshots/print-2.svg)
+
+We have asked the time to use "base time plus 2 half stops", 2 half stops is a full
+stop, which is twice the exposure. The timer shows us that the final calculated time
+is 20s , twice the base time. If we had set the Exposure Value to *-2*, we are asking
+for "base time minus 2 half stops", which would be 5s. Similarly we could ask
+for "base time minus 10% of the base time", which would be 9 seconds.
+
+The *FreeHand* exposure unit ignores the base time and allows you to expose a step for
+as long as you wish.
+
+### Running the exposures
+
+When you press *Run* on the Print Screen (or Test Strip Screen), the exposure of your print will
+begin.
+* If you only have 1 exposure configured the print will begin immediately.
+* If you have multiple exposures configured the exposure will start but will be
+  immediately paused. You will need to press *Run* a second time to begin the
+  first exposure.
+* You can press *Run* again at during a running exposure to pause the exposure, pressing
+  Run again will continue the exposure. The LED warm-up, and cool-down is essentially
+  negligible (in the order of 1us), so we do not need to be concerned about this skewing
+  our exposure times.
+* If you are using a FreeHand exposure the Run button will still let you pause and restart
+  . To stop a FreeHand exposure you must press the Cancel button. This turn off the light
+  and advance you to the next exposure.
+* Pressing Cancel at any other time will stop this exposure, and return you to
+  the Print or Test Strip screens.  Any remaining configured exposures are
+  ignored.
+
+### Multiple Exposures
+
+THe timer allows you to setup up to 9 exposures for a print. By pressing *+/-* on
+the exposure number (shown directly after the *E:*), you can cycle between
+the available exposures.
+* Initially only exposure 1 is enabled.
+* Exposure 1 cannot be disabled
+* The other 8 can be turned on by changing the Exposure Unit from
+  *Off* to something else, or toggled on/off with the *Cancel* button.
+* When the control is on the active exposure selection the display
+  of the number of active exposure switch to a *9* to remind you
+  how many exposures you can choose from (this behaviour may change).
+
+Each exposure can have different Exposure Value, Exposure Unit, and LED
+settings.
+
+The display shows which exposure you are adjusting the settings for, and the
+total number of configured exposures for this print. For example, *1/1* means
+there is only one exposure configured. *3/4* means you are editing the 3rd
+exposure and have 4 exposures enabled in total. It is possible for the display
+to read *5/2*, indicating that you are editing the 5th of the 9 available
+exposures, but only have 2 of the 9 exposures enabled.
 
 ### Test Strip Screen
 
-A quick press of the Mode button switches from Print exposure mode to the Test
-Strip exposure mode. There are four controls on the Test Strip screen.
+A quick press of the Mode button switches from Print Setup mode to the Test
+Strip  mode. There are four controls on the Test Strip screen.
 
-![The Test Strip  mode](/doc/screenshots/ts-1.svg)
+![The Test Strip Setup Screen](/doc/screenshots/ts-1.svg)
 
 - *Base Time*: this setting is shared with the Print Exposure settings. If you
   change it here, it updates the Base Time of the Print Exposure too.
@@ -132,6 +197,23 @@ Strip exposure mode. There are four controls on the Test Strip screen.
 - *Step Count*: This is a visual representation of the number of steps. It can
   be +/- 1, 2 or 3 steps (respectively 3, 5 or 7 steps in total). The Central
   step will always be exposed at the base time.
+- Method: This chooses how the strip will be exposed. There are two choices
+  - *cov*: This indicates that the user will cover the previous steps. For the
+         first exposure the strip is completely uncovered. For the first step
+         a section of the strip is covered, then first two sections, and so on.
+  - abs: This indicates that each section will get a full exposure. This is for
+         use with step wedge printers that present a small window to the user that
+         a strip is slid under and moved along for each exposure.
+
+The Exposure Units are the same as the Print Screen. On the final printed test strip the
+central exposure will always be exposed at the base time. The step to the left will then
+be reduce by the exposure unit and value. The steps 2 and 3 to the left will be reduced by 2 and 3
+times the value. The steps to the right will be increased by 1, 2 and 3 times the value. The following
+shows the seconds of exposure for each given setting:
+
+* `10s ± 2 s`: `4 6 8 10 12 14 16` - each step is 2s apart
+* `10s ± 2 /2º`: `1.25 2.5 5 10 20 40` - each step is 1 stop apart (two half stops)
+* `10s ± 20 %`: `4 6 8 10 12 14 16` - each stp is 20% of 10s apart (2 seconds)
 
 ### Light colour control
 
