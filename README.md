@@ -23,8 +23,7 @@ The main features of this firmware are:
 The process of f-stop printing can be thought of as allowing us to treat our timer
 more like the "shutter speed" dial of our camera, and talk about our paper
 exposure more in terms of the Exposure Triangle we are used to with film. It
-was pioneered by [Gene
-Nocon](https://www.youtube.com/watch?v=xoAiBNSpg6Y&pp=ygUPZi1zdG9wIHByaW50aW5n)
+was pioneered by [Gene Nocon](https://www.youtube.com/watch?v=xoAiBNSpg6Y&pp=ygUPZi1zdG9wIHByaW50aW5n)
 and is implemented in many commercially available darkroom enlarger timers.
 
 F-Stop printing can be achieved with regular darkroom timers by manually calculating
