@@ -305,6 +305,10 @@ timers with this process literally hundred of times with no impact.
     BE ABLE TO USE THIS FIRMWARE AT THIS TIME*
   - If it shows "V1.2" (and  *not* "V1.2a"), you have the B variant and
     are fine to proceed
+* Download the `.hex` file from the latest intrepid-fstopper [releases page](https://github.com/tcolgate/intrepid-fstopper/releases/latest)
+* If you are on Windows you can simply follow the firmware installation guide
+  From Intrepid, but select the `.hex` file downloaded in the previous step
+  when running `Xloader.exe`.
 * Download and install [avrdude](https://github.com/avrdudes/avrdude). This is
   the tool that the official Intrepid firmware upload tool uses in the
   background.
