@@ -1,11 +1,18 @@
 # Intrepid Enlarger Alternative Firmware
 
-This repo contains an experiment to create an alternative firmware
-for the Intrepid Enlarger timer.
+*NOTE* I have no affiliation or association with Intrepid Camera other than being a
+customer. They have had no involvement with this firmware.
 
-*NOTE* I make not promises that this will not destroy your timer,
-burn your house down, or kill a random kitten. That said, it appears
-to be safe to flash the timer, and then re-flash with the official
+This repo contains an experiment to create an alternative firmware for the
+Intrepid
+[Compact](https://intrepidcamera.co.uk/products/intrepid-compact-enlarger-35mm-120)
+and
+[4x5](https://intrepidcamera.co.uk/collections/darkroom/products/intrepid-4x5-enlarger-kit)
+Enlarger timers.
+
+I make not promises that this will not destroy your timer, burn your house
+down, or kill a random kitten. That said, it appears to be safe to flash the
+timer, and then re-flash with the official
 firmware, I am not aware of resultant dead kittens in my area.
 
 The main features of this firmware are:
@@ -26,10 +33,11 @@ exposure more in terms of the Exposure Triangle we are used to with film. It
 was pioneered by [Gene Nocon](https://www.youtube.com/watch?v=xoAiBNSpg6Y&pp=ygUPZi1zdG9wIHByaW50aW5n)
 and is implemented in many commercially available darkroom enlarger timers.
 
-F-Stop printing can be achieved with regular darkroom timers by manually calculating
-the times for individual steps, but this process is time consuming and requires
-a fair bit of maths and/or referencing large tables of times. It's particularly
-fiddly with the Intrepid timer as we have to `+/-` our timer settings.
+F-Stop printing can be achieved with regular darkroom timers[^1] by manually
+calculating the times for individual steps, but this process is time consuming
+and requires a fair bit of maths and/or referencing large tables of times. It's
+particularly fiddly with the Intrepid timer as we have to `+/-` our timer
+settings, rather than just swing a dial on a traditional timer.
 
 F-Stop timing is particularly useful for producing test strips. A traditional
 test strip uses linear time spaces between each step. Since we typically think
@@ -45,7 +53,7 @@ Additional advantages of f-stop printing include:
   at an 1/3 step f-stop test strip we can estimate that if our highlights
   are good at 1 step over the base time, and the shadows look good at
   2 steps under, we have 3 * 1/3rd stop difference which we can translate
-  to a 1.5 difference in filter grade (3 x 0.5).
+  to a 1.5 difference in filter grade (3 x 0.5).[^2]
 - Easier print resizing. If you need to dodge and burn areas of your print
   you can time those in terms of stops or percentages relative to your
   base exposure time. When resizing a print you can calculate your new base
@@ -238,7 +246,7 @@ print.
 In white mode each exposure can set a different brightness for each exposure in a
 multi-exposure print.
 
-For the default white light mode you must use filters for contrast and colour
+For the default white light mode you must use filters for contrast[^3] and colour
 control. For contrast control you can use regular contrast control filters.
 Since the white LED output is not the same as a traditional tungsten bulb,
 results will vary slightly from the traditional usage (this is also true of the
@@ -312,3 +320,17 @@ avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -U intrepid-fstopper.hex
 ```
 avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -U download-intrepid-firmware.hex
 ```
+
+[^1] Jon Finch of Pitctorial Planet has a good guide to f-stop printing without the use of
+a specialist timer.
+
+[^2] Matthew from DistPhoto on Youtube has a [good
+introduction](https://www.youtube.com/watch?v=zS-CPGx1dSo) to use of test
+strips for contrast grading. I do use his test strip printer, but vintage
+version exist and are slightly easier to use (they have a little sliding foot
+that you can use to move the paper without opening the unit.
+
+[^3] I had great difficulty in using the Ilford Multigrade under the lens filters
+with the Intrepid Compact Enlarger. To overcome these issues I built a small
+under the lens tray that can be fitted to the enlarger with a clamp. The SCAD files
+for this are in this repo [here](/hardware)
