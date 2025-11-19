@@ -251,7 +251,7 @@ control. For contrast control you can use regular contrast control filters.
 Since the white LED output is not the same as a traditional tungsten bulb,
 results will vary slightly from the traditional usage (this is also true of the
 standard firmware). You can also use traditional CMY filters for traditional
-RA4 printing, or use RGB filters and try Tri-Colour printing for RA4.
+RA4 printing, or use RGB filters and try [Tri-Colour additive printing](https://www.youtube.com/watch?v=TJ1b5idnlFY) for RA4.
 
 The brightness control of the white light can be useful to act as a form of ND
 filter to increase exposure times without external NDs or needing to change
@@ -263,9 +263,10 @@ light for sensitometry.
 In RGB mode you can set exact R,G & B values for each exposure in a
 multi-exposure print.
 
-The LEDs in the enlarger do not have particularly "narrow" R,G and B spectra.
+The LEDs in the enlarger do not have particularly narrow R,G and B spectra.
 The G and B are quite broad. The blue in particular leans a little greener than
-is really desirable for RA4 printing.
+is really desirable for RA4 printing. This can make printing tricky with small
+adjustments in the blue channel contributing extra green light.
 
 In Intrepid's original firmware they present a traditional CMY filtration
 interface to the user. This translates CMY values into RGB for the light. That
@@ -276,6 +277,11 @@ Rather than attempt to provide a convenient CMY (or contrast graded) filter
 interface, I have opted to instead just provide direct control of the RGB
 channels. In time I hope to provide a guide to contrast grading and RA4 printing
 directly with the RGB light values.
+
+While this cannot fix the underlying broad spectrum of the LEDs, and results
+in a rather alien interface to colour printing in particular, it does mean that
+you have the most direct control possible of the LEDs. Any result achievable with
+the original controls should be possible with the RGB interface.
 
 *NOTE*: it is a quirk of the hardware that *R=255 G=255 B=255* is not a white
 light as you might expect.
