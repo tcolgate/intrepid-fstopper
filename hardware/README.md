@@ -10,6 +10,8 @@ You'll need at least one of his Nepla lens holders too. I find the combination o
 
 ## Under the lens filter tray (`carrier.scad`)
 
+![The fitted filter tray](/doc/carrier.jpg)
+
 The model assume [this exact clamp](https://www.amazon.co.uk/dp/B09NFDXC25?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_2&th=1), a "Suxing Sleeve Swivel Clamp Chuck for Magnetic Stands Holder Bar Dial Indicator Gauge (D6/D8-D8)"
 . I ordered these off amazon. It affixes to the 8mm rod that carries the
 enlarger lens board, and the model has an 8mm peg to fit it to the clamp. If
@@ -24,6 +26,8 @@ I am planning to create a second version of this that will also hold Agfa
 colour filters for RA4 printing.
 
 ### Making the original Ilford holder fit
+
+![The multilated ilford filter carrier legs](/doc/ilford-holder.jpg)
 
 I had a hard time fitting the Ilford Multigrade Under the Lens multigrade
 filter kit with the Compact Enlarger.
@@ -55,6 +59,8 @@ I did manage to make it fit by:
   the velcro does not get between the lens board and the lens.
 
 ## 50mm Gel Filter holder
+
+![The assembled filter holder](/doc/filter.jpg)
 
 This is split between two files `filter-holder-50mm.scad`,
 `filter-holder-50mm-insert.scad`. The first is the main body of the holder. The
