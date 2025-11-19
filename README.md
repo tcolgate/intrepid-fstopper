@@ -327,16 +327,16 @@ avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -U intrepid-fstopper.hex
 avrdude -c stk500v1 -p m328p -b 57600 -P /dev/ttyUSB0 -U download-intrepid-firmware.hex
 ```
 
-[^1] Jon Finch of Pitctorial Planet has a good guide to f-stop printing without the use of
+[^1]: Jon Finch of Pitctorial Planet has a good guide to f-stop printing without the use of
 a specialist timer.
 
-[^2] Matthew from DistPhoto on Youtube has a [good
+[^2]: Matthew from DistPhoto on Youtube has a [good
 introduction](https://www.youtube.com/watch?v=zS-CPGx1dSo) to use of test
 strips for contrast grading. I do use his test strip printer, but vintage
 version exist and are slightly easier to use (they have a little sliding foot
 that you can use to move the paper without opening the unit.
 
-[^3] I had great difficulty in using the Ilford Multigrade under the lens filters
+[^3]: I had great difficulty in using the Ilford Multigrade under the lens filters
 with the Intrepid Compact Enlarger. To overcome these issues I built a small
 under the lens tray that can be fitted to the enlarger with a clamp. The SCAD files
 for this are in this repo [here](/hardware)
