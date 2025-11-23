@@ -180,15 +180,3 @@ func Mul(a Num, b int32) Num {
 		return Num((int32(a) * int32(b)) / 100)
 	}
 }
-
-func Div(a Num, b int32) Num {
-	switch b {
-	case 0:
-		// should panic, but then what?
-		return Max
-	case 100:
-		return a
-	default:
-		return Num(((int32(a) * 100) / int32(b)))
-	}
-}

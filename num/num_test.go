@@ -188,25 +188,3 @@ func TestMul(t *testing.T) {
 		})
 	}
 }
-
-func TestDiv(t *testing.T) {
-	var tests = []struct {
-		name     string
-		expected Num
-		a        Num
-		b        int32
-	}{
-		{"", 1_230, 1_230, 100},
-		{"", 12_300, 1_230, 10},
-		{"", 123, 1_230, 1000},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			actual := Div(tt.a, tt.b)
-			if actual != tt.expected {
-				t.Errorf("(%d / %d): expected %d, actual %d", tt.a, tt.b, tt.expected, actual)
-			}
-		})
-	}
-}
