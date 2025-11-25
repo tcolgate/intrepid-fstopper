@@ -170,13 +170,18 @@ func IntLen(n Num) int {
 	}
 }
 
-func Mul(a Num, b int32) Num {
+func Mul(a Num, b int32) (int32, bool) {
 	switch b {
 	case 0:
-		return 0
+		return 0, false
 	case 100:
-		return a
+		return int32(a), false
 	default:
-		return Num((int32(a) * int32(b)) / 100)
+		out := int32(a) * int32(b) / 100
+		roundedUp := ((int32(a) * int32(b)) % 100) >= 50
+		if roundedUp {
+			out += 1
+		}
+		return out, roundedUp
 	}
 }

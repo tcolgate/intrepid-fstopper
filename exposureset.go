@@ -126,12 +126,12 @@ func halfStops(b uint16, v int16) uint16 {
 	}
 
 	if !neg {
-		adj = int32(num.Mul(num.Num(adj), halfStop))
+		adj, _ = num.Mul(num.Num(adj), halfStop)
 		if adj > 600_00 {
 			return 600_00
 		}
 	} else {
-		adj = int32(num.Mul(num.Num(adj), negHalfStop))
+		adj, _ = num.Mul(num.Num(adj), negHalfStop)
 		if adj < 0 {
 			return 0
 		}
@@ -177,12 +177,12 @@ func thirdStops(b uint16, v int16) uint16 {
 
 	for i = i; i > 0; i -= 1 {
 		if !neg {
-			adj = int32(num.Mul(num.Num(adj), thirdStop))
+			adj, _ = num.Mul(num.Num(adj), thirdStop)
 			if adj > 600_00 {
 				return 600_00
 			}
 		} else {
-			adj = int32(num.Mul(num.Num(adj), negThirdStop))
+			adj, _ = num.Mul(num.Num(adj), negThirdStop)
 			if adj < 0 {
 				return 0
 			}
@@ -229,12 +229,12 @@ func tenthStops(b uint16, v int16) uint16 {
 
 	for i = i; i > 0; i -= 1 {
 		if !neg {
-			adj = int32(num.Mul(num.Num(adj), tenthStop))
+			adj, _ = num.Mul(num.Num(adj), tenthStop)
 			if adj > 600_00 {
 				return 600_00
 			}
 		} else {
-			adj = int32(num.Mul(num.Num(adj), negTenthStop))
+			adj, _ = num.Mul(num.Num(adj), negTenthStop)
 			if adj < 0 {
 				return 0
 			}
