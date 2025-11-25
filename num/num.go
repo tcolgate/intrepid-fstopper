@@ -25,14 +25,35 @@ const (
 )
 
 const (
-	HalfStop    = 141 // = 100 * (2 ^ (1 / 2))
-	NegHalfStop = 71  // = 100 * 1/(2 ^ (1 / 2))
 
-	ThirdStop    = 126 // = 100 * 1/(2 ^ (1 / 3))
-	NegThirdStop = 79
+	/*
+		2 ** (1 / 2)
+		1.41421356237
 
-	TenthStop    = 107 // = 100 * (2 ^ (1 / 10))
-	NegTenthStop = 93  // = 100 * 1/(2 ^ (1 / 10))
+		1 / (2 ** (1 / 2))
+		0.707106781187
+
+		2 ** (1 / 3)
+		1.25992104989
+
+		1 / (2 ** (1 / 3))
+		0.793700525984
+
+		2 ** (1 / 10)
+		1.07177346254
+
+		1 / (2 ** (1 / 10))
+		0.933032991537
+	*/
+
+	HalfStop    = 1414 // = 1000 * (2 ^ (1 / 2))
+	NegHalfStop = 707  // = 1000 * 1/(2 ^ (1 / 2))
+
+	ThirdStop    = 1260 // = 1000 * 1/(2 ^ (1 / 3))
+	NegThirdStop = 794
+
+	TenthStop    = 1072 // = 1000 * (2 ^ (1 / 10))
+	NegTenthStop = 933  // = 1000 * 1/(2 ^ (1 / 10))
 )
 
 type NumBuf [4]byte
@@ -181,15 +202,18 @@ func IntLen(n Num) int {
 	}
 }
 
-func Mul(a Num, b int32) (int32, bool) {
+// Mul1000th does a multiply of a by b, where be
+// is * 1000
+func Mul1000th(a Num, b int32) (int32, bool) {
 	switch b {
 	case 0:
 		return 0, false
-	case 100:
+	case 1000:
 		return int32(a), false
 	default:
-		out := int32(a) * int32(b) / 100
-		roundedUp := ((int32(a) * int32(b)) % 100) >= 50
+		v := int32(a) * int32(b)
+		out := int32(v / 1000)
+		roundedUp := (v % 1000) >= 500
 		if roundedUp {
 			out += 1
 		}
@@ -244,12 +268,12 @@ func HalfStops(b uint16, v int16) uint16 {
 	}
 
 	if !neg {
-		adj, _ = Mul(Num(adj), HalfStop)
+		adj, _ = Mul1000th(Num(adj), HalfStop)
 		if adj > 600_00 {
 			return 600_00
 		}
 	} else {
-		adj, _ = Mul(Num(adj), NegHalfStop)
+		adj, _ = Mul1000th(Num(adj), NegHalfStop)
 		if adj < 0 {
 			return 0
 		}
@@ -295,12 +319,12 @@ func ThirdStops(b uint16, v int16) uint16 {
 
 	for i = i; i > 0; i -= 1 {
 		if !neg {
-			adj, _ = Mul(Num(adj), ThirdStop)
+			adj, _ = Mul1000th(Num(adj), ThirdStop)
 			if adj > 600_00 {
 				return 600_00
 			}
 		} else {
-			adj, _ = Mul(Num(adj), NegThirdStop)
+			adj, _ = Mul1000th(Num(adj), NegThirdStop)
 			if adj < 0 {
 				return 0
 			}
@@ -347,12 +371,12 @@ func TenthStops(b uint16, v int16) uint16 {
 
 	for i = i; i > 0; i -= 1 {
 		if !neg {
-			adj, _ = Mul(Num(adj), TenthStop)
+			adj, _ = Mul1000th(Num(adj), TenthStop)
 			if adj > 600_00 {
 				return 600_00
 			}
 		} else {
-			adj, _ = Mul(Num(adj), NegTenthStop)
+			adj, _ = Mul1000th(Num(adj), NegTenthStop)
 			if adj < 0 {
 				return 0
 			}

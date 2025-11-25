@@ -172,32 +172,38 @@ func TestMul(t *testing.T) {
 		name            string
 		expected        int32
 		expectedRounded bool
+		expectedErr     int32
 
 		a Num
 		b int32
 	}{
-		{"", 1_230, false, 1_230, 100},
-		{"", 123, false, 1_230, 10},
-		{"", 615, false, 1_230, 50},
-		{"", 616, true, 1_231, 50},
-		{"", 12_300, false, 1_230, 1000},
-		{"16s + 1/3rd stop", 20_16, false, 1_600, ThirdStop},
+		{"1230 * 1", 1_230, false, 0, 1_230, 1000},
+		{"1230 * 0.1", 123, false, 0, 1_230, 100},
+		{"1230 * 0.5", 615, false, 0, 1_230, 500},
+		{"1231 * 0.5", 616, true, 0, 1_231, 500},
+		{"1230 * 10", 12_300, false, 0, 1_230, 10000},
 
-		// 2/3rds should be closer to 25_39
-		{"16s + 2/3rd stop", 25_28, false, 1_600, ((ThirdStop * ThirdStop) / 100)},
+		{"16s + 1/2 stop", 22_63, false, -1, 1_600, HalfStop},
+		{"16s - 1/2 stop", 11_31, false, 0, 1_600, NegHalfStop},
+		{"16s + 1/3rd stop", 20_17, false, -1, 1_600, ThirdStop},
+		{"16s - 1/3rd stop", 12_69, false, 1, 1_600, NegThirdStop},
+		{"16s + 1/10th stop", 17_15, false, 0, 1_600, TenthStop},
+		{"16s - 1/10th stop", 14_93, true, 0, 1_600, NegTenthStop},
 
-		// - 1/3rd should be closer to 12_69
-		{"16s - 1/3rd stop", 12_64, false, 1_600, NegThirdStop},
-
-		// - 2/3rd should be closer to 10_08
-		{"16s - 2/3rd stop", 9_92, false, 1_600, ((NegThirdStop * NegThirdStop) / 100)},
+		{"300s + 1/2 stop", 424_26, false, -6, 300_00, HalfStop},
+		{"300s - 1/2 stop", 212_13, false, -3, 300_00, NegHalfStop},
+		{"300s + 1/3rd stop", 377_98, false, 2, 300_00, ThirdStop},
+		{"300s - 1/3rd stop", 238_11, false, 9, 300_00, NegThirdStop},
+		{"300s + 1/10th stop", 321_53, false, 7, 300_00, TenthStop},
+		{"300s - 1/10th stop", 279_91, false, -1, 300_00, NegTenthStop},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			actual, rounded := Mul(tt.a, tt.b)
-			if actual != tt.expected {
-				t.Errorf("(%d * %d): expected %d, actual %d", tt.a, tt.b, tt.expected, actual)
+			actual, rounded := Mul1000th(tt.a, tt.b)
+			diff := actual - tt.expected
+			if diff != tt.expectedErr {
+				t.Errorf("(%d * %d): got %d, expected err of %d, actual %d", tt.a, tt.b, actual, tt.expectedErr, diff)
 			}
 			if rounded != tt.expectedRounded {
 				t.Errorf("(%d * %d): expect rounded %v, actual %v", tt.a, tt.b, tt.expectedRounded, rounded)
