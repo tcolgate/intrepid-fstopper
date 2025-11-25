@@ -167,14 +167,6 @@ func TestIntLen(t *testing.T) {
 	}
 }
 
-var (
-	halfStop    = int32(141) // = 100 * (2 ^ (1 / 2))
-	negHalfStop = int32(71)  // = 100 * 1/(2 ^ (1 / 2))
-
-	thirdStop    = int32(126) // = 100 * 1/(2 ^ (1 / 3))
-	negThirdStop = int32(79)  // = 100 * 1/(2 ^ (2 / 3))
-)
-
 func TestMul(t *testing.T) {
 	var tests = []struct {
 		name            string
@@ -189,16 +181,16 @@ func TestMul(t *testing.T) {
 		{"", 615, false, 1_230, 50},
 		{"", 616, true, 1_231, 50},
 		{"", 12_300, false, 1_230, 1000},
-		{"16s + 1/3rd stop", 20_16, false, 1_600, thirdStop},
+		{"16s + 1/3rd stop", 20_16, false, 1_600, ThirdStop},
 
 		// 2/3rds should be closer to 25_39
-		{"16s + 2/3rd stop", 25_28, false, 1_600, ((thirdStop * thirdStop) / 100)},
+		{"16s + 2/3rd stop", 25_28, false, 1_600, ((ThirdStop * ThirdStop) / 100)},
 
 		// - 1/3rd should be closer to 12_69
-		{"16s - 1/3rd stop", 12_64, false, 1_600, negThirdStop},
+		{"16s - 1/3rd stop", 12_64, false, 1_600, NegThirdStop},
 
 		// - 2/3rd should be closer to 10_08
-		{"16s - 2/3rd stop", 9_92, false, 1_600, ((negThirdStop * negThirdStop) / 100)},
+		{"16s - 2/3rd stop", 9_92, false, 1_600, ((NegThirdStop * NegThirdStop) / 100)},
 	}
 	for _, tt := range tests {
 		tt := tt

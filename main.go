@@ -25,15 +25,6 @@ import (
 const (
 	ledCount = 56
 
-	halfStop    = 141 // = 100 * (2 ^ (1 / 2))
-	negHalfStop = 71  // = 100 * 1/(2 ^ (1 / 2))
-
-	thirdStop    = 125 // = 100 * 1/(2 ^ (1 / 3))
-	negThirdStop = 79
-
-	tenthStop    = 107 // = 100 * (2 ^ (1 / 10))
-	negTenthStop = 93  // = 100 * 1/(2 ^ (1 / 10))
-
 	longPress = 1 * time.Second
 
 	tick = uint32(10 * time.Millisecond)

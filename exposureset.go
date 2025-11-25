@@ -79,183 +79,18 @@ func (es *exposureSet) adjustBaseTime(long, neg bool) bool {
 	}
 }
 
-func bound(v int32) uint16 {
-	switch {
-	case v >= 600_00:
-		return 600_00
-	case v <= 0:
-		return 0
-	default:
-		return uint16(v)
-	}
-}
-
-func halfStops(b uint16, v int16) uint16 {
-	if v == 0 {
-		return b
-	}
-
-	neg := v < 0
-	if neg {
-		v = v * -1
-	}
-
-	adj := int32(b)
-
-	i := v
-	for {
-		if i <= 1 {
-			break
-		}
-		if !neg {
-			adj = int32(uint16(adj) << 1)
-			if adj > 600_00 {
-				return 600_00
-			}
-		} else {
-			adj = int32(uint16(adj) >> 1)
-			if adj < 0 {
-				return 0
-			}
-		}
-		i -= 2
-	}
-
-	if i == 0 {
-		return bound(adj)
-	}
-
-	if !neg {
-		adj, _ = num.Mul(num.Num(adj), halfStop)
-		if adj > 600_00 {
-			return 600_00
-		}
-	} else {
-		adj, _ = num.Mul(num.Num(adj), negHalfStop)
-		if adj < 0 {
-			return 0
-		}
-	}
-
-	return bound(adj)
-}
-
-func thirdStops(b uint16, v int16) uint16 {
-	if v == 0 {
-		return b
-	}
-
-	neg := v < 0
-	if neg {
-		v = v * -1
-	}
-
-	adj := int32(b)
-
-	i := v
-	for {
-		if i <= 2 {
-			break
-		}
-		if !neg {
-			adj = int32(uint16(adj) << 1)
-			if adj > 600_00 {
-				return 600_00
-			}
-		} else {
-			adj = int32(uint16(adj) >> 1)
-			if adj < 0 {
-				return 0
-			}
-		}
-		i -= 3
-	}
-
-	if i == 0 {
-		return bound(adj)
-	}
-
-	for i = i; i > 0; i -= 1 {
-		if !neg {
-			adj, _ = num.Mul(num.Num(adj), thirdStop)
-			if adj > 600_00 {
-				return 600_00
-			}
-		} else {
-			adj, _ = num.Mul(num.Num(adj), negThirdStop)
-			if adj < 0 {
-				return 0
-			}
-		}
-	}
-
-	return bound(adj)
-}
-
-func tenthStops(b uint16, v int16) uint16 {
-	if v == 0 {
-		return b
-	}
-
-	neg := v < 0
-	if neg {
-		v = v * -1
-	}
-
-	adj := int32(b)
-
-	i := v
-	for {
-		if i <= 9 {
-			break
-		}
-		if !neg {
-			adj = int32(uint16(adj) << 1)
-			if adj > 600_00 {
-				return 600_00
-			}
-		} else {
-			adj = int32(uint16(adj) >> 1)
-			if adj < 0 {
-				return 0
-			}
-		}
-		i -= 10
-	}
-
-	if i == 0 {
-		return bound(adj)
-	}
-
-	for i = i; i > 0; i -= 1 {
-		if !neg {
-			adj, _ = num.Mul(num.Num(adj), tenthStop)
-			if adj > 600_00 {
-				return 600_00
-			}
-		} else {
-			adj, _ = num.Mul(num.Num(adj), negTenthStop)
-			if adj < 0 {
-				return 0
-			}
-		}
-	}
-
-	return bound(adj)
-}
-
 func expUnitToS(b uint16, u expUnit, v int16) uint16 {
 	switch u {
 	case expUnitAbsolute:
-		return bound(int32(b) + int32(v))
+		return num.Bound(int32(b) + int32(v))
 	case expUnitPercent:
-		return bound((int32(b) + (int32(b)/100)*int32(v)))
+		return num.Bound((int32(b) + (int32(b)/100)*int32(v)))
 	case expUnitHalfStop:
-		return halfStops(b, v)
+		return num.HalfStops(b, v)
 	case expUnitThirdStop:
-		return thirdStops(b, v)
+		return num.ThirdStops(b, v)
 	case expUnitTenthStop:
-		return tenthStops(b, v)
+		return num.TenthStops(b, v)
 	default:
 		return 0
 	}

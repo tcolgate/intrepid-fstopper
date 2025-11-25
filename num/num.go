@@ -24,6 +24,17 @@ const (
 	IntMax Num = 9999
 )
 
+const (
+	HalfStop    = 141 // = 100 * (2 ^ (1 / 2))
+	NegHalfStop = 71  // = 100 * 1/(2 ^ (1 / 2))
+
+	ThirdStop    = 126 // = 100 * 1/(2 ^ (1 / 3))
+	NegThirdStop = 79
+
+	TenthStop    = 107 // = 100 * (2 ^ (1 / 10))
+	NegTenthStop = 93  // = 100 * 1/(2 ^ (1 / 10))
+)
+
 type NumBuf [4]byte
 
 // numOut renders n / 100 into out, rendered
@@ -184,4 +195,169 @@ func Mul(a Num, b int32) (int32, bool) {
 		}
 		return out, roundedUp
 	}
+}
+
+func Bound(v int32) uint16 {
+	switch {
+	case v >= 600_00:
+		return 600_00
+	case v <= 0:
+		return 0
+	default:
+		return uint16(v)
+	}
+}
+
+func HalfStops(b uint16, v int16) uint16 {
+	if v == 0 {
+		return b
+	}
+
+	neg := v < 0
+	if neg {
+		v = v * -1
+	}
+
+	adj := int32(b)
+
+	i := v
+	for {
+		if i <= 1 {
+			break
+		}
+		if !neg {
+			adj = int32(uint16(adj) << 1)
+			if adj > 600_00 {
+				return 600_00
+			}
+		} else {
+			adj = int32(uint16(adj) >> 1)
+			if adj < 0 {
+				return 0
+			}
+		}
+		i -= 2
+	}
+
+	if i == 0 {
+		return Bound(adj)
+	}
+
+	if !neg {
+		adj, _ = Mul(Num(adj), HalfStop)
+		if adj > 600_00 {
+			return 600_00
+		}
+	} else {
+		adj, _ = Mul(Num(adj), NegHalfStop)
+		if adj < 0 {
+			return 0
+		}
+	}
+
+	return Bound(adj)
+}
+
+func ThirdStops(b uint16, v int16) uint16 {
+	if v == 0 {
+		return b
+	}
+
+	neg := v < 0
+	if neg {
+		v = v * -1
+	}
+
+	adj := int32(b)
+
+	i := v
+	for {
+		if i <= 2 {
+			break
+		}
+		if !neg {
+			adj = int32(uint16(adj) << 1)
+			if adj > 600_00 {
+				return 600_00
+			}
+		} else {
+			adj = int32(uint16(adj) >> 1)
+			if adj < 0 {
+				return 0
+			}
+		}
+		i -= 3
+	}
+
+	if i == 0 {
+		return Bound(adj)
+	}
+
+	for i = i; i > 0; i -= 1 {
+		if !neg {
+			adj, _ = Mul(Num(adj), ThirdStop)
+			if adj > 600_00 {
+				return 600_00
+			}
+		} else {
+			adj, _ = Mul(Num(adj), NegThirdStop)
+			if adj < 0 {
+				return 0
+			}
+		}
+	}
+
+	return Bound(adj)
+}
+
+func TenthStops(b uint16, v int16) uint16 {
+	if v == 0 {
+		return b
+	}
+
+	neg := v < 0
+	if neg {
+		v = v * -1
+	}
+
+	adj := int32(b)
+
+	i := v
+	for {
+		if i <= 9 {
+			break
+		}
+		if !neg {
+			adj = int32(uint16(adj) << 1)
+			if adj > 600_00 {
+				return 600_00
+			}
+		} else {
+			adj = int32(uint16(adj) >> 1)
+			if adj < 0 {
+				return 0
+			}
+		}
+		i -= 10
+	}
+
+	if i == 0 {
+		return Bound(adj)
+	}
+
+	for i = i; i > 0; i -= 1 {
+		if !neg {
+			adj, _ = Mul(Num(adj), TenthStop)
+			if adj > 600_00 {
+				return 600_00
+			}
+		} else {
+			adj, _ = Mul(Num(adj), NegTenthStop)
+			if adj < 0 {
+				return 0
+			}
+		}
+	}
+
+	return Bound(adj)
 }
